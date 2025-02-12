@@ -1,16 +1,24 @@
 // globe.js
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('globe'), antialias: true });
+
+// Create the renderer with a transparent background
+const renderer = new THREE.WebGLRenderer({
+  canvas: document.getElementById('globe'),
+  antialias: true,
+  alpha: true // Enable transparency
+});
+renderer.setClearColor(0x000000, 0); // Set background to transparent
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+// Create the globe
 const geometry = new THREE.SphereGeometry(5, 32, 32);
 const texture = new THREE.TextureLoader().load('textures/earth.jpg'); // Path to your Earth texture
 const material = new THREE.MeshBasicMaterial({ map: texture });
 const globe = new THREE.Mesh(geometry, material);
 scene.add(globe);
 
-// Add a darker background sphere
+// Add a darker background sphere (optional, if you want a darker globe background)
 const backgroundGeometry = new THREE.SphereGeometry(5.1, 32, 32); // Slightly larger than the globe
 const backgroundMaterial = new THREE.MeshBasicMaterial({
   color: 0x333333, // Dark gray color
@@ -19,8 +27,10 @@ const backgroundMaterial = new THREE.MeshBasicMaterial({
 const backgroundSphere = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
 scene.add(backgroundSphere);
 
+// Position the camera
 camera.position.z = 10;
 
+// Animation loop
 function animate() {
   requestAnimationFrame(animate);
   globe.rotation.y += 0.001; // Slower rotation

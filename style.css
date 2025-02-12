@@ -75,7 +75,7 @@ body::after {
   z-index: -1; /* Ensure it stays behind other content */
 }
 
-/* Sidebar and tabs (unchanged) */
+/* Sidebar and tabs */
 .sidebar {
   position: fixed;
   top: 50%; /* Center vertically */
