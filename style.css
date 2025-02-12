@@ -26,27 +26,28 @@ body {
 
 .sidebar {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 200px;
-  height: 100%;
-  background-color: #333; /* Darker than background */
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+  top: 50%; /* Center vertically */
+  left: 0; /* Position on the left */
+  transform: translateY(-50%); /* Center vertically */
+  display: flex;
+  flex-direction: column;
+  gap: 40px; /* Increased space between tabs */
 }
 
 .tab {
-  display: block;
+  background-color: #444; /* Lighter than background */
   color: #fff;
   text-decoration: none;
-  padding: 10px;
-  margin: 10px 0;
-  background-color: #444; /* Lighter than sidebar */
-  border-radius: 5px;
+  padding: 20px 40px; /* Larger padding for a tab-like feel */
+  border-radius: 0 10px 10px 0; /* Rounded edges on the right side */
   text-align: center;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, transform 0.3s;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); /* Add a subtle shadow */
+  transform: translateX(-80%); /* Start off-screen */
+  width: 150px; /* Fixed width for consistency */
 }
 
 .tab:hover {
   background-color: #555; /* Highlight on hover */
+  transform: translateX(-20%); /* Slide out on hover */
 }

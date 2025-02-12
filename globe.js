@@ -10,11 +10,20 @@ const material = new THREE.MeshBasicMaterial({ map: texture });
 const globe = new THREE.Mesh(geometry, material);
 scene.add(globe);
 
+// Add a darker background sphere
+const backgroundGeometry = new THREE.SphereGeometry(5.1, 32, 32); // Slightly larger than the globe
+const backgroundMaterial = new THREE.MeshBasicMaterial({
+  color: 0x333333, // Dark gray color
+  side: THREE.BackSide // Render the inside of the sphere
+});
+const backgroundSphere = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
+scene.add(backgroundSphere);
+
 camera.position.z = 10;
 
 function animate() {
   requestAnimationFrame(animate);
-  globe.rotation.y += 0.005; // Rotate the globe
+  globe.rotation.y += 0.001; // Slower rotation
   renderer.render(scene, camera);
 }
 animate();
