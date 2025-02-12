@@ -18,15 +18,6 @@ const material = new THREE.MeshBasicMaterial({ map: texture });
 const globe = new THREE.Mesh(geometry, material);
 scene.add(globe);
 
-// Add a darker background sphere (optional, if you want a darker globe background)
-const backgroundGeometry = new THREE.SphereGeometry(5.1, 32, 32); // Slightly larger than the globe
-const backgroundMaterial = new THREE.MeshBasicMaterial({
-  color: 0x333333, // Dark gray color
-  side: THREE.BackSide // Render the inside of the sphere
-});
-const backgroundSphere = new THREE.Mesh(backgroundGeometry, backgroundMaterial);
-scene.add(backgroundSphere);
-
 // Position the camera
 camera.position.z = 10;
 
