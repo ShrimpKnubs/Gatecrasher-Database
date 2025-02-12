@@ -4,38 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Landing Page</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f0f0f0;
-    }
-    .newspaper {
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .categories {
-      margin-top: 20px;
-    }
-    .categories a {
-      display: block;
-      margin: 10px 0;
-      font-size: 1.2em;
-      color: #000;
-      text-decoration: none;
-    }
-    .categories a:hover {
-      text-decoration: underline;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <img src="newspaper.jpg" alt="Newspaper" class="newspaper">
-  <div class="categories">
-    <a href="map.html">Real-Time Map</a>
-    <a href="missions.html">Missions</a>
-    <a href="intel.html">Intel Reports</a>
+  <canvas id="globe"></canvas>
+  <div class="sidebar">
+    <a href="map.html" class="tab">Real-Time Map</a>
+    <a href="missions.html" class="tab">Missions</a>
+    <a href="intel.html" class="tab">Intel Reports</a>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="globe.js"></script>
 </body>
 </html>

@@ -1,18 +1,52 @@
 /* style.css */
+@font-face {
+  font-family: 'Britannic';
+  src: url('fonts/britannic-regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+  background-color: #212421; /* Dark gray background */
+  color: #ffffff; /* Light text for contrast */
+  font-family: 'Britannic', sans-serif; /* Use your custom font */
   margin: 0;
   padding: 0;
+  overflow: hidden; /* Prevent scrolling */
 }
 
-h1 {
+#globe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; /* Ensure it stays behind other content */
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 100%;
+  background-color: #333; /* Darker than background */
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.tab {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #444; /* Lighter than sidebar */
+  border-radius: 5px;
   text-align: center;
-  color: #333;
+  transition: background-color 0.3s;
 }
 
-#map {
-  height: 600px;
-  margin: 20px;
-  border: 2px solid #ccc;
+.tab:hover {
+  background-color: #555; /* Highlight on hover */
 }
