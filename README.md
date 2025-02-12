@@ -1,3 +1,5 @@
+Chapter 1
+
 1  In the Beginning, There Was Kelp,
 
 2  And lo, in the primordial depths of Arma, there Kelp Arose, the First Reforger, who dwelt in the abyss where the light of good ops did not yet shine. 
