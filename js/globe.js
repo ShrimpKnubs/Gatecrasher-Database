@@ -10,9 +10,17 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setClearColor(0x000000, 0); // Transparent background
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+// Load Earth texture
+const textureLoader = new THREE.TextureLoader();
+const texture = textureLoader.load('textures/earth.jpg', () => {
+  console.log('Earth texture loaded successfully!');
+}, undefined, (error) => {
+  console.error('Error loading Earth texture:', error);
+});
+
 // Globe material (light gray with subtle shading)
 const material = new THREE.MeshPhongMaterial({
-  color: 0xd3d3d3, // Light gray
+  map: texture, // Use the loaded texture
   emissive: 0x000000,
   specular: 0x555555,
   shininess: 30,
