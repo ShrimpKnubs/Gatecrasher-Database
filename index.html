@@ -43,11 +43,6 @@
     <a href="pages/intel.html" class="tab">Intel</a>
   </div>
 
-  <!-- Right-side script tab -->
-  <div id="script-tab">
-    <div id="script-output"></div>
-  </div>
-
   <!-- Background music -->
   <audio id="background-music" loop>
     <source src="music/background-music.mp3" type="audio/mpeg">
@@ -139,7 +134,6 @@
       document.getElementById('vanta-background').style.opacity = '1';
       document.getElementById('globe').style.opacity = '1';
       document.querySelector('.sidebar').style.opacity = '1';
-      document.getElementById('script-tab').style.opacity = '1';
     });
 
     // Volume slider functionality
@@ -220,40 +214,13 @@
         });
       });
 
-    // Load world highways
-    fetch('data/world_highways.geojson')
-      .then(response => response.json())
-      .then(data => {
-        data.features.forEach(feature => {
-          const coordinates = feature.geometry.coordinates;
-          const lineMaterial = new THREE.LineBasicMaterial({ color: 0xFFD700 }); // Yellow for highways
-          const lineGeometry = new THREE.BufferGeometry();
-          const points = [];
-
-          coordinates.forEach(point => {
-            const lat = point[1];
-            const lon = point[0];
-            const phi = (90 - lat) * (Math.PI / 180);
-            const theta = (lon + 180) * (Math.PI / 180);
-            const x = -10 * Math.sin(phi) * Math.cos(theta); // 2x larger
-            const y = 10 * Math.cos(phi);
-            const z = 10 * Math.sin(phi) * Math.sin(theta);
-            points.push(new THREE.Vector3(x, y, z));
-          });
-
-          lineGeometry.setFromPoints(points);
-          const line = new THREE.Line(lineGeometry, lineMaterial);
-          scene.add(line);
-        });
-      });
-
     // Load latitude/longitude grid
     fetch('data/rectangle.geojson')
       .then(response => response.json())
       .then(data => {
         data.features.forEach(feature => {
           const coordinates = feature.geometry.coordinates;
-          const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 }); // Green for grid
+          const lineMaterial = new THREE.LineBasicMaterial({ color: 0x808080 }); // Gray for grid
           const lineGeometry = new THREE.BufferGeometry();
           const points = [];
 
@@ -277,7 +244,7 @@
       });
 
     // Position the camera
-    camera.position.z = 30; // Move camera back to fit the larger globe
+    camera.position.z = 20; // Zoom in closer to the globe
 
     // Animation loop
     function animate() {
@@ -293,40 +260,6 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
-
-    // Right-side script tab
-    const scriptOutput = document.getElementById('script-output');
-    const scriptLines = [
-      "> INITIALIZING TACTICAL OVERLAY...",
-      "> LOADING SATELLITE FEEDS...",
-      "> ANALYZING ENEMY MOVEMENTS...",
-      "> DEPLOYING DRONE SURVEILLANCE...",
-      "> CALCULATING OPTIMAL ROUTES...",
-      "> UPDATING COMMAND CENTER...",
-      "> SYNCHRONIZING WITH HQ...",
-      "> ACTIVATING STEALTH MODE...",
-      "> DEPLOYING TROOPS TO GRID ALPHA-7...",
-      "> MONITORING RADIO FREQUENCIES...",
-      "> ENCRYPTING COMMUNICATIONS...",
-      "> SCANNING FOR HOSTILE ACTIVITY...",
-      "> DEPLOYING COUNTERMEASURES...",
-      "> RELAYING DATA TO FIELD UNITS...",
-      "> COMPLETING MISSION BRIEFING..."
-    ];
-
-    let currentLine = 0;
-
-    function addScriptLine() {
-      if (currentLine >= scriptLines.length) {
-        scriptOutput.removeChild(scriptOutput.firstChild); // Remove the top line
-      }
-      const line = document.createElement('p');
-      line.textContent = scriptLines[currentLine % scriptLines.length];
-      scriptOutput.appendChild(line);
-      currentLine++;
-    }
-
-    setInterval(addScriptLine, 1000); // Add a new line every second
   </script>
 </body>
 </html>
