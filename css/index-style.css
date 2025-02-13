@@ -59,7 +59,7 @@
 }
 
 #activate-button {
-  background-color: #00ff00; /* Green button */
+  background-color: ivory; /* Ivory button */
   color: #1a1c1a; /* Dark text */
   border: none;
   padding: 10px 20px;
@@ -70,7 +70,7 @@
 }
 
 #activate-button:hover {
-  background-color: #4d663f; /* Darker green on hover */
+  background-color: #dcdcdc; /* Light gray on hover */
 }
 
 /* Volume control */
@@ -85,7 +85,8 @@
 }
 
 #volume-icon {
-  font-size: 24px;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
 }
 
@@ -95,6 +96,41 @@
   display: none; /* Hidden initially */
   opacity: 0;
   transition: opacity 0.3s ease;
+  background: #333; /* Dark gray background */
+  -webkit-appearance: none; /* Remove default styling */
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+}
+
+#volume-slider::-webkit-slider-runnable-track {
+  background: #333; /* Dark gray background */
+  height: 4px;
+  border-radius: 2px;
+}
+
+#volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: white; /* White thumb */
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#volume-slider::-moz-range-track {
+  background: #333; /* Dark gray background */
+  height: 4px;
+  border-radius: 2px;
+}
+
+#volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: white; /* White thumb */
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 #volume-control:hover #volume-slider {

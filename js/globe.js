@@ -15,10 +15,9 @@ const textureLoader = new THREE.TextureLoader();
 const earthTexture = textureLoader.load('textures/earth.jpg');
 const earthNormalMap = textureLoader.load('textures/earth_normal.tif');
 const earthSpecularMap = textureLoader.load('textures/earth_specular.tif');
-const cloudTexture = textureLoader.load('textures/earth_clouds.jpg');
 
 // Create the globe
-const globeGeometry = new THREE.SphereGeometry(3, 64, 64);
+const globeGeometry = new THREE.SphereGeometry(5, 64, 64); // Larger globe
 const globeMaterial = new THREE.MeshPhongMaterial({
   map: earthTexture,
   normalMap: earthNormalMap,
@@ -28,18 +27,8 @@ const globeMaterial = new THREE.MeshPhongMaterial({
 const globe = new THREE.Mesh(globeGeometry, globeMaterial);
 scene.add(globe);
 
-// Create the clouds
-const cloudGeometry = new THREE.SphereGeometry(3.05, 64, 64); // Slightly larger than the globe
-const cloudMaterial = new THREE.MeshPhongMaterial({
-  map: cloudTexture,
-  transparent: true,
-  opacity: 0.8
-});
-const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial);
-scene.add(clouds);
-
 // Position the camera
-camera.position.z = 10;
+camera.position.z = 15; // Move camera closer
 
 // Lighting
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -53,7 +42,6 @@ scene.add(directionalLight);
 function animate() {
   requestAnimationFrame(animate);
   globe.rotation.y += 0.001; // Rotate the globe
-  clouds.rotation.y += 0.0008; // Rotate clouds slightly slower
   renderer.render(scene, camera);
 }
 animate();
