@@ -1,18 +1,69 @@
 @font-face {
   font-family: 'Britannic';
-  src: url('fonts/britannic-regular.otf') format('opentype');
+  src: url('./fonts/britannic-regular.otf') format('opentype'); /* Ensure path is correct */
   font-weight: normal;
   font-style: normal;
 }
 
-/* Custom cursor */
+/* Apply font globally */
 body {
-  cursor: url('textures/custom-cursor.png'), auto;
+  font-family: 'Britannic', monospace !important; /* Force font */
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent scrolling */
 }
 
-/* Apply custom cursor to all interactive elements */
-a, button, input, textarea, .tab {
-  cursor: url('textures/custom-cursor.png'), auto;
+/* Custom cursor */
+body, a, .tab, button {
+  cursor: url('./textures/custom-cursor.png'), auto !important; /* Force cursor */
+}
+
+/* Boot overlay */
+#boot-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #1a1c1a; /* Dark background */
+  z-index: 9999; /* Above everything */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#terminal-text {
+  color: #00ff00; /* Green text */
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+#terminal-text p {
+  margin: 0;
+  opacity: 1;
+}
+
+#activate-button {
+  background-color: #00ff00; /* Green button */
+  color: #1a1c1a; /* Dark text */
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: none; /* Hidden initially */
+}
+
+#activate-button:hover {
+  background-color: #4d663f; /* Darker green on hover */
+}
+
+/* Hide everything initially */
+#terminal-background, #globe, .sidebar {
+  opacity: 0;
 }
 
 /* Terminal background */
@@ -22,7 +73,9 @@ a, button, input, textarea, .tab {
   left: 0;
   width: 100%;
   height: 100%;
+  background-color: #1a1c1a; /* Dark background */
   z-index: -2; /* Behind the globe */
+  overflow: hidden;
 }
 
 /* Globe canvas */
@@ -41,31 +94,32 @@ a, button, input, textarea, .tab {
   top: 0;
   left: 0;
   height: 100%;
-  width: 120px; /* Increased width */
-  background-color: transparent; /* Removed grayish-green background */
+  width: 160px; /* Wider sidebar */
   z-index: 1; /* Above the globe */
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start; /* Align tabs to the left */
   justify-content: center;
-  gap: 40px; /* Increased spacing between tabs */
+  gap: 60px; /* More spacing between tabs */
   padding: 20px 0;
+  background-color: transparent; /* Remove grayish-green background */
 }
 
 .tab {
   background-color: rgba(60, 65, 60, 0.9);
-  color: #00ff00;
+  color: ivory; /* Ivory white text */
   text-decoration: none;
-  padding: 20px 30px; /* Increased padding */
-  border-radius: 5px;
+  padding: 30px 60px; /* Larger padding to expand left */
+  border-radius: 0; /* Straight corners */
   text-align: center;
-  width: 100px; /* Increased width */
-  transition: background-color 0.3s ease, transform 0.3s ease;
-  font-size: 18px; /* Increased font size */
+  width: 120px; /* Wider tabs */
+  transition: transform 0.3s ease-out; /* Smooth animation */
+  font-size: 24px; /* Bigger text */
   font-family: 'Britannic', monospace; /* Use custom font */
+  margin-left: -40px; /* Expand left */
 }
 
 .tab:hover {
   background-color: rgba(80, 85, 80, 0.9);
-  transform: translateX(20px); /* Increased slide-out distance */
+  transform: translateX(40px); /* Expand further left on hover */
 }

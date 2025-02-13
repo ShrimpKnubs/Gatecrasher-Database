@@ -4,48 +4,45 @@ const colors = {
   numbers: '#2a2c2a'
 };
 
-// Generate random numbers
+// Generate random numbers (dense enough to fill the screen)
 function generateNumbers() {
-  const numbers = '0123456789';
+  const numbers = '0123456789'.repeat(2000); // Increase density
   let content = '';
-  for (let i = 0; i < 2000; i++) { // Increase the number of characters
+  for (let i = 0; i < numbers.length; i++) {
     content += numbers[Math.floor(Math.random() * numbers.length)] + ' ';
+    if (i % 100 === 0) content += '\n'; // Add line breaks
   }
   return content;
 }
 
 // Create the background
 function createBackground() {
-  background.style.backgroundColor = colors.background;
   background.style.position = 'fixed';
   background.style.top = '0';
   background.style.left = '0';
-  background.style.width = '100%';
-  background.style.height = '100%';
+  background.style.width = '100vw';
+  background.style.height = '100vh';
   background.style.zIndex = '-1';
   background.style.overflow = 'hidden';
 
   // Add numbers
   const numbers = document.createElement('div');
   numbers.style.position = 'absolute';
-  numbers.style.top = '0';
-  numbers.style.left = '0';
   numbers.style.width = '100%';
   numbers.style.height = '100%';
   numbers.style.color = colors.numbers;
-  numbers.style.fontFamily = 'Britannic, monospace'; // Use custom font
+  numbers.style.fontFamily = 'Britannic, monospace';
   numbers.style.fontSize = '14px';
-  numbers.style.lineHeight = '1.5';
+  numbers.style.lineHeight = '1.2';
   numbers.style.opacity = '0.5';
   numbers.style.whiteSpace = 'pre-wrap';
   numbers.textContent = generateNumbers();
   background.appendChild(numbers);
 
-  // Update numbers every second
+  // Update numbers every 0.5 seconds (faster refresh)
   setInterval(() => {
     numbers.textContent = generateNumbers();
-  }, 1000);
+  }, 20000);
 }
 
-// Initialize the background
 createBackground();

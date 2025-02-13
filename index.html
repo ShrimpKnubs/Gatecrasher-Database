@@ -7,6 +7,19 @@
   <link rel="stylesheet" href="css/index-style.css"> <!-- Link to CSS -->
 </head>
 <body>
+  <!-- Overlay for boot-up sequence -->
+  <div id="boot-overlay">
+    <div id="terminal-text">
+      <p>> INITIALIZING SYSTEM...</p>
+      <p>> LOADING CORE MODULES...</p>
+      <p>> CHECKING NETWORK CONNECTIVITY...</p>
+      <p>> VERIFYING USER CREDENTIALS...</p>
+      <p>> SYSTEM READY FOR ACTIVATION...</p>
+      <p>> PRESS [ACTIVATE] TO CONTINUE</p>
+    </div>
+    <button id="activate-button">ACTIVATE</button>
+  </div>
+
   <!-- Terminal background -->
   <div id="terminal-background"></div>
 
@@ -26,15 +39,72 @@
     Your browser does not support the audio element.
   </audio>
 
+  <!-- Activation sound -->
+  <audio id="activation-sound">
+    <source src="sounds/activation-sound.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="js/globe.js"></script>
-  <script src="js/terminal-background.js"></script> <!-- New script for terminal background -->
+  <script src="js/terminal-background.js"></script>
   <script>
-    // Automatically play the background music
+    // Boot-up sequence
+    const bootOverlay = document.getElementById('boot-overlay');
+    const activateButton = document.getElementById('activate-button');
+    const terminalText = document.getElementById('terminal-text');
     const music = document.getElementById('background-music');
-    music.play().catch(() => {
-      console.log('Autoplay blocked. Please interact with the page to play music.');
+    const activationSound = document.getElementById('activation-sound');
+
+    // Typewriter effect for terminal text
+    function typeWriter(element, text, delay, callback) {
+      let i = 0;
+      const speed = 50; // Typing speed in milliseconds
+      function type() {
+        if (i < text.length) {
+          element.innerHTML += text.charAt(i);
+          i++;
+          setTimeout(type, speed);
+        } else if (callback) {
+          callback();
+        }
+      }
+      setTimeout(type, delay);
+    }
+
+    // Animate terminal text
+    const lines = terminalText.querySelectorAll('p');
+    let delay = 0;
+    lines.forEach((line, index) => {
+      const text = line.textContent;
+      line.textContent = ''; // Clear the text initially
+      typeWriter(line, text, delay, () => {
+        if (index === lines.length - 1) {
+          // Show activate button after last line
+          activateButton.style.display = 'block';
+        }
+      });
+      delay += text.length * 50 + 500; // Add delay between lines
+    });
+
+    // Activate button click handler
+    activateButton.addEventListener('click', () => {
+      // Play activation sound
+      activationSound.play();
+
+      // Start music
+      music.play().catch(() => {
+        console.log('Autoplay blocked. Please interact with the page to play music.');
+      });
+
+      // Hide boot overlay
+      bootOverlay.style.display = 'none';
+
+      // Show the rest of the page
+      document.getElementById('terminal-background').style.opacity = '1';
+      document.getElementById('globe').style.opacity = '1';
+      document.querySelector('.sidebar').style.opacity = '1';
     });
   </script>
 </body>
