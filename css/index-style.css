@@ -1,0 +1,77 @@
+@font-face {
+  font-family: 'Britannic';
+  src: url('../fonts/britannic-regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Gray background layer */
+.gray-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #333; /* Gray background */
+  z-index: -2; /* Behind the globe */
+}
+
+body {
+  background-color: #000; /* Black background */
+  color: #00ff00; /* Green text for terminal look */
+  font-family: 'Britannic', monospace;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent scrolling */
+  position: relative;
+  cursor: url('../textures/custom-cursor.png'), auto; /* Custom cursor */
+}
+
+/* Apply custom cursor to all interactive elements */
+a, button, input, textarea, .tab {
+  cursor: url('../textures/custom-cursor.png'), auto; /* Custom cursor for interactive states */
+}
+
+/* Globe canvas */
+#globe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* Above the gray background */
+}
+
+/* Sidebar and tabs */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 80px; /* Width of the sidebar */
+  background-color: rgba(40, 45, 40, 0.9); /* Dark greenish-gray background */
+  z-index: 1; /* Above the globe */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px; /* Space between tabs */
+  padding: 20px 0;
+}
+
+.tab {
+  background-color: rgba(60, 65, 60, 0.9); /* Slightly lighter greenish-gray */
+  color: #00ff00; /* Green text */
+  text-decoration: none;
+  padding: 15px 20px;
+  border-radius: 5px;
+  text-align: center;
+  width: 70px; /* Fixed width for tabs */
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  font-size: 14px;
+}
+
+.tab:hover {
+  background-color: rgba(80, 85, 80, 0.9); /* Hover effect */
+  transform: translateX(10px); /* Slide out slightly on hover */
+}
