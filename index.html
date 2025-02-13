@@ -7,6 +7,11 @@
   <link rel="stylesheet" href="css/index-style.css"> <!-- Link to CSS -->
 </head>
 <body>
+  <!-- Logo screen -->
+  <div id="logo-screen">
+    <img src="textures/logo.png" alt="Logo">
+  </div>
+
   <!-- Overlay for boot-up sequence -->
   <div id="boot-overlay">
     <div id="terminal-text">
@@ -55,6 +60,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.21/vanta.cells.min.js"></script>
   <script src="js/globe.js"></script>
   <script>
+    // Logo screen
+    const logoScreen = document.getElementById('logo-screen');
+    setTimeout(() => {
+      logoScreen.style.display = 'none'; // Hide logo after 2 seconds
+    }, 2000);
+
     // Vanta.js Cells Background
     VANTA.CELLS({
       el: "#vanta-background",
@@ -64,10 +75,9 @@
       minHeight: 200.00,
       minWidth: 200.00,
       scale: 1.00,
-      color1: 0x43614f,
-      color2: 0x9d9d9d,
-      size: 1.40,
-      speed: 0.70
+      color1: 0x931a1a,
+      color2: 0x98211d,
+      size: 0.30
     });
 
     // Boot-up sequence
