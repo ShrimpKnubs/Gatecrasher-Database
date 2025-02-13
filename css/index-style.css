@@ -1,3 +1,20 @@
+@font-face {
+  font-family: 'Britannic';
+  src: url('fonts/britannic-regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Custom cursor */
+body {
+  cursor: url('textures/custom-cursor.png'), auto;
+}
+
+/* Apply custom cursor to all interactive elements */
+a, button, input, textarea, .tab {
+  cursor: url('textures/custom-cursor.png'), auto;
+}
+
 /* Terminal background */
 #terminal-background {
   position: fixed;
@@ -24,14 +41,14 @@
   top: 0;
   left: 0;
   height: 100%;
-  width: 80px;
-  background-color: rgba(40, 45, 40, 0.9);
+  width: 120px; /* Increased width */
+  background-color: transparent; /* Removed grayish-green background */
   z-index: 1; /* Above the globe */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 40px; /* Increased spacing between tabs */
   padding: 20px 0;
 }
 
@@ -39,15 +56,16 @@
   background-color: rgba(60, 65, 60, 0.9);
   color: #00ff00;
   text-decoration: none;
-  padding: 15px 20px;
+  padding: 20px 30px; /* Increased padding */
   border-radius: 5px;
   text-align: center;
-  width: 70px;
+  width: 100px; /* Increased width */
   transition: background-color 0.3s ease, transform 0.3s ease;
-  font-size: 14px;
+  font-size: 18px; /* Increased font size */
+  font-family: 'Britannic', monospace; /* Use custom font */
 }
 
 .tab:hover {
   background-color: rgba(80, 85, 80, 0.9);
-  transform: translateX(10px);
+  transform: translateX(20px); /* Increased slide-out distance */
 }

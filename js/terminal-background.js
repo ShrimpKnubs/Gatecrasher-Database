@@ -1,15 +1,14 @@
 const background = document.getElementById('terminal-background');
 const colors = {
   background: '#1a1c1a',
-  numbers: '#2a2c2a',
-  triangles: '#4d663f'
+  numbers: '#2a2c2a'
 };
 
 // Generate random numbers
 function generateNumbers() {
   const numbers = '0123456789';
   let content = '';
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 2000; i++) { // Increase the number of characters
     content += numbers[Math.floor(Math.random() * numbers.length)] + ' ';
   }
   return content;
@@ -34,7 +33,7 @@ function createBackground() {
   numbers.style.width = '100%';
   numbers.style.height = '100%';
   numbers.style.color = colors.numbers;
-  numbers.style.fontFamily = 'monospace';
+  numbers.style.fontFamily = 'Britannic, monospace'; // Use custom font
   numbers.style.fontSize = '14px';
   numbers.style.lineHeight = '1.5';
   numbers.style.opacity = '0.5';
@@ -42,34 +41,10 @@ function createBackground() {
   numbers.textContent = generateNumbers();
   background.appendChild(numbers);
 
-  // Add triangles
+  // Update numbers every second
   setInterval(() => {
-    const triangle = document.createElement('div');
-    triangle.style.position = 'absolute';
-    triangle.style.top = `${Math.random() * 100}%`;
-    triangle.style.left = `${Math.random() * 100}%`;
-    triangle.style.width = `${Math.random() * 50 + 20}px`;
-    triangle.style.height = `${Math.random() * 50 + 20}px`;
-    triangle.style.backgroundColor = 'transparent';
-    triangle.style.borderLeft = `solid ${colors.triangles}`;
-    triangle.style.borderRight = `solid transparent`;
-    triangle.style.borderBottom = `solid transparent`;
-    triangle.style.transform = 'rotate(45deg)';
-    triangle.style.opacity = '0';
-    triangle.style.transition = 'opacity 2s ease-in-out';
-    background.appendChild(triangle);
-
-    // Fade in and out
-    setTimeout(() => {
-      triangle.style.opacity = '0.5';
-    }, 100);
-    setTimeout(() => {
-      triangle.style.opacity = '0';
-    }, 2000);
-    setTimeout(() => {
-      triangle.remove();
-    }, 4000);
-  }, 1000); // Add a new triangle every second
+    numbers.textContent = generateNumbers();
+  }, 1000);
 }
 
 // Initialize the background

@@ -18,12 +18,9 @@ const texture = textureLoader.load('textures/earth.jpg', () => {
   console.error('Error loading Earth texture:', error);
 });
 
-// Globe material (light gray with subtle shading)
-const material = new THREE.MeshPhongMaterial({
+// Globe material (matte, non-reflective)
+const material = new THREE.MeshLambertMaterial({
   map: texture, // Use the loaded texture
-  emissive: 0x000000,
-  specular: 0x555555,
-  shininess: 30,
   transparent: true,
   opacity: 0.95
 });
@@ -33,13 +30,9 @@ const geometry = new THREE.SphereGeometry(3, 64, 64); // High-resolution sphere
 const globe = new THREE.Mesh(geometry, material);
 scene.add(globe);
 
-// Lighting
+// Lighting (minimal, no specular highlights)
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft light
 scene.add(ambientLight);
-
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight.position.set(5, 3, 5); // Light from top-right
-scene.add(directionalLight);
 
 // Camera position
 camera.position.z = 7;
