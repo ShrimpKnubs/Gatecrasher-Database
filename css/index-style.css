@@ -1,21 +1,14 @@
 @font-face {
-  font-family: 'Britannic';
-  src: url('./fonts/britannic-regular.otf') format('opentype'); /* Ensure path is correct */
+  font-family: 'BlackOpsOne';
+  src: url('./fonts/BlackOpsOne-Regular.ttf') format('truetype'); /* Ensure path is correct */
   font-weight: normal;
   font-style: normal;
 }
 
 /* Apply font globally */
-body {
-  font-family: 'Britannic', monospace !important; /* Force font */
-  margin: 0;
-  padding: 0;
-  overflow: hidden; /* Prevent scrolling */
-}
-
-/* Custom cursor */
-body, a, .tab, button {
-  cursor: url('./textures/custom-cursor.png'), auto !important; /* Force cursor */
+* {
+  font-family: 'BlackOpsOne', monospace !important; /* Force font */
+  cursor: url('./textures/custom-cursor.png'), auto !important; /* Force custom cursor */
 }
 
 /* Boot overlay */
@@ -61,21 +54,48 @@ body, a, .tab, button {
   background-color: #4d663f; /* Darker green on hover */
 }
 
+/* Volume control */
+#volume-control {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#volume-icon {
+  font-size: 24px;
+  cursor: pointer;
+}
+
+#volume-slider {
+  width: 100px;
+  cursor: pointer;
+  display: none; /* Hidden initially */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#volume-control:hover #volume-slider {
+  display: block; /* Show slider on hover */
+  opacity: 1;
+}
+
 /* Hide everything initially */
-#terminal-background, #globe, .sidebar {
+#vanta-background, #globe, .sidebar {
   opacity: 0;
 }
 
-/* Terminal background */
-#terminal-background {
+/* Vanta.js Cells Background */
+#vanta-background {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #1a1c1a; /* Dark background */
   z-index: -2; /* Behind the globe */
-  overflow: hidden;
 }
 
 /* Globe canvas */
@@ -115,7 +135,6 @@ body, a, .tab, button {
   width: 120px; /* Wider tabs */
   transition: transform 0.3s ease-out; /* Smooth animation */
   font-size: 24px; /* Bigger text */
-  font-family: 'Britannic', monospace; /* Use custom font */
   margin-left: -40px; /* Expand left */
 }
 
