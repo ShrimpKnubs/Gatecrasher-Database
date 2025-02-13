@@ -1,23 +1,26 @@
-/* Ensure the Vanta.js background covers the entire screen */
+/* index-style.css */
+@font-face {
+  font-family: 'BlackOpsOne';
+  src: url('../fonts/BlackOpsOne-Regular.ttf') format('truetype');
+}
+
+* {
+  font-family: 'BlackOpsOne', sans-serif !important;
+  cursor: url('../textures/custom-cursor.png'), auto !important;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 #vanta-background {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: -1; /* Place it behind everything */
+  z-index: -1;
 }
 
-/* Hide everything initially */
-#logo-screen,
-#boot-overlay,
-#globe,
-.sidebar {
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-/* Logo screen */
 #logo-screen {
   position: fixed;
   top: 0;
@@ -27,154 +30,79 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #1a1c1a; /* Dark background */
-  z-index: 10000; /* Above everything */
+  background: #1a1c1a;
+  z-index: 10000;
 }
 
-#logo-screen img {
-  max-width: 100%;
-  max-height: 100%;
-}
-
-/* Boot overlay */
 #boot-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #1a1c1a; /* Dark background */
-  z-index: 9999; /* Above everything */
+  background: #1a1c1a;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  color: ivory;
 }
 
-#terminal-text {
-  color: ivory; /* Ivory text */
-  text-align: center;
-  font-size: 18px;
-  line-height: 1.5;
-  margin-bottom: 20px;
+#globe {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
-#terminal-text p {
-  margin: 0;
-  opacity: 1;
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  padding: 20px 0;
 }
 
-#activate-button {
-  background-color: ivory; /* Ivory button */
-  color: #1a1c1a; /* Dark text */
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  display: none; /* Hidden initially */
+.tab {
+  background: rgba(60,65,60,0.9);
+  color: ivory;
+  padding: 30px 60px;
+  text-decoration: none;
+  width: 120px;
+  margin-left: -40px;
+  transition: transform 0.3s ease-out;
 }
 
-#activate-button:hover {
-  background-color: #dcdcdc; /* Light gray on hover */
+.tab:hover {
+  transform: translateX(40px);
+  background: rgba(80,85,80,0.9);
 }
 
-/* Volume control */
 #volume-control {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 9999;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-#volume-icon {
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-}
-
 #volume-slider {
   width: 100px;
-  cursor: pointer;
-  display: none; /* Hidden initially */
+  display: none;
   opacity: 0;
   transition: opacity 0.3s ease;
-  background: #333; /* Dark gray background */
-  -webkit-appearance: none; /* Remove default styling */
-  appearance: none;
-  height: 4px;
-  border-radius: 2px;
-}
-
-#volume-slider::-webkit-slider-runnable-track {
-  background: #333; /* Dark gray background */
-  height: 4px;
-  border-radius: 2px;
-}
-
-#volume-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  background: white; /* White thumb */
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-#volume-slider::-moz-range-track {
-  background: #333; /* Dark gray background */
-  height: 4px;
-  border-radius: 2px;
-}
-
-#volume-slider::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  background: white; /* White thumb */
-  border-radius: 50%;
-  cursor: pointer;
 }
 
 #volume-control:hover #volume-slider {
-  display: block; /* Show slider on hover */
+  display: block;
   opacity: 1;
-}
-
-/* Sidebar and tabs */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 160px; /* Wider sidebar */
-  z-index: 1; /* Above the globe */
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start; /* Align tabs to the left */
-  justify-content: center;
-  gap: 60px; /* More spacing between tabs */
-  padding: 20px 0;
-  background-color: transparent; /* Remove grayish-green background */
-}
-
-.tab {
-  background-color: rgba(60, 65, 60, 0.9);
-  color: ivory; /* Ivory white text */
-  text-decoration: none;
-  padding: 30px 60px; /* Larger padding to expand left */
-  border-radius: 0; /* Straight corners */
-  text-align: center;
-  width: 120px; /* Wider tabs */
-  transition: transform 0.3s ease-out; /* Smooth animation */
-  font-size: 24px; /* Bigger text */
-  margin-left: -40px; /* Expand left */
-}
-
-.tab:hover {
-  background-color: rgba(80, 85, 80, 0.9);
-  transform: translateX(40px); /* Expand further left on hover */
 }

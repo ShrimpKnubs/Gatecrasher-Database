@@ -7,12 +7,15 @@
   <link rel="stylesheet" href="css/index-style.css">
 </head>
 <body>
+  <!-- Vanta.js Cells Background -->
+  <div id="vanta-background"></div>
+
   <!-- Logo screen -->
   <div id="logo-screen">
     <img src="textures/logo.png" alt="Logo">
   </div>
 
-  <!-- Overlay for boot-up sequence -->
+  <!-- Boot overlay -->
   <div id="boot-overlay">
     <div id="terminal-text">
       <p>> INITIALIZING SYSTEM...</p>
@@ -30,56 +33,46 @@
     <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
   </div>
 
-  <!-- Vanta.js Clouds Background -->
-  <div id="vanta-background"></div>
-
   <!-- Globe canvas -->
   <canvas id="globe"></canvas>
 
-  <!-- Sidebar with tabs -->
+  <!-- Sidebar -->
   <div class="sidebar">
     <a href="pages/map.html" class="tab">Map</a>
     <a href="pages/missions.html" class="tab">Missions</a>
     <a href="pages/intel.html" class="tab">Intel</a>
   </div>
 
-  <!-- Background music -->
+  <!-- Audio elements -->
   <audio id="background-music" loop>
     <source src="music/background-music.mp3" type="audio/mpeg">
-    Your browser does not support the audio element.
   </audio>
-
-  <!-- Activation sound -->
   <audio id="activation-sound">
     <source src="sounds/activation-sound.mp3" type="audio/mpeg">
-    Your browser does not support the audio element.
   </audio>
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.21/vanta.clouds.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.21/dist/vanta.cells.min.js"></script>
   <script>
-    // Logo screen
-    const logoScreen = document.getElementById('logo-screen');
-    setTimeout(() => {
-      logoScreen.style.display = 'none'; // Hide logo after 2 seconds
-    }, 2000);
-
-    // Vanta.js Clouds Background
-    VANTA.CLOUDS({
+    // Initialize Vanta.js Cells Background
+    VANTA.CELLS({
       el: "#vanta-background",
       mouseControls: true,
       touchControls: true,
       gyroControls: false,
       minHeight: 200.00,
       minWidth: 200.00,
-      backgroundColor: 0x0,
-      skyColor: 0x2f0101,
-      cloudColor: 0x222222,
-      sunColor: 0xfc8200,
-      sunGlareColor: 0xa20000,
-      sunlightColor: 0xc50000
+      scale: 1.00,
+      color1: 0x931a1a,
+      color2: 0x98211d,
+      size: 0.30
     });
+
+    // Logo screen timeout
+    setTimeout(() => {
+      document.getElementById('logo-screen').style.display = 'none';
+    }, 2000);
 
     // Boot-up sequence
     const bootOverlay = document.getElementById('boot-overlay');
@@ -88,18 +81,16 @@
     const music = document.getElementById('background-music');
     const activationSound = document.getElementById('activation-sound');
 
-    // Typewriter effect for terminal text
+    // Typewriter effect
     function typeWriter(element, text, delay, callback) {
       let i = 0;
-      const speed = 25; // Faster typing speed (doubled)
+      const speed = 25;
       function type() {
         if (i < text.length) {
           element.innerHTML += text.charAt(i);
           i++;
           setTimeout(type, speed);
-        } else if (callback) {
-          callback();
-        }
+        } else if (callback) callback();
       }
       setTimeout(type, delay);
     }
@@ -109,160 +100,105 @@
     let delay = 0;
     lines.forEach((line, index) => {
       const text = line.textContent;
-      line.textContent = ''; // Clear the text initially
+      line.textContent = '';
       typeWriter(line, text, delay, () => {
         if (index === lines.length - 1) {
-          // Show activate button after last line
           activateButton.style.display = 'block';
         }
       });
-      delay += text.length * 25 + 250; // Add delay between lines (doubled speed)
+      delay += text.length * 25 + 250;
     });
 
-    // Activate button click handler
+    // Activation handler
     activateButton.addEventListener('click', () => {
-      // Play activation sound
       activationSound.play();
-
-      // Start music
-      music.play().catch(() => {
-        console.log('Autoplay blocked. Please interact with the page to play music.');
-      });
-
-      // Hide boot overlay
+      music.play().catch(console.log);
       bootOverlay.style.display = 'none';
-
-      // Show the rest of the page
       document.getElementById('vanta-background').style.opacity = '1';
       document.getElementById('globe').style.opacity = '1';
       document.querySelector('.sidebar').style.opacity = '1';
     });
 
-    // Volume slider functionality
+    // Volume control
     const volumeIcon = document.getElementById('volume-icon');
     const volumeSlider = document.getElementById('volume-slider');
     let isSliderVisible = false;
 
-    volumeIcon.addEventListener('mouseenter', () => {
-      isSliderVisible = true;
-      volumeSlider.style.display = 'block'; // Show slider on hover
-    });
+    volumeIcon.addEventListener('mouseenter', () => isSliderVisible = true);
+    volumeIcon.addEventListener('mouseleave', () => isSliderVisible = false);
+    volumeSlider.addEventListener('mouseenter', () => isSliderVisible = true);
+    volumeSlider.addEventListener('mouseleave', () => isSliderVisible = false);
+    
+    volumeSlider.addEventListener('input', (e) => music.volume = e.target.value);
 
-    volumeIcon.addEventListener('mouseleave', () => {
-      isSliderVisible = false;
-      setTimeout(() => {
-        if (!isSliderVisible) {
-          volumeSlider.style.display = 'none'; // Hide slider after delay
-        }
-      }, 300); // Delay before hiding
-    });
-
-    volumeSlider.addEventListener('mouseenter', () => {
-      isSliderVisible = true;
-    });
-
-    volumeSlider.addEventListener('mouseleave', () => {
-      isSliderVisible = false;
-      setTimeout(() => {
-        if (!isSliderVisible) {
-          volumeSlider.style.display = 'none'; // Hide slider after delay
-        }
-      }, 300); // Delay before hiding
-    });
-
-    volumeSlider.addEventListener('input', () => {
-      music.volume = volumeSlider.value; // Adjust music volume
-    });
-
-    // Globe Script
+    // Globe initialization
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-    // Create the renderer with a transparent background
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({
       canvas: document.getElementById('globe'),
       antialias: true,
       alpha: true
     });
-    renderer.setClearColor(0x000000, 0); // Set background to transparent
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Load country borders
+    // Country borders
     fetch('data/countries.json')
-      .then(response => response.json())
+      .then(r => r.json())
       .then(data => {
         data.features.forEach(feature => {
-          const coordinates = feature.geometry.coordinates;
-          const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff }); // White borders
           const lineGeometry = new THREE.BufferGeometry();
           const points = [];
-
-          coordinates.forEach(polygon => {
+          
+          feature.geometry.coordinates.forEach(polygon => {
             polygon.forEach(point => {
-              const lat = point[1];
-              const lon = point[0];
-              const phi = (90 - lat) * (Math.PI / 180);
-              const theta = (lon + 180) * (Math.PI / 180);
-              const x = -10 * Math.sin(phi) * Math.cos(theta); // 2x larger
-              const y = 10 * Math.cos(phi);
-              const z = 10 * Math.sin(phi) * Math.sin(theta);
-              points.push(new THREE.Vector3(x, y, z));
+              const lat = point[1], lon = point[0];
+              const phi = (90 - lat) * Math.PI/180;
+              const theta = (lon + 180) * Math.PI/180;
+              points.push(new THREE.Vector3(
+                -10 * Math.sin(phi) * Math.cos(theta),
+                10 * Math.cos(phi),
+                10 * Math.sin(phi) * Math.sin(theta)
+              );
             });
           });
-
+          
           lineGeometry.setFromPoints(points);
-          const line = new THREE.Line(lineGeometry, lineMaterial);
-          scene.add(line);
+          scene.add(new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: 0xffffff})));
         });
       });
 
-    // Create custom latitude/longitude grid
-    const gridMaterial = new THREE.LineBasicMaterial({ color: 0x808080 }); // Gray for grid
+    // Latitude/Longitude grid
+    const gridMaterial = new THREE.LineBasicMaterial({color: 0x808080});
     const gridGeometry = new THREE.BufferGeometry();
     const gridPoints = [];
-
-    // Latitude lines (horizontal)
-    for (let lat = -90; lat <= 90; lat += 10) {
-      const phi = (90 - lat) * (Math.PI / 180);
-      for (let lon = -180; lon <= 180; lon += 10) {
-        const theta = (lon + 180) * (Math.PI / 180);
-        const x = -10 * Math.sin(phi) * Math.cos(theta);
-        const y = 10 * Math.cos(phi);
-        const z = 10 * Math.sin(phi) * Math.sin(theta);
-        gridPoints.push(new THREE.Vector3(x, y, z));
+    
+    // Grid generation code
+    for(let lat = -90; lat <= 90; lat += 10) {
+      const phi = (90 - lat) * Math.PI/180;
+      for(let lon = -180; lon <= 180; lon += 10) {
+        const theta = (lon + 180) * Math.PI/180;
+        gridPoints.push(new THREE.Vector3(
+          -10 * Math.sin(phi) * Math.cos(theta),
+          10 * Math.cos(phi),
+          10 * Math.sin(phi) * Math.sin(theta)
+        );
       }
     }
-
-    // Longitude lines (vertical)
-    for (let lon = -180; lon <= 180; lon += 10) {
-      const theta = (lon + 180) * (Math.PI / 180);
-      for (let lat = -90; lat <= 90; lat += 10) {
-        const phi = (90 - lat) * (Math.PI / 180);
-        const x = -10 * Math.sin(phi) * Math.cos(theta);
-        const y = 10 * Math.cos(phi);
-        const z = 10 * Math.sin(phi) * Math.sin(theta);
-        gridPoints.push(new THREE.Vector3(x, y, z));
-      }
-    }
-
+    
     gridGeometry.setFromPoints(gridPoints);
-    const grid = new THREE.Line(gridGeometry, gridMaterial);
-    scene.add(grid);
+    scene.add(new THREE.Line(gridGeometry, gridMaterial));
 
-    // Position the camera
-    camera.position.z = 20; // Zoom in closer to the globe
-
-    // Animation loop
+    camera.position.z = 20;
+    
     function animate() {
       requestAnimationFrame(animate);
-      scene.rotation.y += 0.0005; // Rotate the globe very slowly
+      scene.rotation.y += 0.0005;
       renderer.render(scene, camera);
     }
     animate();
 
-    // Handle window resizing
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.aspect = window.innerWidth/window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
