@@ -30,7 +30,7 @@
     <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
   </div>
 
-  <!-- Vanta.js Cells Background -->
+  <!-- Vanta.js Waves Background -->
   <div id="vanta-background"></div>
 
   <!-- Globe canvas -->
@@ -57,7 +57,7 @@
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.21/vanta.cells.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.21/vanta.waves.min.js"></script>
   <script>
     // Logo screen
     const logoScreen = document.getElementById('logo-screen');
@@ -65,8 +65,8 @@
       logoScreen.style.display = 'none'; // Hide logo after 2 seconds
     }, 2000);
 
-    // Vanta.js Cells Background
-    VANTA.CELLS({
+    // Vanta.js Waves Background
+    VANTA.WAVES({
       el: "#vanta-background",
       mouseControls: true,
       touchControls: true,
@@ -74,9 +74,12 @@
       minHeight: 200.00,
       minWidth: 200.00,
       scale: 1.00,
-      color1: 0x931a1a,
-      color2: 0x98211d,
-      size: 0.30
+      scaleMobile: 1.00,
+      color: 0x4d1111,
+      shininess: 0.00,
+      waveHeight: 9.50,
+      waveSpeed: 0.90,
+      zoom: 0.96
     });
 
     // Boot-up sequence
@@ -214,34 +217,38 @@
         });
       });
 
-    // Load latitude/longitude grid
-    fetch('data/rectangle.geojson')
-      .then(response => response.json())
-      .then(data => {
-        data.features.forEach(feature => {
-          const coordinates = feature.geometry.coordinates;
-          const lineMaterial = new THREE.LineBasicMaterial({ color: 0x808080 }); // Gray for grid
-          const lineGeometry = new THREE.BufferGeometry();
-          const points = [];
+    // Create custom latitude/longitude grid
+    const gridMaterial = new THREE.LineBasicMaterial({ color: 0x808080 }); // Gray for grid
+    const gridGeometry = new THREE.BufferGeometry();
+    const gridPoints = [];
 
-          coordinates.forEach(polygon => {
-            polygon.forEach(point => {
-              const lat = point[1];
-              const lon = point[0];
-              const phi = (90 - lat) * (Math.PI / 180);
-              const theta = (lon + 180) * (Math.PI / 180);
-              const x = -10 * Math.sin(phi) * Math.cos(theta); // 2x larger
-              const y = 10 * Math.cos(phi);
-              const z = 10 * Math.sin(phi) * Math.sin(theta);
-              points.push(new THREE.Vector3(x, y, z));
-            });
-          });
+    // Latitude lines (horizontal)
+    for (let lat = -90; lat <= 90; lat += 10) {
+      const phi = (90 - lat) * (Math.PI / 180);
+      for (let lon = -180; lon <= 180; lon += 10) {
+        const theta = (lon + 180) * (Math.PI / 180);
+        const x = -10 * Math.sin(phi) * Math.cos(theta);
+        const y = 10 * Math.cos(phi);
+        const z = 10 * Math.sin(phi) * Math.sin(theta);
+        gridPoints.push(new THREE.Vector3(x, y, z));
+      }
+    }
 
-          lineGeometry.setFromPoints(points);
-          const line = new THREE.Line(lineGeometry, lineMaterial);
-          scene.add(line);
-        });
-      });
+    // Longitude lines (vertical)
+    for (let lon = -180; lon <= 180; lon += 10) {
+      const theta = (lon + 180) * (Math.PI / 180);
+      for (let lat = -90; lat <= 90; lat += 10) {
+        const phi = (90 - lat) * (Math.PI / 180);
+        const x = -10 * Math.sin(phi) * Math.cos(theta);
+        const y = 10 * Math.cos(phi);
+        const z = 10 * Math.sin(phi) * Math.sin(theta);
+        gridPoints.push(new THREE.Vector3(x, y, z));
+      }
+    }
+
+    gridGeometry.setFromPoints(gridPoints);
+    const grid = new THREE.Line(gridGeometry, gridMaterial);
+    scene.add(grid);
 
     // Position the camera
     camera.position.z = 20; // Zoom in closer to the globe
