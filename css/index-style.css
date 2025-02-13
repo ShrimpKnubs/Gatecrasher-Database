@@ -1,45 +1,18 @@
 @font-face {
   font-family: 'Britannic';
-  src: url('../fonts/britannic-regular.otf') format('opentype');
+  src: url('fonts/britannic-regular.otf') format('opentype'); /* Updated path */
   font-weight: normal;
   font-style: normal;
 }
 
-/* Gray background layer */
-.gray-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #333; /* Gray background */
-  z-index: -2; /* Behind the globe */
-}
-
+/* Custom cursor */
 body {
-  background-color: #000; /* Black background */
-  color: #00ff00; /* Green text for terminal look */
-  font-family: 'Britannic', monospace;
-  margin: 0;
-  padding: 0;
-  overflow: hidden; /* Prevent scrolling */
-  position: relative;
-  cursor: url('../textures/custom-cursor.png'), auto; /* Custom cursor */
+  cursor: url('textures/custom-cursor.png'), auto; /* Updated path */
 }
 
 /* Apply custom cursor to all interactive elements */
 a, button, input, textarea, .tab {
-  cursor: url('../textures/custom-cursor.png'), auto; /* Custom cursor for interactive states */
-}
-
-/* Globe canvas */
-#globe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0; /* Above the gray background */
+  cursor: url('textures/custom-cursor.png'), auto; /* Updated path */
 }
 
 /* Sidebar and tabs */
