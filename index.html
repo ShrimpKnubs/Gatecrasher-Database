@@ -7,15 +7,15 @@
   <link rel="stylesheet" href="css/index-style.css">
 </head>
 <body>
-  <!-- Vanta.js Cells Background -->
+  <!-- Background Elements -->
   <div id="vanta-background"></div>
+  <canvas id="globe"></canvas>
 
-  <!-- Logo screen -->
+  <!-- UI Layers -->
   <div id="logo-screen">
     <img src="textures/logo.png" alt="Logo">
   </div>
 
-  <!-- Boot overlay -->
   <div id="boot-overlay">
     <div id="terminal-text">
       <p>> INITIALIZING SYSTEM...</p>
@@ -27,23 +27,22 @@
     <button id="activate-button">ACTIVATE</button>
   </div>
 
-  <!-- Volume slider -->
+  <div id="image-panel">
+    <img src="" alt="Intel Photo" id="tab-image">
+  </div>
+
+  <div class="sidebar">
+    <a href="#" class="tab" data-img="tab1.png">STRAT MAP</a>
+    <a href="#" class="tab" data-img="tab2.png">MISSIONS</a>
+    <a href="#" class="tab" data-img="tab3.png">INTEL</a>
+  </div>
+
   <div id="volume-control">
-    <img id="volume-icon" src="textures/volume.png" alt="Volume Icon">
+    <img id="volume-icon" src="textures/volume.png" alt="Volume">
     <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
   </div>
 
-  <!-- Globe canvas -->
-  <canvas id="globe"></canvas>
-
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <a href="pages/map.html" class="tab">Map</a>
-    <a href="pages/missions.html" class="tab">Missions</a>
-    <a href="pages/intel.html" class="tab">Intel</a>
-  </div>
-
-  <!-- Audio elements -->
+  <!-- Audio Elements -->
   <audio id="background-music" loop>
     <source src="music/background-music.mp3" type="audio/mpeg">
   </audio>
@@ -53,35 +52,37 @@
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.21/dist/vanta.cells.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.21/vanta.clouds.min.js"></script>
   <script>
-    // Initialize Vanta.js Cells Background
-    VANTA.CELLS({
+    // Initialize Vanta.js Background
+    const vantaEffect = VANTA.CLOUDS({
       el: "#vanta-background",
       mouseControls: true,
       touchControls: true,
       gyroControls: false,
       minHeight: 200.00,
       minWidth: 200.00,
-      scale: 1.00,
-      color1: 0x931a1a,
-      color2: 0x98211d,
-      size: 0.30
+      backgroundColor: 0x0,
+      skyColor: 0x2f0101,
+      cloudColor: 0x222222,
+      sunColor: 0xfc8200,
+      sunGlareColor: 0xa20000,
+      sunlightColor: 0xc50000
     });
 
-    // Logo screen timeout
+    // Logo Screen Handling
     setTimeout(() => {
       document.getElementById('logo-screen').style.display = 'none';
     }, 2000);
 
-    // Boot-up sequence
+    // Boot Sequence System
     const bootOverlay = document.getElementById('boot-overlay');
     const activateButton = document.getElementById('activate-button');
     const terminalText = document.getElementById('terminal-text');
     const music = document.getElementById('background-music');
     const activationSound = document.getElementById('activation-sound');
 
-    // Typewriter effect
+    // Typewriter Functionality
     function typeWriter(element, text, delay, callback) {
       let i = 0;
       const speed = 25;
@@ -95,43 +96,41 @@
       setTimeout(type, delay);
     }
 
-    // Animate terminal text
+    // Animate Terminal
     const lines = terminalText.querySelectorAll('p');
     let delay = 0;
+    activateButton.style.display = 'none';
+    
     lines.forEach((line, index) => {
       const text = line.textContent;
       line.textContent = '';
       typeWriter(line, text, delay, () => {
         if (index === lines.length - 1) {
           activateButton.style.display = 'block';
+          activateButton.style.opacity = '0';
+          setTimeout(() => {
+            activateButton.style.opacity = '1';
+          }, 100);
         }
       });
       delay += text.length * 25 + 250;
     });
 
-    // Activation handler
+    // Activation Protocol
     activateButton.addEventListener('click', () => {
       activationSound.play();
-      music.play().catch(console.log);
+      music.play().catch(console.error);
       bootOverlay.style.display = 'none';
-      document.getElementById('vanta-background').style.opacity = '1';
-      document.getElementById('globe').style.opacity = '1';
       document.querySelector('.sidebar').style.opacity = '1';
     });
 
-    // Volume control
-    const volumeIcon = document.getElementById('volume-icon');
+    // Volume Control System
     const volumeSlider = document.getElementById('volume-slider');
-    let isSliderVisible = false;
+    volumeSlider.addEventListener('input', (e) => {
+      music.volume = e.target.value;
+    });
 
-    volumeIcon.addEventListener('mouseenter', () => isSliderVisible = true);
-    volumeIcon.addEventListener('mouseleave', () => isSliderVisible = false);
-    volumeSlider.addEventListener('mouseenter', () => isSliderVisible = true);
-    volumeSlider.addEventListener('mouseleave', () => isSliderVisible = false);
-    
-    volumeSlider.addEventListener('input', (e) => music.volume = e.target.value);
-
-    // Globe initialization
+    // Globe Visualization Core
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({
@@ -141,55 +140,42 @@
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Country borders
-    fetch('data/countries.json')
-      .then(r => r.json())
-      .then(data => {
-        data.features.forEach(feature => {
-          const lineGeometry = new THREE.BufferGeometry();
-          const points = [];
-          
-          feature.geometry.coordinates.forEach(polygon => {
-            polygon.forEach(point => {
-              const lat = point[1], lon = point[0];
-              const phi = (90 - lat) * Math.PI/180;
-              const theta = (lon + 180) * Math.PI/180;
-              points.push(new THREE.Vector3(
-                -10 * Math.sin(phi) * Math.cos(theta),
-                10 * Math.cos(phi),
-                10 * Math.sin(phi) * Math.sin(theta)
-              );
+    // GeoJSON Processing Unit
+    function processGeoData(url, color) {
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          data.features.forEach(feature => {
+            const geometry = new THREE.BufferGeometry();
+            const points = [];
+            
+            feature.geometry.coordinates.forEach(polygon => {
+              polygon.forEach(point => {
+                const [lon, lat] = point;
+                const phi = (90 - lat) * Math.PI/180;
+                const theta = (lon + 180) * Math.PI/180;
+                points.push(new THREE.Vector3(
+                  -10 * Math.sin(phi) * Math.cos(theta),
+                  10 * Math.cos(phi),
+                  10 * Math.sin(phi) * Math.sin(theta)
+                ));
+              });
             });
+            
+            geometry.setFromPoints(points);
+            scene.add(new THREE.Line(geometry, new THREE.LineBasicMaterial({color})));
           });
-          
-          lineGeometry.setFromPoints(points);
-          scene.add(new THREE.Line(lineGeometry, new THREE.LineBasicMaterial({color: 0xffffff})));
         });
-      });
-
-    // Latitude/Longitude grid
-    const gridMaterial = new THREE.LineBasicMaterial({color: 0x808080});
-    const gridGeometry = new THREE.BufferGeometry();
-    const gridPoints = [];
-    
-    // Grid generation code
-    for(let lat = -90; lat <= 90; lat += 10) {
-      const phi = (90 - lat) * Math.PI/180;
-      for(let lon = -180; lon <= 180; lon += 10) {
-        const theta = (lon + 180) * Math.PI/180;
-        gridPoints.push(new THREE.Vector3(
-          -10 * Math.sin(phi) * Math.cos(theta),
-          10 * Math.cos(phi),
-          10 * Math.sin(phi) * Math.sin(theta)
-        );
-      }
     }
-    
-    gridGeometry.setFromPoints(gridPoints);
-    scene.add(new THREE.Line(gridGeometry, gridMaterial));
 
+    // Load Strategic Data
+    processGeoData('data/countries.geojson', 0xffffff);  // White borders
+    processGeoData('data/ne_110_coastline.json', 0xFFD700); // Gold coastlines
+
+    // Camera Configuration
     camera.position.z = 20;
-    
+
+    // Animation Sequence
     function animate() {
       requestAnimationFrame(animate);
       scene.rotation.y += 0.0005;
@@ -197,6 +183,26 @@
     }
     animate();
 
+    // Intelligence Panel Control
+    const imagePanel = document.getElementById('image-panel');
+    const tabImage = document.getElementById('tab-image');
+    let activeTab = null;
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        if(activeTab === tab) {
+          imagePanel.style.left = '-25vw';
+          activeTab = null;
+        } else {
+          tabImage.src = `textures/${tab.dataset.img}`;
+          imagePanel.style.left = '0';
+          activeTab = tab;
+        }
+      });
+    });
+
+    // Window Resize Handler
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth/window.innerHeight;
       camera.updateProjectionMatrix();
