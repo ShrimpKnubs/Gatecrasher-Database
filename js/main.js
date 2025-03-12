@@ -6,12 +6,13 @@ VANTA.CLOUDS({
   gyroControls: false,
   minHeight: 200.00,
   minWidth: 200.00,
-  backgroundColor: 0x0a1520,
-  skyColor: 0x1a2a3a,
-  cloudColor: 0x1a2530,
-  sunColor: 0x4b9fff,
-  sunGlareColor: 0x3a6a9a,
-  sunlightColor: 0x2a5a8a
+  backgroundColor: 0x1a1a1a, // Updated to match new color scheme
+  skyColor: 0x2a2a2a,
+  cloudColor: 0x3a3a3a,
+  cloudShadowColor: 0x222222,
+  sunColor: 0xe74c3c,
+  sunGlareColor: 0xe74c3c,
+  sunlightColor: 0xe6e6dc
 });
 
 // DOM Elements
@@ -22,6 +23,7 @@ const logoScreen = document.getElementById('logo-screen');
 const music = document.getElementById('background-music');
 const activationSound = document.getElementById('activation-sound');
 const tabSound = document.getElementById('tab-sound');
+const missionSound = document.getElementById('mission-sound');
 const imagePanel = document.getElementById('image-panel');
 const tabImage = document.getElementById('tab-image');
 const tabs = document.querySelectorAll('.tab');
@@ -32,17 +34,72 @@ const notification = document.getElementById('notification');
 const reticle = document.querySelector('.reticle');
 const volumeSlider = document.getElementById('volume-slider');
 const globe = document.getElementById('globe');
+const missionPanel = document.getElementById('mission-panel');
+const closeButton = document.getElementById('close-mission');
+
+// Mission Data
+const missions = [
+  {
+    id: 'mission1',
+    name: 'OPERATION BLACKOUT',
+    location: 'ALTIS - COORDINATES: 38.9072N, 77.0369E',
+    details: 'Infiltrate enemy compound to secure intel on weapons shipments. Expect heavy resistance from local militia forces. Stealth approach recommended for initial phase.',
+    objectives: '1. Secure intel documents from main building<br>2. Eliminate or neutralize militia commander<br>3. Extract to designated LZ',
+    difficulty: 'HIGH',
+    payment: '$15,000',
+    duration: '2.5 HRS',
+    teamSize: 'SQUAD (4-8)',
+    coordinates: { lat: 38.9072, lon: -77.0369 }
+  },
+  {
+    id: 'mission2',
+    name: 'OPERATION RED STORM',
+    location: 'TANOA - COORDINATES: 51.5074N, 0.1278E',
+    details: 'Rescue hostages from terrorist-held village. Heavy civilian presence in area. ROE restricts collateral damage. Night operation preferred.',
+    objectives: '1. Locate and secure all hostages<br>2. Eliminate hostile forces<br>3. Extract hostages to FOB Sierra',
+    difficulty: 'MEDIUM',
+    payment: '$12,000',
+    duration: '2 HRS',
+    teamSize: 'FIRETEAM (4)',
+    coordinates: { lat: 51.5074, lon: -0.1278 }
+  },
+  {
+    id: 'mission3',
+    name: 'OPERATION FROZEN THUNDER',
+    location: 'CHERNARUS - COORDINATES: 55.7558N, 37.6173E',
+    details: 'Sabotage enemy communications array. Weather conditions are extreme, expect temperatures below -20°C. Enemy patrols in area.',
+    objectives: '1. Infiltrate communications base<br>2. Plant explosives on main array<br>3. Destroy backup generators<br>4. Exfiltrate to extraction point',
+    difficulty: 'EXTREME',
+    payment: '$22,000',
+    duration: '3 HRS',
+    teamSize: 'PLATOON (12-16)',
+    coordinates: { lat: 55.7558, lon: 37.6173 }
+  },
+  {
+    id: 'mission4',
+    name: 'OPERATION DESERT HAWK',
+    location: 'TAKISTAN - COORDINATES: 39.9042N, 116.4074E',
+    details: 'Reconnaissance mission to gather intelligence on enemy troop movements. Maintain distance and avoid detection at all costs.',
+    objectives: '1. Establish observation point<br>2. Document enemy patrol patterns<br>3. Photograph military installations<br>4. Return with intelligence',
+    difficulty: 'LOW',
+    payment: '$8,000',
+    duration: '4 HRS',
+    teamSize: 'RECON TEAM (2-3)',
+    coordinates: { lat: 39.9042, lon: 116.4074 }
+  }
+];
 
 // System State
 let systemActive = false;
 let activeTab = null;
+let activeMission = null;
 let rotating = true;
 let targetLat = 0;
 let targetLon = 0;
 
-// Logo Screen Handling
+// Logo Screen Handling (No fading, instant transition)
 setTimeout(() => {
-  fadeOut(logoScreen, 1000);
+  logoScreen.style.display = 'none';
 }, 2000);
 
 // Boot Sequence System
@@ -89,7 +146,7 @@ function typeWriter(element, text, delay, callback) {
   setTimeout(type, delay);
 }
 
-// System Activation
+// System Activation (No fading, instant transitions for military terminal feel)
 function activateSystem() {
   systemActive = true;
   activationSound.play();
@@ -98,18 +155,8 @@ function activateSystem() {
   music.volume = volumeSlider.value;
   music.play().catch(console.error);
   
-  // Fade out boot overlay
-  fadeOut(bootOverlay, 1000);
-  
-  // Animate sidebar entrance
-  setTimeout(() => {
-    document.querySelectorAll('.tab').forEach((tab, index) => {
-      setTimeout(() => {
-        tab.style.transition = 'transform 0.5s cubic-bezier(0.215, 0.610, 0.355, 1.000)';
-        tab.style.transform = 'translateX(0)';
-      }, index * 200);
-    });
-  }, 500);
+  // Instant hide of boot overlay (no fade)
+  bootOverlay.style.display = 'none';
   
   // Initialize updating features
   updateDateTime();
@@ -122,44 +169,81 @@ function activateSystem() {
 // Tab Control System
 function initializeTabSystem() {
   tabs.forEach(tab => {
+    tab.addEventListener('mouseenter', (e) => {
+      if (!systemActive) return;
+      
+      // Play tab sound
+      if (tabSound.readyState >= 2) {
+        tabSound.currentTime = 0;
+        tabSound.play().catch(console.error);
+      }
+      
+      // Show image panel with corresponding image
+      imagePanel.style.opacity = '1';
+      imagePanel.style.pointerEvents = 'auto';
+      tabImage.src = `textures/${tab.dataset.img}`;
+      
+      // Update status
+      statusText.textContent = `STATUS: ${tab.textContent} SECTION ACTIVE`;
+    });
+    
+    tab.addEventListener('mouseleave', () => {
+      // Hide image panel when not hovering
+      imagePanel.style.opacity = '0';
+      imagePanel.style.pointerEvents = 'none';
+    });
+    
     tab.addEventListener('click', (e) => {
       e.preventDefault();
       
       if (!systemActive) return;
-      
-      // Play tab sound
-      if (tabSound.readyState >= 2) { // Check if audio is loaded
-        tabSound.currentTime = 0;
-        tabSound.play().catch(console.error);
-      }
       
       // Set active tab
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       activeTab = tab.dataset.section;
       
-      // Update status
-      statusText.textContent = `STATUS: ${tab.textContent} ACTIVE`;
-      
-      // Load image
-      tabImage.src = `textures/${tab.dataset.img}`;
-      
-      // Toggle panel
-      if (imagePanel.style.left === '0px') {
-        if (e.currentTarget === activeTab) {
-          imagePanel.style.left = '-30vw';
-          activeTab = null;
-        } else {
-          // Just update the image
-        }
-      } else {
-        imagePanel.style.left = '0px';
-      }
-      
       // Show notification
       showNotification(`${tab.textContent} SECTION ACCESSED`);
     });
   });
+}
+
+// Mission Panel System
+function initializeMissionPanel() {
+  closeButton.addEventListener('click', () => {
+    missionPanel.classList.remove('active');
+    activeMission = null;
+  });
+}
+
+function displayMission(missionId) {
+  const mission = missions.find(m => m.id === missionId);
+  if (!mission) return;
+  
+  // Play mission sound
+  if (missionSound && missionSound.readyState >= 2) {
+    missionSound.currentTime = 0;
+    missionSound.play().catch(console.error);
+  }
+  
+  // Update mission panel content
+  document.getElementById('mission-title').textContent = mission.name;
+  document.getElementById('mission-name').textContent = mission.name;
+  document.getElementById('mission-location').textContent = mission.location;
+  document.getElementById('mission-details').textContent = mission.details;
+  document.getElementById('mission-objectives').innerHTML = mission.objectives;
+  document.getElementById('mission-difficulty').textContent = mission.difficulty;
+  document.getElementById('mission-payment').textContent = mission.payment;
+  document.getElementById('mission-duration').textContent = mission.duration;
+  document.getElementById('mission-team-size').textContent = mission.teamSize;
+  
+  // Show mission panel
+  missionPanel.classList.add('active');
+  activeMission = missionId;
+  
+  // Show notification
+  showNotification(`MISSION BRIEFING: ${mission.name}`);
 }
 
 // Globe Visualization System
@@ -278,6 +362,8 @@ function initializeGlobe() {
       })
       .catch(error => {
         console.error("Error loading GeoJSON:", error);
+        // Fallback to simple sphere if data fails to load
+        createSimpleGlobe();
       });
   }
   
@@ -304,39 +390,146 @@ function initializeGlobe() {
     }
   }
   
-  // Load Data
-  loadGeoData('data/countries.geojson', 0x4b9fff);
-  loadGeoData('data/ne_110_coastline.json', 0x5a8aba);
+  // Fallback globe if GeoJSON fails
+  function createSimpleGlobe() {
+    // Create a wireframe sphere
+    const geometry = new THREE.SphereGeometry(10, 32, 32);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x4a4a4a,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.5
+    });
+    const sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+    
+    // Add longitudinal and latitudinal lines for globe effect
+    for (let i = 0; i < 18; i++) {
+      const phi = Math.PI * i / 18;
+      const circleGeometry = new THREE.CircleGeometry(10 * Math.sin(phi), 64);
+      circleGeometry.vertices.shift(); // Remove center vertex
+      const circleMaterial = new THREE.LineBasicMaterial({ color: 0x3a3a3a });
+      const circle = new THREE.Line(circleGeometry);
+      circle.position.y = 10 * Math.cos(phi);
+      circle.rotation.x = Math.PI / 2;
+      scene.add(circle);
+    }
+    
+    for (let i = 0; i < 36; i++) {
+      const theta = 2 * Math.PI * i / 36;
+      const points = [];
+      for (let j = 0; j <= 64; j++) {
+        const phi = Math.PI * j / 64;
+        points.push(new THREE.Vector3(
+          10 * Math.sin(phi) * Math.cos(theta),
+          10 * Math.cos(phi),
+          10 * Math.sin(phi) * Math.sin(theta)
+        ));
+      }
+      const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+      const lineMaterial = new THREE.LineBasicMaterial({ color: 0x3a3a3a });
+      const line = new THREE.Line(lineGeometry, lineMaterial);
+      scene.add(line);
+    }
+  }
   
-  // Add some points of interest
-  function addPOI(lat, lon, color) {
+  // Try to load GeoJSON data
+  try {
+    loadGeoData('data/countries.geojson', 0xe6e6dc); // Ivory color for countries
+    loadGeoData('data/ne_110_coastline.json', 0xe74c3c); // Saffron red for coastlines
+  } catch (error) {
+    console.error("Failed to load GeoJSON data:", error);
+    createSimpleGlobe();
+  }
+  
+  // Add mission points of interest
+  function addMissionPoint(mission) {
+    const lat = mission.coordinates.lat;
+    const lon = mission.coordinates.lon;
     const phi = (90 - lat) * Math.PI/180;
     const theta = (lon + 180) * Math.PI/180;
     
-    const geometry = new THREE.SphereGeometry(0.1, 8, 8);
-    const material = new THREE.MeshBasicMaterial({ color: color });
-    const poi = new THREE.Mesh(geometry, material);
+    // Create point marker
+    const geometry = new THREE.SphereGeometry(0.15, 8, 8);
+    const material = new THREE.MeshBasicMaterial({ color: 0xe74c3c }); // Saffron red
+    const point = new THREE.Mesh(geometry, material);
     
-    poi.position.x = -10 * Math.sin(phi) * Math.cos(theta);
-    poi.position.y = 10 * Math.cos(phi);
-    poi.position.z = 10 * Math.sin(phi) * Math.sin(theta);
+    point.position.x = -10 * Math.sin(phi) * Math.cos(theta);
+    point.position.y = 10 * Math.cos(phi);
+    point.position.z = 10 * Math.sin(phi) * Math.sin(theta);
     
-    scene.add(poi);
+    // Add mission identifier
+    point.userData = { 
+      missionId: mission.id,
+      type: 'mission-point'
+    };
+    
+    scene.add(point);
+    
+    // Add pulsing effect (ring)
+    const ringGeometry = new THREE.RingGeometry(0.2, 0.3, 32);
+    const ringMaterial = new THREE.MeshBasicMaterial({ 
+      color: 0xe74c3c,
+      transparent: true,
+      opacity: 0.7,
+      side: THREE.DoubleSide
+    });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.position.copy(point.position);
+    
+    // Orient ring to face outward from globe center
+    ring.lookAt(new THREE.Vector3(0, 0, 0));
+    scene.add(ring);
+    
+    // Store reference for animation
+    point.userData.ring = ring;
+    
+    return point;
   }
   
-  // Add some example POIs
-  addPOI(38.9072, -77.0369, 0xff3a3a); // Washington DC
-  addPOI(51.5074, -0.1278, 0xff3a3a);  // London
-  addPOI(55.7558, 37.6173, 0xff3a3a);  // Moscow
-  addPOI(39.9042, 116.4074, 0xff3a3a); // Beijing
+  // Add mission points
+  const missionPoints = missions.map(mission => addMissionPoint(mission));
+  
+  // Handle clicking on mission points
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  
+  globe.addEventListener('click', (event) => {
+    if (!systemActive) return;
+    
+    // Calculate mouse position in normalized device coordinates
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    
+    // Update the raycaster
+    raycaster.setFromCamera(mouse, camera);
+    
+    // Check for intersections with mission points
+    const intersects = raycaster.intersectObjects(missionPoints);
+    if (intersects.length > 0) {
+      const missionId = intersects[0].object.userData.missionId;
+      displayMission(missionId);
+    }
+  });
   
   // Animation Loop
   function animate() {
     requestAnimationFrame(animate);
     
+    // Rotate globe if auto-rotation is enabled
     if (rotating) {
       scene.rotation.y += 0.0005;
     }
+    
+    // Animate mission points
+    missionPoints.forEach(point => {
+      if (point.userData.ring) {
+        const ring = point.userData.ring;
+        ring.scale.x = 1 + 0.2 * Math.sin(Date.now() * 0.003);
+        ring.scale.y = 1 + 0.2 * Math.sin(Date.now() * 0.003);
+        ring.material.opacity = 0.7 * (0.5 + 0.5 * Math.sin(Date.now() * 0.003));
+      }
+    });
     
     renderer.render(scene, camera);
   }
@@ -351,28 +544,13 @@ function initializeGlobe() {
 }
 
 // Utility Functions
-function fadeOut(element, duration) {
-  let opacity = 1;
-  const interval = 10;
-  const delta = interval / duration;
-  
-  const fadeEffect = setInterval(() => {
-    if (opacity <= 0) {
-      element.style.display = 'none';
-      clearInterval(fadeEffect);
-    } else {
-      opacity -= delta;
-      element.style.opacity = opacity;
-    }
-  }, interval);
-}
-
 function showNotification(text) {
   notification.textContent = text;
   notification.style.display = 'block';
   
+  // Use setTimeout for immediate display and removal rather than fade
   setTimeout(() => {
-    fadeOut(notification, 1000);
+    notification.style.display = 'none';
   }, 3000);
 }
 
@@ -395,5 +573,16 @@ volumeSlider.addEventListener('input', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   initializeBootSequence();
   initializeTabSystem();
+  initializeMissionPanel();
   initializeGlobe();
+  
+  // Fix volume icon if not showing
+  const volumeIcon = document.getElementById('volume-icon');
+  if (volumeIcon) {
+    volumeIcon.onerror = function() {
+      // Fallback if image fails to load
+      this.style.display = 'none';
+      document.getElementById('volume-control').innerHTML += '<span style="color:#e6e6dc;">VOL</span>';
+    };
+  }
 });
