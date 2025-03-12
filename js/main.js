@@ -1,4 +1,4 @@
-// Initialize Vanta.js (Z-Index: -1) - REPLACED WITH STATIC BACKGROUND
+// Initialize background
 document.getElementById('vanta-background').style.backgroundImage = "url('textures/background.png')";
 document.getElementById('vanta-background').style.backgroundSize = "cover";
 document.getElementById('vanta-background').style.backgroundRepeat = "no-repeat";
@@ -22,6 +22,11 @@ const volumeSlider = document.getElementById('volume-slider');
 const globe = document.getElementById('globe');
 const missionPanel = document.getElementById('mission-panel');
 const closeButton = document.getElementById('close-mission');
+
+// Add background image to logo screen too
+logoScreen.style.backgroundImage = "url('textures/background.png')";
+logoScreen.style.backgroundSize = "cover";
+logoScreen.style.backgroundRepeat = "no-repeat";
 
 // Mission Data
 const missions = [
@@ -82,6 +87,8 @@ let activeMission = null;
 let rotating = true;
 let targetLat = 0;
 let targetLon = 0;
+let lastInteractionTime = 0;
+let rotationTimeout = null;
 
 // Logo Screen Handling (No fading, instant transition)
 setTimeout(() => {
@@ -207,6 +214,9 @@ function initializeMissionPanel() {
   closeButton.addEventListener('click', () => {
     missionPanel.classList.remove('active');
     activeMission = null;
+    
+    // Resume auto-rotation when mission panel is closed
+    resumeRotation();
   });
 }
 
@@ -235,8 +245,32 @@ function displayMission(missionId) {
   missionPanel.classList.add('active');
   activeMission = missionId;
   
+  // Stop rotation when mission is displayed
+  rotating = false;
+  
   // Show notification
   showNotification(`MISSION BRIEFING: ${mission.name}`);
+}
+
+// Globe rotation control
+function pauseRotation() {
+  rotating = false;
+  lastInteractionTime = Date.now();
+  
+  // Clear any existing timeout
+  if (rotationTimeout) {
+    clearTimeout(rotationTimeout);
+  }
+  
+  // Set timeout to resume rotation after 3 seconds of inactivity
+  rotationTimeout = setTimeout(resumeRotation, 3000);
+}
+
+function resumeRotation() {
+  // Don't resume if a mission is active
+  if (activeMission) return;
+  
+  rotating = true;
 }
 
 // Globe Visualization System
@@ -271,6 +305,9 @@ function initializeGlobe() {
       x: e.clientX,
       y: e.clientY
     };
+    
+    // Pause rotation when user interacts with globe
+    pauseRotation();
   });
   
   document.addEventListener('mouseup', () => {
@@ -280,12 +317,10 @@ function initializeGlobe() {
   document.addEventListener('mousemove', (e) => {
     if (!systemActive) return;
     
-    // Remove coordinates display functionality - per request
-    // Remove reticle - per request
-    
     // Rotate globe when dragging
     if (isDragging) {
-      rotating = false;
+      pauseRotation();
+      
       const deltaMove = {
         x: e.clientX - previousMousePosition.x,
         y: e.clientY - previousMousePosition.y
@@ -301,19 +336,11 @@ function initializeGlobe() {
     }
   });
   
-  // Double click to re-enable auto rotation
-  document.addEventListener('dblclick', () => {
-    if (systemActive) {
-      rotating = !rotating;
-      showNotification(rotating ? 'AUTO-ROTATION ENABLED' : 'AUTO-ROTATION DISABLED');
-    }
-  });
-  
-  // Create textured globe using earth.png
+  // Create textured globe using earth.jpg
   function createTexturedGlobe() {
     // Create a texture loader
     const textureLoader = new THREE.TextureLoader();
-    const earthTexture = textureLoader.load('textures/earth.png');
+    const earthTexture = textureLoader.load('textures/earth.jpg'); // Fixed: changed to earth.jpg
     
     // Create sphere geometry
     const geometry = new THREE.SphereGeometry(10, 64, 64);
@@ -344,7 +371,7 @@ function initializeGlobe() {
     
     // Create point marker
     const geometry = new THREE.SphereGeometry(0.15, 8, 8);
-    const material = new THREE.MeshBasicMaterial({ color: 0xe74c3c }); // Saffron red
+    const material = new THREE.MeshBasicMaterial({ color: 0x53a774 }); // Changed to highlight color
     const point = new THREE.Mesh(geometry, material);
     
     point.position.x = -10 * Math.sin(phi) * Math.cos(theta);
@@ -362,7 +389,7 @@ function initializeGlobe() {
     // Add pulsing effect (ring)
     const ringGeometry = new THREE.RingGeometry(0.2, 0.3, 32);
     const ringMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0xe74c3c,
+      color: 0x53a774, // Changed to highlight color
       transparent: true,
       opacity: 0.7,
       side: THREE.DoubleSide
@@ -475,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
     volumeIcon.onerror = function() {
       // Fallback if image fails to load
       this.style.display = 'none';
-      document.getElementById('volume-control').innerHTML += '<span style="color:#e6e6dc;">VOL</span>';
+      document.getElementById('volume-control').innerHTML += '<span style="color:#53a774;">VOL</span>';
     };
   }
 });
