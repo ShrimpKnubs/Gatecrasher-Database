@@ -22,6 +22,7 @@ const volumeSlider = document.getElementById('volume-slider');
 const globe = document.getElementById('globe');
 const missionPanel = document.getElementById('mission-panel');
 const closeButton = document.getElementById('close-mission');
+const lcdOverlay = document.getElementById('lcd-overlay');
 
 // Add background image to logo screen and boot overlay too
 logoScreen.style.backgroundImage = "url('textures/background.png')";
@@ -173,7 +174,8 @@ function activateSystem() {
   showNotification('SYSTEM ACTIVATED - GLOBE TRACKING OPERATIONAL');
   
   // Apply LCD screen overlay
-  document.getElementById('lcd-overlay').style.display = 'block';
+  lcdOverlay.style.display = 'block';
+  console.log("LCD overlay activated");
 }
 
 // Tab Control System
@@ -280,60 +282,106 @@ function resumeRotation() {
   rotating = true;
 }
 
-// Function to fetch submarine cable data
-async function fetchSubmarineCables() {
-  try {
-    const response = await fetch('https://raw.githubusercontent.com/telegeography/www.submarinecablemap.com/master/public/api/v3/cable/cable-geo.json');
-    const data = await response.json();
-    return data.features.map(feature => ({
-      points: feature.geometry.coordinates.map(coords => ({
-        lng: coords[0],
-        lat: coords[1],
-        alt: 0
-      }))
-    }));
-  } catch (error) {
-    console.error('Error fetching submarine cable data:', error);
-    return [];
-  }
+// Mock submarine cable data (replaces fetch API call)
+function getSubmarineCables() {
+  // Generate a set of mock submarine cable routes
+  const cables = [];
+  
+  // Cable 1: Transatlantic
+  cables.push({
+    points: [
+      { lat: 40.7128, lng: -74.0060 }, // New York
+      { lat: 42.0, lng: -45.0 },       // Mid-Atlantic
+      { lat: 51.5074, lng: -0.1278 }   // London
+    ]
+  });
+  
+  // Cable 2: Trans-Pacific
+  cables.push({
+    points: [
+      { lat: 37.7749, lng: -122.4194 }, // San Francisco
+      { lat: 30.0, lng: -170.0 },       // Mid-Pacific
+      { lat: 23.0, lng: 150.0 },        // West Pacific
+      { lat: 35.6762, lng: 139.6503 }   // Tokyo
+    ]
+  });
+  
+  // Cable 3: Europe to Asia
+  cables.push({
+    points: [
+      { lat: 51.5074, lng: -0.1278 },   // London
+      { lat: 41.9028, lng: 12.4964 },   // Rome
+      { lat: 39.0, lng: 26.0 },         // Mediterranean
+      { lat: 31.2001, lng: 29.9187 },   // Alexandria
+      { lat: 25.0, lng: 55.0 },         // Arabian Sea
+      { lat: 19.0760, lng: 72.8777 },   // Mumbai
+      { lat: 13.0, lng: 85.0 },         // Bay of Bengal
+      { lat: 1.3521, lng: 103.8198 }    // Singapore
+    ]
+  });
+  
+  // Cable 4: South America to Africa
+  cables.push({
+    points: [
+      { lat: -22.9068, lng: -43.1729 }, // Rio de Janeiro
+      { lat: -10.0, lng: -20.0 },       // South Atlantic
+      { lat: -15.0, lng: 5.0 },         // Mid Atlantic
+      { lat: -33.9249, lng: 18.4241 }   // Cape Town
+    ]
+  });
+  
+  // Cable 5: Australia to Asia
+  cables.push({
+    points: [
+      { lat: -33.8688, lng: 151.2093 }, // Sydney
+      { lat: -15.0, lng: 155.0 },       // Coral Sea
+      { lat: -5.0, lng: 145.0 },        // New Guinea
+      { lat: 3.1390, lng: 101.6869 },   // Kuala Lumpur
+      { lat: 13.7563, lng: 100.5018 }   // Bangkok
+    ]
+  });
+  
+  return cables;
 }
 
-// Function to fetch ACLED conflict data
-async function fetchConflictData() {
-  try {
-    // Proxy endpoint or API endpoint with key in your server
-    const response = await fetch('https://api.acleddata.com/acled/read?terms=accept&limit=1000&event_date=2024-01-01|2024-03-01');
-    const data = await response.json();
+// Mock conflict data for heatmap (replaces fetch API call)
+function getConflictData() {
+  // Generate realistic conflict hotspots around the world
+  return [
+    // Middle East conflicts
+    { lat: 33.3152, lng: 44.3661, weight: 5 },  // Baghdad
+    { lat: 34.5553, lng: 69.2075, weight: 4 },  // Kabul
+    { lat: 33.5138, lng: 36.2765, weight: 4 },  // Damascus
+    { lat: 15.3694, lng: 44.1910, weight: 3 },  // Sana'a (Yemen)
+    { lat: 31.7683, lng: 35.2137, weight: 3 },  // Jerusalem
     
-    if (data && data.data) {
-      return data.data.map(event => ({
-        lat: parseFloat(event.latitude),
-        lng: parseFloat(event.longitude),
-        weight: getWeightFromFatalities(event.fatalities)
-      }));
-    }
-    return [];
-  } catch (error) {
-    console.error('Error fetching ACLED data:', error);
-    // Return some sample data for testing if API fails
-    return [
-      { lat: 34.5, lng: 69.2, weight: 3 },
-      { lat: 33.3, lng: 44.4, weight: 5 },
-      { lat: 1.3, lng: 32.2, weight: 2 },
-      { lat: 31.5, lng: 34.4, weight: 4 },
-      { lat: 15.3, lng: 44.2, weight: 3 }
-    ];
-  }
-}
-
-function getWeightFromFatalities(fatalities) {
-  if (!fatalities) return 1;
-  fatalities = parseInt(fatalities);
-  if (fatalities <= 1) return 1;
-  if (fatalities <= 5) return 2;
-  if (fatalities <= 20) return 3;
-  if (fatalities <= 50) return 4;
-  return 5;
+    // African conflicts
+    { lat: 9.0820, lng: 8.6753, weight: 3 },    // Nigeria
+    { lat: 12.1348, lng: 15.0557, weight: 2 },  // Chad
+    { lat: 6.1771, lng: 35.7499, weight: 2 },   // South Sudan
+    { lat: 9.1450, lng: 40.4897, weight: 2 },   // Ethiopia
+    { lat: 2.0469, lng: 45.3182, weight: 3 },   // Somalia
+    
+    // Eastern Europe
+    { lat: 50.4501, lng: 30.5234, weight: 3 },  // Kyiv
+    { lat: 48.0196, lng: 37.8022, weight: 4 },  // Donetsk
+    
+    // Latin America
+    { lat: 4.5709, lng: -74.2973, weight: 2 },  // Colombia
+    { lat: 10.4806, lng: -66.9036, weight: 2 }, // Venezuela
+    { lat: 19.4326, lng: -99.1332, weight: 3 }, // Mexico City
+    
+    // Southeast Asia
+    { lat: 21.9162, lng: 95.9560, weight: 2 },  // Myanmar
+    { lat: 14.5995, lng: 120.9842, weight: 1 }, // Manila
+    
+    // Additional hotspots
+    { lat: 34.0522, lng: -118.2437, weight: 1 }, // Los Angeles
+    { lat: 51.5074, lng: -0.1278, weight: 1 },   // London
+    { lat: 55.7558, lng: 37.6173, weight: 2 },   // Moscow
+    { lat: 39.9042, lng: 116.4074, weight: 1 },  // Beijing
+    { lat: 28.6139, lng: 77.2090, weight: 2 }    // New Delhi
+  ];
 }
 
 // Globe Visualization System
@@ -496,8 +544,9 @@ function initializeGlobe() {
   scene.add(heatmapGroup);
   
   // Add submarine cables
-  async function addSubmarineCables() {
-    const cables = await fetchSubmarineCables();
+  function addSubmarineCables() {
+    const cables = getSubmarineCables(); // Use mock data instead of fetching
+    console.log("Adding submarine cables:", cables.length);
     
     cables.forEach(cable => {
       const points = [];
@@ -529,8 +578,9 @@ function initializeGlobe() {
   }
   
   // Add ACLED conflict heatmap
-  async function addConflictHeatmap() {
-    const conflictData = await fetchConflictData();
+  function addConflictHeatmap() {
+    const conflictData = getConflictData(); // Use mock data instead of fetching
+    console.log("Adding conflict points:", conflictData.length);
     
     conflictData.forEach(point => {
       const phi = (90 - point.lat) * Math.PI / 180;
