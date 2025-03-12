@@ -1,11 +1,26 @@
 /* Core System */
 @font-face {
-  font-family: 'BlackOpsOne';
-  src: url('../fonts/BlackOpsOne-Regular.ttf') format('truetype');
+  font-family: 'Hack-Regular';
+  src: url('../fonts/Hack-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Hack-Bold';
+  src: url('../fonts/Hack-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Hack-Italic';
+  src: url('../fonts/Hack-Italic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Hack-BoldItalic';
+  src: url('../fonts/Hack-BoldItalic.ttf') format('truetype');
 }
 
 * {
-  font-family: 'BlackOpsOne', sans-serif !important;
+  font-family: 'Hack-Regular', monospace !important;
   cursor: url('../textures/custom-cursor.png'), auto !important;
   margin: 0;
   padding: 0;
@@ -79,6 +94,7 @@
   padding: 20px;
   width: 80%;
   max-width: 600px;
+  text-align: center;
 }
 
 #terminal-text {
@@ -88,6 +104,7 @@
 #terminal-text p {
   margin-bottom: 8px;
   color: var(--text-primary);
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 #activate-button {
@@ -98,10 +115,13 @@
   font-size: 1.2em;
   cursor: pointer;
   margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
   opacity: 1;
   transition: background 0.2s ease;
   position: relative;
   overflow: hidden;
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 #activate-button:hover {
@@ -139,6 +159,7 @@
   position: relative;
   text-align: right;
   transform: translateX(-150px); /* Start off-screen */
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 .tab:after {
@@ -228,6 +249,7 @@
 #mission-title {
   color: var(--highlight-color);
   font-size: 1.5em;
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 #close-mission {
@@ -236,6 +258,7 @@
   color: var(--highlight-color);
   font-size: 1.2em;
   cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 .mission-section {
@@ -246,6 +269,7 @@
   color: var(--highlight-color);
   font-size: 0.9em;
   margin-bottom: 5px;
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 .mission-content {
@@ -270,6 +294,7 @@
 .stat-label {
   color: var(--highlight-color);
   font-size: 0.8em;
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 .stat-value {
@@ -295,6 +320,7 @@
 
 #status-text {
   flex-grow: 1;
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 #date-time {
@@ -359,6 +385,7 @@
   display: none;
   text-align: center;
   min-width: 300px;
+  font-family: 'Hack-Bold', monospace !important;
 }
 
 /* For mission points on the globe */

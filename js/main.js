@@ -89,6 +89,8 @@ let targetLat = 0;
 let targetLon = 0;
 let lastInteractionTime = 0;
 let rotationTimeout = null;
+let velocity = { x: 0, y: 0 };
+const friction = 0.95;
 
 // Logo Screen Handling (No fading, instant transition)
 setTimeout(() => {
@@ -182,9 +184,6 @@ function initializeTabSystem() {
       imagePanel.style.opacity = '1';
       imagePanel.style.pointerEvents = 'auto';
       tabImage.src = `textures/${tab.dataset.img}`;
-      
-      // Update status
-      statusText.textContent = `STATUS: ${tab.textContent} SECTION ACTIVE`;
     });
     
     tab.addEventListener('mouseleave', () => {
@@ -306,6 +305,9 @@ function initializeGlobe() {
       y: e.clientY
     };
     
+    // Reset velocity when starting to drag
+    velocity = { x: 0, y: 0 };
+    
     // Pause rotation when user interacts with globe
     pauseRotation();
   });
@@ -326,8 +328,19 @@ function initializeGlobe() {
         y: e.clientY - previousMousePosition.y
       };
       
-      scene.rotation.y += deltaMove.x * 0.005;
-      scene.rotation.x += deltaMove.y * 0.005;
+      // Set velocity based on mouse movement
+      velocity.x = deltaMove.x * 0.005;
+      velocity.y = deltaMove.y * 0.005;
+      
+      scene.rotation.y += velocity.x;
+      
+      // Apply rotation limits to prevent going upside down
+      const newXRotation = scene.rotation.x + velocity.y;
+      const maxRotation = Math.PI / 2 * 0.95; // Slightly less than 90 degrees
+      
+      if (newXRotation <= maxRotation && newXRotation >= -maxRotation) {
+        scene.rotation.x = newXRotation;
+      }
       
       previousMousePosition = {
         x: e.clientX,
@@ -340,7 +353,7 @@ function initializeGlobe() {
   function createTexturedGlobe() {
     // Create a texture loader
     const textureLoader = new THREE.TextureLoader();
-    const earthTexture = textureLoader.load('textures/earth.jpg'); // Fixed: changed to earth.jpg
+    const earthTexture = textureLoader.load('textures/earth.jpg');
     
     // Create sphere geometry
     const geometry = new THREE.SphereGeometry(10, 64, 64);
@@ -436,9 +449,33 @@ function initializeGlobe() {
   function animate() {
     requestAnimationFrame(animate);
     
-    // Rotate globe if auto-rotation is enabled
+    // Apply momentum with friction if not dragging
+    if (!isDragging && !rotating) {
+      velocity.x *= friction;
+      velocity.y *= friction;
+      
+      // Only apply velocity if it's significant
+      if (Math.abs(velocity.x) > 0.0001) {
+        scene.rotation.y += velocity.x;
+      }
+      
+      if (Math.abs(velocity.y) > 0.0001) {
+        // Apply rotation limits
+        const newXRotation = scene.rotation.x + velocity.y;
+        const maxRotation = Math.PI / 2 * 0.95;
+        
+        if (newXRotation <= maxRotation && newXRotation >= -maxRotation) {
+          scene.rotation.x = newXRotation;
+        } else {
+          // If we hit the limits, stop the y velocity
+          velocity.y = 0;
+        }
+      }
+    }
+    
+    // Auto rotate globe if enabled - doubled speed
     if (rotating) {
-      scene.rotation.y += 0.0005;
+      scene.rotation.y += 0.001; // Doubled from 0.0005
     }
     
     // Animate mission points
