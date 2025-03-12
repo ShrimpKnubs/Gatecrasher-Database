@@ -1,4 +1,4 @@
-/* Core System Styling */
+/* Core System */
 @font-face {
   font-family: 'BlackOpsOne';
   src: url('../fonts/BlackOpsOne-Regular.ttf') format('truetype');
@@ -12,7 +12,7 @@
   box-sizing: border-box;
 }
 
-/* Background Stratification */
+/* Background Layer */
 #vanta-background {
   position: fixed;
   top: 0;
@@ -22,16 +22,18 @@
   z-index: -1;
 }
 
+/* Globe Canvas */
 #globe {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: 1;
+  opacity: 1 !important;
 }
 
-/* Boot Sequence Containment */
+/* Boot Sequence */
 #logo-screen {
   position: fixed;
   top: 0;
@@ -41,7 +43,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a1c1a;
+  background: #101214;
   z-index: 10000;
 }
 
@@ -51,109 +53,243 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 10, 0.98);
+  background: rgba(10,15,20,0.98);
   z-index: 9999;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #00ff00;
+  color: #4b9fff; /* Military blue terminal color instead of green */
   font-size: 1.2em;
+}
+
+#boot-terminal {
+  background: rgba(20,25,30,0.8);
+  padding: 20px;
+  border: 2px solid #2a3a4a;
+  width: 80%;
+  max-width: 600px;
+  box-shadow: 0 0 20px rgba(0,100,255,0.3);
 }
 
 #terminal-text {
-  text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
+}
+
+#terminal-text p {
+  margin-bottom: 8px;
+  text-shadow: 0 0 5px rgba(75,159,255,0.7);
 }
 
 #activate-button {
-  background: #2f0101;
-  color: #00ff00;
-  border: 3px solid #fc8200;
-  padding: 15px 30px;
+  background: #1a2a3a;
+  color: #4b9fff;
+  border: 2px solid #3a5a7a;
+  padding: 12px 30px;
   font-size: 1.2em;
   cursor: pointer;
+  margin-top: 20px;
+  opacity: 1;
   transition: all 0.3s ease;
-  opacity: 0;
-}
-
-#activate-button:hover {
-  background: #a20000;
-  border-color: #ff4500;
-}
-
-/* Tactical Side Panel */
-.sidebar {
-  position: fixed;
-  left: -160px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-  padding: 25px 0;
-  transition: left 0.3s ease;
-}
-
-.tab {
-  background: rgba(30, 30, 30, 0.95);
-  color: #00ff00;
-  padding: 25px 60px;
-  text-decoration: none;
-  width: 240px;
-  margin-left: -100px;
-  border-left: 8px solid #fc8200;
-  font-size: 1.2em;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-}
-
-.tab:hover {
-  transform: translateX(120px);
-  background: rgba(60, 60, 60, 0.95);
-}
-
-/* Intelligence Display */
-#image-panel {
-  position: fixed;
-  left: -25vw;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 25vw;
-  height: 70vh;
-  background: rgba(0, 0, 0, 0.95);
-  z-index: 500;
-  transition: left 0.5s ease-in-out;
-  border-right: 4px solid #fc8200;
+  position: relative;
   overflow: hidden;
 }
 
-#tab-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+#activate-button:hover {
+  background: #2a3a4a;
+  box-shadow: 0 0 15px rgba(75,159,255,0.5);
 }
 
-/* Audio Control Module */
-#volume-control {
+#activate-button:active {
+  background: #3a4a5a;
+}
+
+/* Sidebar System - Improved for better visibility and military style */
+.sidebar {
   position: fixed;
-  top: 25px;
-  right: 25px;
-  z-index: 1001;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 0;
+  opacity: 1;
+}
+
+.tab {
+  background: rgba(30,40,50,0.9);
+  color: #4b9fff;
+  padding: 15px 20px 15px 40px;
+  text-decoration: none;
+  width: 200px;
+  margin-left: -150px;
+  border-right: 4px solid #3a6a9a;
+  font-size: 1.1em;
+  transition: transform 0.2s cubic-bezier(0.215, 0.610, 0.355, 1.000);
+  position: relative;
+  text-align: right;
+}
+
+.tab:after {
+  content: '>';
+  position: absolute;
+  right: 15px;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tab:hover {
+  transform: translateX(150px);
+  background: rgba(40,50,60,0.95);
+}
+
+.tab:hover:after {
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+.tab.active {
+  transform: translateX(150px);
+  background: rgba(50,60,70,0.95);
+  border-right: 4px solid #5a8aba;
+}
+
+/* Image Panel */
+#image-panel {
+  position: fixed;
+  left: -30vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30vw;
+  height: 70vh;
+  background: rgba(20,25,30,0.95);
+  z-index: 1;
+  border-right: 4px solid #3a6a9a;
+  transition: left 0.3s cubic-bezier(0.215, 0.610, 0.355, 1.000);
+  box-shadow: 5px 0 25px rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+}
+
+#tab-image {
+  max-width: 90%;
+  max-height: 90%;
+  border: 2px solid #3a6a9a;
+}
+
+/* Status Bar */
+#status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(20,25,30,0.9);
+  color: #4b9fff;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 20px;
+  border-top: 2px solid #3a6a9a;
+  font-size: 0.9em;
+  z-index: 3;
+}
+
+#status-text {
+  flex-grow: 1;
+}
+
+#coordinates, #date-time {
+  padding: 0 15px;
+}
+
+/* Volume Control */
+#volume-control {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(20,25,30,0.7);
+  padding: 8px;
+  border: 1px solid #3a6a9a;
+  border-radius: 4px;
 }
 
 #volume-slider {
-  width: 120px;
+  width: 100px;
   display: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  background: #3a6a9a;
+  outline: none;
+}
+
+#volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #4b9fff;
+  cursor: pointer;
+  border-radius: 50%;
 }
 
 #volume-control:hover #volume-slider {
   display: block;
-  opacity: 1;
+}
+
+/* Notification Box */
+#notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20,25,30,0.9);
+  border: 2px solid #3a6a9a;
+  color: #4b9fff;
+  padding: 10px 20px;
+  z-index: 5;
+  display: none;
+  text-align: center;
+  min-width: 300px;
+}
+
+/* Targeting reticle for globe */
+.reticle {
+  position: fixed;
+  border: 1px solid #4b9fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.6;
+  display: none;
+}
+
+.reticle:before, .reticle:after {
+  content: '';
+  position: absolute;
+  background: #4b9fff;
+}
+
+.reticle:before {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+.reticle:after {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
 }
