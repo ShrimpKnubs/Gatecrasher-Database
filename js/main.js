@@ -1,19 +1,7 @@
-// Initialize Vanta.js (Z-Index: -1)
-VANTA.CLOUDS({
-  el: "#vanta-background",
-  mouseControls: true,
-  touchControls: true,
-  gyroControls: false,
-  minHeight: 200.00,
-  minWidth: 200.00,
-  backgroundColor: 0x1a1a1a, // Updated to match new color scheme
-  skyColor: 0x2a2a2a,
-  cloudColor: 0x3a3a3a,
-  cloudShadowColor: 0x222222,
-  sunColor: 0xe74c3c,
-  sunGlareColor: 0xe74c3c,
-  sunlightColor: 0xe6e6dc
-});
+// Initialize Vanta.js (Z-Index: -1) - REPLACED WITH STATIC BACKGROUND
+document.getElementById('vanta-background').style.backgroundImage = "url('textures/background.png')";
+document.getElementById('vanta-background').style.backgroundSize = "cover";
+document.getElementById('vanta-background').style.backgroundRepeat = "no-repeat";
 
 // DOM Elements
 const bootOverlay = document.getElementById('boot-overlay');
@@ -28,10 +16,8 @@ const imagePanel = document.getElementById('image-panel');
 const tabImage = document.getElementById('tab-image');
 const tabs = document.querySelectorAll('.tab');
 const statusText = document.getElementById('status-text');
-const coordsDisplay = document.getElementById('coordinates');
 const dateTimeDisplay = document.getElementById('date-time');
 const notification = document.getElementById('notification');
-const reticle = document.querySelector('.reticle');
 const volumeSlider = document.getElementById('volume-slider');
 const globe = document.getElementById('globe');
 const missionPanel = document.getElementById('mission-panel');
@@ -162,6 +148,13 @@ function activateSystem() {
   updateDateTime();
   setInterval(updateDateTime, 1000);
   
+  // Set STRAT MAP tab as active by default
+  const stratMapTab = document.querySelector('.tab[data-section="stratmap"]');
+  if (stratMapTab) {
+    stratMapTab.classList.add('active');
+    activeTab = "stratmap";
+  }
+  
   // Show notification
   showNotification('SYSTEM ACTIVATED - GLOBE TRACKING OPERATIONAL');
 }
@@ -287,21 +280,8 @@ function initializeGlobe() {
   document.addEventListener('mousemove', (e) => {
     if (!systemActive) return;
     
-    // Update coordinates display
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const x = (e.clientX / viewportWidth) * 360 - 180;
-    const y = 90 - (e.clientY / viewportHeight) * 180;
-    coordsDisplay.textContent = `LAT: ${y.toFixed(4)} LON: ${x.toFixed(4)}`;
-    
-    // Show reticle on globe hover
-    if (e.target === globe) {
-      reticle.style.display = 'block';
-      reticle.style.left = (e.clientX - 20) + 'px';
-      reticle.style.top = (e.clientY - 20) + 'px';
-    } else {
-      reticle.style.display = 'none';
-    }
+    // Remove coordinates display functionality - per request
+    // Remove reticle - per request
     
     // Rotate globe when dragging
     if (isDragging) {
@@ -329,118 +309,31 @@ function initializeGlobe() {
     }
   });
   
-  // GeoJSON Loader
-  function loadGeoData(url, color) {
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-        data.features.forEach(feature => {
-          if (feature.geometry && feature.geometry.coordinates) {
-            // Handle different geometry types
-            const geometryType = feature.geometry.type;
-            const coordinates = feature.geometry.coordinates;
-            
-            if (geometryType === 'MultiLineString') {
-              coordinates.forEach(lineString => {
-                createLine(lineString, color);
-              });
-            } else if (geometryType === 'LineString') {
-              createLine(coordinates, color);
-            } else if (geometryType === 'MultiPolygon') {
-              coordinates.forEach(polygon => {
-                polygon.forEach(ring => {
-                  createLine(ring, color);
-                });
-              });
-            } else if (geometryType === 'Polygon') {
-              coordinates.forEach(ring => {
-                createLine(ring, color);
-              });
-            }
-          }
-        });
-      })
-      .catch(error => {
-        console.error("Error loading GeoJSON:", error);
-        // Fallback to simple sphere if data fails to load
-        createSimpleGlobe();
-      });
-  }
-  
-  function createLine(coordinates, color) {
-    const points = [];
-    coordinates.forEach(point => {
-      const [lon, lat] = point;
-      const phi = (90 - lat) * Math.PI/180;
-      const theta = (lon + 180) * Math.PI/180;
-      points.push(new THREE.Vector3(
-        -10 * Math.sin(phi) * Math.cos(theta),
-        10 * Math.cos(phi),
-        10 * Math.sin(phi) * Math.sin(theta)
-      ));
+  // Create textured globe using earth.png
+  function createTexturedGlobe() {
+    // Create a texture loader
+    const textureLoader = new THREE.TextureLoader();
+    const earthTexture = textureLoader.load('textures/earth.png');
+    
+    // Create sphere geometry
+    const geometry = new THREE.SphereGeometry(10, 64, 64);
+    
+    // Create material with texture
+    const material = new THREE.MeshBasicMaterial({
+      map: earthTexture,
+      transparent: true,
+      opacity: 0.9
     });
     
-    if (points.length > 1) {
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      const material = new THREE.LineBasicMaterial({
-        color: color,
-        linewidth: 1,
-      });
-      scene.add(new THREE.Line(geometry, material));
-    }
-  }
-  
-  // Fallback globe if GeoJSON fails
-  function createSimpleGlobe() {
-    // Create a wireframe sphere
-    const geometry = new THREE.SphereGeometry(10, 32, 32);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0x4a4a4a,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.5
-    });
+    // Create mesh and add to scene
     const sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
     
-    // Add longitudinal and latitudinal lines for globe effect
-    for (let i = 0; i < 18; i++) {
-      const phi = Math.PI * i / 18;
-      const circleGeometry = new THREE.CircleGeometry(10 * Math.sin(phi), 64);
-      circleGeometry.vertices.shift(); // Remove center vertex
-      const circleMaterial = new THREE.LineBasicMaterial({ color: 0x3a3a3a });
-      const circle = new THREE.Line(circleGeometry);
-      circle.position.y = 10 * Math.cos(phi);
-      circle.rotation.x = Math.PI / 2;
-      scene.add(circle);
-    }
-    
-    for (let i = 0; i < 36; i++) {
-      const theta = 2 * Math.PI * i / 36;
-      const points = [];
-      for (let j = 0; j <= 64; j++) {
-        const phi = Math.PI * j / 64;
-        points.push(new THREE.Vector3(
-          10 * Math.sin(phi) * Math.cos(theta),
-          10 * Math.cos(phi),
-          10 * Math.sin(phi) * Math.sin(theta)
-        ));
-      }
-      const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-      const lineMaterial = new THREE.LineBasicMaterial({ color: 0x3a3a3a });
-      const line = new THREE.Line(lineGeometry, lineMaterial);
-      scene.add(line);
-    }
+    return sphere;
   }
   
-  // Try to load GeoJSON data
-  try {
-    loadGeoData('data/countries.geojson', 0xe6e6dc); // Ivory color for countries
-    loadGeoData('data/ne_110_coastline.json', 0xe74c3c); // Saffron red for coastlines
-  } catch (error) {
-    console.error("Failed to load GeoJSON data:", error);
-    createSimpleGlobe();
-  }
+  // Create the textured globe
+  const earthGlobe = createTexturedGlobe();
   
   // Add mission points of interest
   function addMissionPoint(mission) {
