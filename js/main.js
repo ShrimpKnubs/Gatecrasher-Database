@@ -23,10 +23,15 @@ const globe = document.getElementById('globe');
 const missionPanel = document.getElementById('mission-panel');
 const closeButton = document.getElementById('close-mission');
 
-// Add background image to logo screen too
+// Add background image to logo screen and boot overlay too
 logoScreen.style.backgroundImage = "url('textures/background.png')";
 logoScreen.style.backgroundSize = "cover";
 logoScreen.style.backgroundRepeat = "no-repeat";
+
+bootOverlay.style.backgroundImage = "url('textures/background.png')";
+bootOverlay.style.backgroundSize = "cover";
+bootOverlay.style.backgroundRepeat = "no-repeat";
+bootOverlay.style.backgroundColor = "rgba(0, 31, 24, 0.85)"; // Semi-transparent overlay
 
 // Mission Data
 const missions = [
@@ -166,6 +171,9 @@ function activateSystem() {
   
   // Show notification
   showNotification('SYSTEM ACTIVATED - GLOBE TRACKING OPERATIONAL');
+  
+  // Apply LCD screen overlay
+  document.getElementById('lcd-overlay').style.display = 'block';
 }
 
 // Tab Control System
@@ -272,6 +280,62 @@ function resumeRotation() {
   rotating = true;
 }
 
+// Function to fetch submarine cable data
+async function fetchSubmarineCables() {
+  try {
+    const response = await fetch('https://raw.githubusercontent.com/telegeography/www.submarinecablemap.com/master/public/api/v3/cable/cable-geo.json');
+    const data = await response.json();
+    return data.features.map(feature => ({
+      points: feature.geometry.coordinates.map(coords => ({
+        lng: coords[0],
+        lat: coords[1],
+        alt: 0
+      }))
+    }));
+  } catch (error) {
+    console.error('Error fetching submarine cable data:', error);
+    return [];
+  }
+}
+
+// Function to fetch ACLED conflict data
+async function fetchConflictData() {
+  try {
+    // Proxy endpoint or API endpoint with key in your server
+    const response = await fetch('https://api.acleddata.com/acled/read?terms=accept&limit=1000&event_date=2024-01-01|2024-03-01');
+    const data = await response.json();
+    
+    if (data && data.data) {
+      return data.data.map(event => ({
+        lat: parseFloat(event.latitude),
+        lng: parseFloat(event.longitude),
+        weight: getWeightFromFatalities(event.fatalities)
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching ACLED data:', error);
+    // Return some sample data for testing if API fails
+    return [
+      { lat: 34.5, lng: 69.2, weight: 3 },
+      { lat: 33.3, lng: 44.4, weight: 5 },
+      { lat: 1.3, lng: 32.2, weight: 2 },
+      { lat: 31.5, lng: 34.4, weight: 4 },
+      { lat: 15.3, lng: 44.2, weight: 3 }
+    ];
+  }
+}
+
+function getWeightFromFatalities(fatalities) {
+  if (!fatalities) return 1;
+  fatalities = parseInt(fatalities);
+  if (fatalities <= 1) return 1;
+  if (fatalities <= 5) return 2;
+  if (fatalities <= 20) return 3;
+  if (fatalities <= 50) return 4;
+  return 5;
+}
+
 // Globe Visualization System
 function initializeGlobe() {
   const scene = new THREE.Scene();
@@ -375,16 +439,16 @@ function initializeGlobe() {
   // Create the textured globe
   const earthGlobe = createTexturedGlobe();
   
-  // Add mission points of interest
+  // Add mission points of interest - Changed to dark red color
   function addMissionPoint(mission) {
     const lat = mission.coordinates.lat;
     const lon = mission.coordinates.lon;
     const phi = (90 - lat) * Math.PI/180;
     const theta = (lon + 180) * Math.PI/180;
     
-    // Create point marker
+    // Create point marker - Dark red color
     const geometry = new THREE.SphereGeometry(0.15, 8, 8);
-    const material = new THREE.MeshBasicMaterial({ color: 0x53a774 }); // Changed to highlight color
+    const material = new THREE.MeshBasicMaterial({ color: 0x8B0000 }); // Dark red
     const point = new THREE.Mesh(geometry, material);
     
     point.position.x = -10 * Math.sin(phi) * Math.cos(theta);
@@ -399,10 +463,10 @@ function initializeGlobe() {
     
     scene.add(point);
     
-    // Add pulsing effect (ring)
+    // Add pulsing effect (ring) - Dark red
     const ringGeometry = new THREE.RingGeometry(0.2, 0.3, 32);
     const ringMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0x53a774, // Changed to highlight color
+      color: 0x8B0000, // Dark red
       transparent: true,
       opacity: 0.7,
       side: THREE.DoubleSide
@@ -422,6 +486,83 @@ function initializeGlobe() {
   
   // Add mission points
   const missionPoints = missions.map(mission => addMissionPoint(mission));
+  
+  // Submarine Cables Group
+  const cablesGroup = new THREE.Group();
+  scene.add(cablesGroup);
+  
+  // Heat map group
+  const heatmapGroup = new THREE.Group();
+  scene.add(heatmapGroup);
+  
+  // Add submarine cables
+  async function addSubmarineCables() {
+    const cables = await fetchSubmarineCables();
+    
+    cables.forEach(cable => {
+      const points = [];
+      
+      cable.points.forEach(point => {
+        const phi = (90 - point.lat) * Math.PI / 180;
+        const theta = (point.lng + 180) * Math.PI / 180;
+        
+        // Calculate position on globe
+        const x = -10 * Math.sin(phi) * Math.cos(theta);
+        const y = 10 * Math.cos(phi);
+        const z = 10 * Math.sin(phi) * Math.sin(theta);
+        
+        points.push(new THREE.Vector3(x, y, z));
+      });
+      
+      // Create cable
+      const cableGeometry = new THREE.BufferGeometry().setFromPoints(points);
+      const cableMaterial = new THREE.LineBasicMaterial({ 
+        color: 0x8B0000, // Dark red
+        linewidth: 1,
+        transparent: true,
+        opacity: 0.6
+      });
+      
+      const cableLine = new THREE.Line(cableGeometry, cableMaterial);
+      cablesGroup.add(cableLine);
+    });
+  }
+  
+  // Add ACLED conflict heatmap
+  async function addConflictHeatmap() {
+    const conflictData = await fetchConflictData();
+    
+    conflictData.forEach(point => {
+      const phi = (90 - point.lat) * Math.PI / 180;
+      const theta = (point.lng + 180) * Math.PI / 180;
+      
+      // Calculate position on globe
+      const x = -10.05 * Math.sin(phi) * Math.cos(theta); // Slightly above surface
+      const y = 10.05 * Math.cos(phi);
+      const z = 10.05 * Math.sin(phi) * Math.sin(theta);
+      
+      // Create heat point
+      const size = 0.1 + (point.weight * 0.05);
+      const heatGeometry = new THREE.SphereGeometry(size, 8, 8);
+      
+      // Create gradient color based on weight (red with varying opacity)
+      const opacity = 0.3 + (point.weight * 0.1);
+      const heatMaterial = new THREE.MeshBasicMaterial({
+        color: 0xFF0000,
+        transparent: true,
+        opacity: opacity
+      });
+      
+      const heatPoint = new THREE.Mesh(heatGeometry, heatMaterial);
+      heatPoint.position.set(x, y, z);
+      
+      heatmapGroup.add(heatPoint);
+    });
+  }
+  
+  // Load submarine cables and conflict heatmap
+  addSubmarineCables();
+  addConflictHeatmap();
   
   // Handle clicking on mission points
   const raycaster = new THREE.Raycaster();

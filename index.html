@@ -100,6 +100,14 @@
     <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5">
   </div>
 
+  <!-- LCD Screen Overlay (Z-Index Layer 4) -->
+  <div id="lcd-overlay" style="display: none;">
+    <div class="scanline"></div>
+    <div class="flicker"></div>
+    <div class="interlace"></div>
+    <div class="crt-corners"></div>
+  </div>
+
   <!-- Audio -->
   <audio id="background-music" loop>
     <source src="music/background-music.mp3" type="audio/mpeg">

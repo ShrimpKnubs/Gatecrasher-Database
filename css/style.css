@@ -35,6 +35,7 @@
   --accent-color: rgb(0,60,45); /* New accent color */
   --highlight-color: rgb(83,167,116); /* New highlight color */
   --border-color: rgb(0,70,55);
+  --mission-color: #8B0000; /* Dark red color for missions and cables */
 }
 
 /* Background Layer */
@@ -391,4 +392,99 @@
 /* For mission points on the globe */
 .mission-point {
   cursor: pointer !important;
+}
+
+/* LCD Screen Effect */
+#lcd-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9000;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.3) 50%
+  );
+  background-size: 100% 4px;
+  z-index: 9001;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.flicker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 50, 30, 0.1);
+  opacity: 0;
+  z-index: 9002;
+  pointer-events: none;
+  animation: flicker 0.3s infinite;
+}
+
+.interlace {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    transparent 0px,
+    rgba(0, 0, 0, 0.025) 1px,
+    transparent 2px
+  );
+  z-index: 9003;
+  pointer-events: none;
+}
+
+.crt-corners {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  box-shadow: 
+    inset 0 0 100px rgba(0, 0, 0, 0.5),
+    0 0 50px rgba(0, 150, 100, 0.1);
+  z-index: 9004;
+  pointer-events: none;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.1; }
+  5% { opacity: 0.2; }
+  10% { opacity: 0.1; }
+  15% { opacity: 0.3; }
+  20% { opacity: 0.1; }
+  25% { opacity: 0.2; }
+  30% { opacity: 0.1; }
+  35% { opacity: 0.3; }
+  40% { opacity: 0.1; }
+  45% { opacity: 0.2; }
+  50% { opacity: 0.1; }
+  55% { opacity: 0.3; }
+  60% { opacity: 0.1; }
+  65% { opacity: 0.2; }
+  70% { opacity: 0.1; }
+  75% { opacity: 0.3; }
+  80% { opacity: 0.1; }
+  85% { opacity: 0.2; }
+  90% { opacity: 0.1; }
+  95% { opacity: 0.3; }
+  100% { opacity: 0.1; }
 }
