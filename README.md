@@ -6,7 +6,7 @@ Chapter 1
 
 3  And Kelp spake, saying, "Let there be ops," and there were ops—but they were as an ass, wrought with chaos and sqf erros, and the servers did tremble. 
 
-4  Yea, Kelp did forge with hands unskilled, and the scripts were as tangled as the weeds of the deep, and the errors did multiply upon the face of the clients. 
+4  Yea, Kelp did forge with hands unskilled, and the scripts were as tangled as the weeds of the deep, and the errors did multiply upon the face of Altis. 
 
 5  And the players cried out, "Why hast thou forsaken us, O Kelp, with these forsaken deployments?" But Kelp hearkened not, for Kelp was busy refactoring the same broken script for the seventh time. 
 
