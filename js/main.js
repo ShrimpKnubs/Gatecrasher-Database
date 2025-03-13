@@ -12,16 +12,17 @@ const music = document.getElementById('background-music');
 const activationSound = document.getElementById('activation-sound');
 const tabSound = document.getElementById('tab-sound');
 const missionSound = document.getElementById('mission-sound');
-const imagePanel = document.getElementById('image-panel');
-const tabImage = document.getElementById('tab-image');
-const tabs = document.querySelectorAll('.tab');
+const intelSound = document.getElementById('intel-sound');
 const statusText = document.getElementById('status-text');
 const dateTimeDisplay = document.getElementById('date-time');
 const notification = document.getElementById('notification');
 const volumeSlider = document.getElementById('volume-slider');
 const globe = document.getElementById('globe');
 const missionPanel = document.getElementById('mission-panel');
-const closeButton = document.getElementById('close-mission');
+const closeMissionButton = document.getElementById('close-mission');
+const intelPanel = document.getElementById('intel-panel');
+const closeIntelButton = document.getElementById('close-intel');
+const missionIntelButton = document.getElementById('mission-intel-button');
 const lcdOverlay = document.getElementById('lcd-overlay');
 
 // Add background image to logo screen and boot overlay too
@@ -34,65 +35,10 @@ bootOverlay.style.backgroundSize = "cover";
 bootOverlay.style.backgroundRepeat = "no-repeat";
 bootOverlay.style.backgroundColor = "rgba(0, 31, 24, 0.85)"; // Semi-transparent overlay
 
-// Mission Data
-const missions = [
-  {
-    id: 'mission1',
-    name: 'OPERATION BLACKOUT',
-    location: 'ALTIS - COORDINATES: 38.9072N, 77.0369E',
-    details: 'Infiltrate enemy compound to secure intel on weapons shipments. Expect heavy resistance from local militia forces. Stealth approach recommended for initial phase.',
-    objectives: '1. Secure intel documents from main building<br>2. Eliminate or neutralize militia commander<br>3. Extract to designated LZ',
-    difficulty: 'HIGH',
-    payment: '$15,000',
-    duration: '2.5 HRS',
-    teamSize: 'SQUAD (4-8)',
-    coordinates: { lat: 38.9072, lon: -77.0369 }
-  },
-  {
-    id: 'mission2',
-    name: 'OPERATION RED STORM',
-    location: 'TANOA - COORDINATES: 51.5074N, 0.1278E',
-    details: 'Rescue hostages from terrorist-held village. Heavy civilian presence in area. ROE restricts collateral damage. Night operation preferred.',
-    objectives: '1. Locate and secure all hostages<br>2. Eliminate hostile forces<br>3. Extract hostages to FOB Sierra',
-    difficulty: 'MEDIUM',
-    payment: '$12,000',
-    duration: '2 HRS',
-    teamSize: 'FIRETEAM (4)',
-    coordinates: { lat: 51.5074, lon: -0.1278 }
-  },
-  {
-    id: 'mission3',
-    name: 'OPERATION FROZEN THUNDER',
-    location: 'CHERNARUS - COORDINATES: 55.7558N, 37.6173E',
-    details: 'Sabotage enemy communications array. Weather conditions are extreme, expect temperatures below -20°C. Enemy patrols in area.',
-    objectives: '1. Infiltrate communications base<br>2. Plant explosives on main array<br>3. Destroy backup generators<br>4. Exfiltrate to extraction point',
-    difficulty: 'EXTREME',
-    payment: '$22,000',
-    duration: '3 HRS',
-    teamSize: 'PLATOON (12-16)',
-    coordinates: { lat: 55.7558, lon: 37.6173 }
-  },
-  {
-    id: 'mission4',
-    name: 'OPERATION DESERT HAWK',
-    location: 'TAKISTAN - COORDINATES: 39.9042N, 116.4074E',
-    details: 'Reconnaissance mission to gather intelligence on enemy troop movements. Maintain distance and avoid detection at all costs.',
-    objectives: '1. Establish observation point<br>2. Document enemy patrol patterns<br>3. Photograph military installations<br>4. Return with intelligence',
-    difficulty: 'LOW',
-    payment: '$8,000',
-    duration: '4 HRS',
-    teamSize: 'RECON TEAM (2-3)',
-    coordinates: { lat: 39.9042, lon: 116.4074 }
-  }
-];
-
 // System State
 let systemActive = false;
-let activeTab = null;
 let activeMission = null;
 let rotating = true;
-let targetLat = 0;
-let targetLon = 0;
 let lastInteractionTime = 0;
 let rotationTimeout = null;
 let velocity = { x: 0, y: 0 };
@@ -102,6 +48,102 @@ const friction = 0.95;
 setTimeout(() => {
   logoScreen.style.display = 'none';
 }, 2000);
+
+// Load mission data from external file
+async function loadMissions() {
+  try {
+    const response = await fetch('data/missions.json');
+    const missions = await response.json();
+    
+    // Log loaded missions for debugging
+    console.log('Loaded missions:', missions);
+    
+    if (!missions || missions.length === 0) {
+      throw new Error('No missions found in JSON file');
+    }
+    
+    return missions;
+  } catch (error) {
+    console.error('Error loading missions:', error);
+    // Fallback to sample missions if file not found or empty
+    return [
+      {
+        id: 'mission1',
+        name: 'OPERATION BLACKOUT',
+        location: 'ALTIS - COORDINATES: 38.9072N, 77.0369E',
+        difficulty: 'HIGH',
+        payment: '$15,000',
+        duration: '2.5 HRS',
+        teamSize: 'SQUAD (4-8)',
+        coordinates: { lat: 38.9072, lon: -77.0369 }
+      },
+      {
+        id: 'mission2',
+        name: 'OPERATION RED STORM',
+        location: 'TANOA - COORDINATES: 51.5074N, 0.1278E',
+        difficulty: 'MEDIUM',
+        payment: '$12,000',
+        duration: '2 HRS',
+        teamSize: 'FIRETEAM (4)',
+        coordinates: { lat: 51.5074, lon: -0.1278 }
+      },
+      {
+        id: 'mission3',
+        name: 'OPERATION FROZEN THUNDER',
+        location: 'CHERNARUS - COORDINATES: 55.7558N, 37.6173E',
+        difficulty: 'EXTREME',
+        payment: '$22,000',
+        duration: '3 HRS',
+        teamSize: 'PLATOON (12-16)',
+        coordinates: { lat: 55.7558, lon: 37.6173 }
+      },
+      {
+        id: 'mission4',
+        name: 'OPERATION DESERT HAWK',
+        location: 'TAKISTAN - COORDINATES: 39.9042N, 116.4074E',
+        difficulty: 'LOW',
+        payment: '$8,000',
+        duration: '4 HRS',
+        teamSize: 'RECON TEAM (2-3)',
+        coordinates: { lat: 39.9042, lon: 116.4074 }
+      }
+    ];
+  }
+}
+
+// Load intel data from external file
+async function loadIntel() {
+  try {
+    const response = await fetch('data/intel.json');
+    const intel = await response.json();
+    return intel;
+  } catch (error) {
+    console.error('Error loading intel:', error);
+    // Fallback to sample intel if file not found
+    return {
+      "mission1": {
+        "title": "OPERATION BLACKOUT INTEL",
+        "content": "",
+        "images": ["blackout_sat.jpg", "blackout_compound.jpg"]
+      },
+      "mission2": {
+        "title": "OPERATION RED STORM INTEL",
+        "content": "",
+        "images": ["redstorm_village.jpg", "redstorm_hostages.jpg"]
+      },
+      "mission3": {
+        "title": "OPERATION FROZEN THUNDER INTEL",
+        "content": "",
+        "images": ["frozen_array.jpg", "frozen_thermal.jpg"]
+      },
+      "mission4": {
+        "title": "OPERATION DESERT HAWK INTEL",
+        "content": "",
+        "images": ["desert_topo.jpg", "desert_vehicle.jpg"]
+      }
+    };
+  }
+}
 
 // Boot Sequence System
 function initializeBootSequence() {
@@ -147,10 +189,10 @@ function typeWriter(element, text, delay, callback) {
   setTimeout(type, delay);
 }
 
-// System Activation (No fading, instant transitions for military terminal feel)
+// System Activation
 function activateSystem() {
   systemActive = true;
-  activationSound.play();
+  activationSound.play().catch(console.error);
   
   // Set music volume based on slider
   music.volume = volumeSlider.value;
@@ -163,75 +205,95 @@ function activateSystem() {
   updateDateTime();
   setInterval(updateDateTime, 1000);
   
-  // Set STRAT MAP tab as active by default
-  const stratMapTab = document.querySelector('.tab[data-section="stratmap"]');
-  if (stratMapTab) {
-    stratMapTab.classList.add('active');
-    activeTab = "stratmap";
-  }
-  
   // Show notification
   showNotification('SYSTEM ACTIVATED - GLOBE TRACKING OPERATIONAL');
   
   // Apply LCD screen overlay
   lcdOverlay.style.display = 'block';
-  console.log("LCD overlay activated");
-}
-
-// Tab Control System
-function initializeTabSystem() {
-  tabs.forEach(tab => {
-    tab.addEventListener('mouseenter', (e) => {
-      if (!systemActive) return;
-      
-      // Play tab sound
-      if (tabSound.readyState >= 2) {
-        tabSound.currentTime = 0;
-        tabSound.play().catch(console.error);
-      }
-      
-      // Show image panel with corresponding image
-      imagePanel.style.opacity = '1';
-      imagePanel.style.pointerEvents = 'auto';
-      tabImage.src = `textures/${tab.dataset.img}`;
-    });
-    
-    tab.addEventListener('mouseleave', () => {
-      // Hide image panel when not hovering
-      imagePanel.style.opacity = '0';
-      imagePanel.style.pointerEvents = 'none';
-    });
-    
-    tab.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      if (!systemActive) return;
-      
-      // Set active tab
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      activeTab = tab.dataset.section;
-      
-      // Show notification
-      showNotification(`${tab.textContent} SECTION ACCESSED`);
-    });
-  });
 }
 
 // Mission Panel System
 function initializeMissionPanel() {
-  closeButton.addEventListener('click', () => {
+  closeMissionButton.addEventListener('click', () => {
     missionPanel.classList.remove('active');
     activeMission = null;
     
     // Resume auto-rotation when mission panel is closed
     resumeRotation();
   });
+  
+  // Intel button functionality
+  missionIntelButton.addEventListener('click', () => {
+    if (activeMission) {
+      openIntelPanel(activeMission);
+    }
+  });
 }
 
-function displayMission(missionId) {
+// Intel Panel System
+function initializeIntelPanel() {
+  closeIntelButton.addEventListener('click', () => {
+    intelPanel.classList.remove('active');
+  });
+}
+
+async function openIntelPanel(missionId) {
+  // Load intel data
+  const intelData = await loadIntel();
+  const missionIntel = intelData[missionId];
+  
+  if (!missionIntel) {
+    showNotification('NO INTEL AVAILABLE FOR THIS MISSION');
+    return;
+  }
+  
+  // Play intel sound
+  if (intelSound && intelSound.readyState >= 2) {
+    intelSound.currentTime = 0;
+    intelSound.play().catch(console.error);
+  }
+  
+  // Update intel panel content
+  document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
+  
+  // Create intel content container
+  let intelContent = '';
+  
+  // Only add content paragraph if there's actual content
+  if (missionIntel.content && missionIntel.content.trim() !== '') {
+    intelContent += `<p>${missionIntel.content}</p>`;
+  }
+  
+  // Add images if available
+  if (missionIntel.images && missionIntel.images.length > 0) {
+    missionIntel.images.forEach(imgSrc => {
+      intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+    });
+  }
+  
+  // If there's no content and no images, show a placeholder message
+  if (intelContent === '') {
+    intelContent = '<p>No intel data available.</p>';
+  }
+  
+  document.getElementById('intel-content').innerHTML = intelContent;
+  
+  // Show intel panel
+  intelPanel.classList.add('active');
+  
+  // Show notification
+  showNotification('ACCESSING MISSION INTEL');
+}
+
+async function displayMission(missionId) {
+  // Load mission data
+  const missions = await loadMissions();
   const mission = missions.find(m => m.id === missionId);
-  if (!mission) return;
+  
+  if (!mission) {
+    showNotification('MISSION DATA NOT FOUND');
+    return;
+  }
   
   // Play mission sound
   if (missionSound && missionSound.readyState >= 2) {
@@ -241,14 +303,33 @@ function displayMission(missionId) {
   
   // Update mission panel content
   document.getElementById('mission-title').textContent = mission.name;
-  document.getElementById('mission-name').textContent = mission.name;
   document.getElementById('mission-location').textContent = mission.location;
-  document.getElementById('mission-details').textContent = mission.details;
-  document.getElementById('mission-objectives').innerHTML = mission.objectives;
   document.getElementById('mission-difficulty').textContent = mission.difficulty;
   document.getElementById('mission-payment').textContent = mission.payment;
   document.getElementById('mission-duration').textContent = mission.duration;
   document.getElementById('mission-team-size').textContent = mission.teamSize;
+  
+  // Display mission image if available
+  const missionPanel = document.getElementById('mission-panel');
+  let missionImageElement = missionPanel.querySelector('.mission-image');
+  
+  if (mission.image) {
+    // Create or update mission image element
+    if (!missionImageElement) {
+      missionImageElement = document.createElement('img');
+      missionImageElement.className = 'mission-image';
+      
+      // Insert after mission location
+      const locationElement = document.getElementById('mission-location').parentElement;
+      locationElement.parentNode.insertBefore(missionImageElement, locationElement.nextSibling);
+    }
+    
+    missionImageElement.src = `data/images/${mission.image}`;
+    missionImageElement.style.display = 'block';
+  } else if (missionImageElement) {
+    // Hide mission image if none available
+    missionImageElement.style.display = 'none';
+  }
   
   // Show mission panel
   missionPanel.classList.add('active');
@@ -282,110 +363,8 @@ function resumeRotation() {
   rotating = true;
 }
 
-// Mock submarine cable data (replaces fetch API call)
-function getSubmarineCables() {
-  // Generate a set of mock submarine cable routes
-  const cables = [];
-  
-  // Cable 1: Transatlantic
-  cables.push({
-    points: [
-      { lat: 40.7128, lng: -74.0060 }, // New York
-      { lat: 42.0, lng: -45.0 },       // Mid-Atlantic
-      { lat: 51.5074, lng: -0.1278 }   // London
-    ]
-  });
-  
-  // Cable 2: Trans-Pacific
-  cables.push({
-    points: [
-      { lat: 37.7749, lng: -122.4194 }, // San Francisco
-      { lat: 30.0, lng: -170.0 },       // Mid-Pacific
-      { lat: 23.0, lng: 150.0 },        // West Pacific
-      { lat: 35.6762, lng: 139.6503 }   // Tokyo
-    ]
-  });
-  
-  // Cable 3: Europe to Asia
-  cables.push({
-    points: [
-      { lat: 51.5074, lng: -0.1278 },   // London
-      { lat: 41.9028, lng: 12.4964 },   // Rome
-      { lat: 39.0, lng: 26.0 },         // Mediterranean
-      { lat: 31.2001, lng: 29.9187 },   // Alexandria
-      { lat: 25.0, lng: 55.0 },         // Arabian Sea
-      { lat: 19.0760, lng: 72.8777 },   // Mumbai
-      { lat: 13.0, lng: 85.0 },         // Bay of Bengal
-      { lat: 1.3521, lng: 103.8198 }    // Singapore
-    ]
-  });
-  
-  // Cable 4: South America to Africa
-  cables.push({
-    points: [
-      { lat: -22.9068, lng: -43.1729 }, // Rio de Janeiro
-      { lat: -10.0, lng: -20.0 },       // South Atlantic
-      { lat: -15.0, lng: 5.0 },         // Mid Atlantic
-      { lat: -33.9249, lng: 18.4241 }   // Cape Town
-    ]
-  });
-  
-  // Cable 5: Australia to Asia
-  cables.push({
-    points: [
-      { lat: -33.8688, lng: 151.2093 }, // Sydney
-      { lat: -15.0, lng: 155.0 },       // Coral Sea
-      { lat: -5.0, lng: 145.0 },        // New Guinea
-      { lat: 3.1390, lng: 101.6869 },   // Kuala Lumpur
-      { lat: 13.7563, lng: 100.5018 }   // Bangkok
-    ]
-  });
-  
-  return cables;
-}
-
-// Mock conflict data for heatmap (replaces fetch API call)
-function getConflictData() {
-  // Generate realistic conflict hotspots around the world
-  return [
-    // Middle East conflicts
-    { lat: 33.3152, lng: 44.3661, weight: 5 },  // Baghdad
-    { lat: 34.5553, lng: 69.2075, weight: 4 },  // Kabul
-    { lat: 33.5138, lng: 36.2765, weight: 4 },  // Damascus
-    { lat: 15.3694, lng: 44.1910, weight: 3 },  // Sana'a (Yemen)
-    { lat: 31.7683, lng: 35.2137, weight: 3 },  // Jerusalem
-    
-    // African conflicts
-    { lat: 9.0820, lng: 8.6753, weight: 3 },    // Nigeria
-    { lat: 12.1348, lng: 15.0557, weight: 2 },  // Chad
-    { lat: 6.1771, lng: 35.7499, weight: 2 },   // South Sudan
-    { lat: 9.1450, lng: 40.4897, weight: 2 },   // Ethiopia
-    { lat: 2.0469, lng: 45.3182, weight: 3 },   // Somalia
-    
-    // Eastern Europe
-    { lat: 50.4501, lng: 30.5234, weight: 3 },  // Kyiv
-    { lat: 48.0196, lng: 37.8022, weight: 4 },  // Donetsk
-    
-    // Latin America
-    { lat: 4.5709, lng: -74.2973, weight: 2 },  // Colombia
-    { lat: 10.4806, lng: -66.9036, weight: 2 }, // Venezuela
-    { lat: 19.4326, lng: -99.1332, weight: 3 }, // Mexico City
-    
-    // Southeast Asia
-    { lat: 21.9162, lng: 95.9560, weight: 2 },  // Myanmar
-    { lat: 14.5995, lng: 120.9842, weight: 1 }, // Manila
-    
-    // Additional hotspots
-    { lat: 34.0522, lng: -118.2437, weight: 1 }, // Los Angeles
-    { lat: 51.5074, lng: -0.1278, weight: 1 },   // London
-    { lat: 55.7558, lng: 37.6173, weight: 2 },   // Moscow
-    { lat: 39.9042, lng: 116.4074, weight: 1 },  // Beijing
-    { lat: 28.6139, lng: 77.2090, weight: 2 }    // New Delhi
-  ];
-}
-
 // Globe Visualization System
-function initializeGlobe() {
+async function initializeGlobe() {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({
@@ -487,7 +466,11 @@ function initializeGlobe() {
   // Create the textured globe
   const earthGlobe = createTexturedGlobe();
   
-  // Add mission points of interest - Changed to dark red color
+  // Load missions and add them to the globe
+  const missions = await loadMissions();
+  const missionPoints = [];
+  
+  // Add mission points of interest
   function addMissionPoint(mission) {
     const lat = mission.coordinates.lat;
     const lon = mission.coordinates.lon;
@@ -533,86 +516,10 @@ function initializeGlobe() {
   }
   
   // Add mission points
-  const missionPoints = missions.map(mission => addMissionPoint(mission));
-  
-  // Submarine Cables Group
-  const cablesGroup = new THREE.Group();
-  scene.add(cablesGroup);
-  
-  // Heat map group
-  const heatmapGroup = new THREE.Group();
-  scene.add(heatmapGroup);
-  
-  // Add submarine cables
-  function addSubmarineCables() {
-    const cables = getSubmarineCables(); // Use mock data instead of fetching
-    console.log("Adding submarine cables:", cables.length);
-    
-    cables.forEach(cable => {
-      const points = [];
-      
-      cable.points.forEach(point => {
-        const phi = (90 - point.lat) * Math.PI / 180;
-        const theta = (point.lng + 180) * Math.PI / 180;
-        
-        // Calculate position on globe
-        const x = -10 * Math.sin(phi) * Math.cos(theta);
-        const y = 10 * Math.cos(phi);
-        const z = 10 * Math.sin(phi) * Math.sin(theta);
-        
-        points.push(new THREE.Vector3(x, y, z));
-      });
-      
-      // Create cable
-      const cableGeometry = new THREE.BufferGeometry().setFromPoints(points);
-      const cableMaterial = new THREE.LineBasicMaterial({ 
-        color: 0x8B0000, // Dark red
-        linewidth: 1,
-        transparent: true,
-        opacity: 0.6
-      });
-      
-      const cableLine = new THREE.Line(cableGeometry, cableMaterial);
-      cablesGroup.add(cableLine);
-    });
-  }
-  
-  // Add ACLED conflict heatmap
-  function addConflictHeatmap() {
-    const conflictData = getConflictData(); // Use mock data instead of fetching
-    console.log("Adding conflict points:", conflictData.length);
-    
-    conflictData.forEach(point => {
-      const phi = (90 - point.lat) * Math.PI / 180;
-      const theta = (point.lng + 180) * Math.PI / 180;
-      
-      // Calculate position on globe
-      const x = -10.05 * Math.sin(phi) * Math.cos(theta); // Slightly above surface
-      const y = 10.05 * Math.cos(phi);
-      const z = 10.05 * Math.sin(phi) * Math.sin(theta);
-      
-      // Create heat point
-      const size = 0.1 + (point.weight * 0.05);
-      const heatGeometry = new THREE.SphereGeometry(size, 8, 8);
-      
-      // Create gradient color based on weight (red with varying opacity)
-      const opacity = 0.3 + (point.weight * 0.1);
-      const heatMaterial = new THREE.MeshBasicMaterial({
-        color: 0xFF0000,
-        transparent: true,
-        opacity: opacity
-      });
-      
-      const heatPoint = new THREE.Mesh(heatGeometry, heatMaterial);
-      heatPoint.position.set(x, y, z);
-      
-      heatmapGroup.add(heatPoint);
-    });
-  }
-  
-  // Load submarine cables and conflict heatmap
-  addSubmarineCables();
-  addConflictHeatmap();
+  missions.forEach(mission => {
+    const point = addMissionPoint(mission);
+    missionPoints.push(point);
+  });
   
   // Handle clicking on mission points
   const raycaster = new THREE.Raycaster();
@@ -720,8 +627,8 @@ volumeSlider.addEventListener('input', (e) => {
 // Initialize All Systems
 document.addEventListener('DOMContentLoaded', () => {
   initializeBootSequence();
-  initializeTabSystem();
   initializeMissionPanel();
+  initializeIntelPanel();
   initializeGlobe();
   
   // Fix volume icon if not showing

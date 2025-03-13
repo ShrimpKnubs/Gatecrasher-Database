@@ -39,15 +39,6 @@
     </div>
   </div>
 
-  <div id="image-panel">
-    <img src="" alt="Intel Photo" id="tab-image">
-  </div>
-
-  <div class="sidebar">
-    <a href="#" class="tab" data-img="tab1.png" data-section="stratmap">STRAT MAP</a>
-    <a href="#" class="tab" data-img="tab3.png" data-section="intel">INTEL</a>
-  </div>
-
   <!-- Mission Panel -->
   <div id="mission-panel">
     <div id="mission-header">
@@ -55,43 +46,39 @@
       <button id="close-mission">X</button>
     </div>
     <div class="mission-section">
-      <div class="mission-label">OPERATION NAME</div>
-      <div id="mission-name" class="mission-content">OPERATION BLACKOUT</div>
-    </div>
-    <div class="mission-section">
       <div class="mission-label">LOCATION</div>
-      <div id="mission-location" class="mission-content">ALTIS - COORDINATES: 38.9072N, 77.0369E</div>
-    </div>
-    <div class="mission-section">
-      <div class="mission-label">MISSION DETAILS</div>
-      <div id="mission-details" class="mission-content">
-        Infiltrate enemy compound to secure intel on weapons shipments. Expect heavy resistance from local militia forces. Stealth approach recommended for initial phase.
-      </div>
-    </div>
-    <div class="mission-section">
-      <div class="mission-label">OBJECTIVES</div>
-      <div id="mission-objectives" class="mission-content">
-        1. Secure intel documents from main building<br>
-        2. Eliminate or neutralize militia commander<br>
-        3. Extract to designated LZ
-      </div>
+      <div id="mission-location" class="mission-content">LOCATION PLACEHOLDER</div>
     </div>
     <div class="mission-stats">
       <div class="stat-box">
         <div class="stat-label">DIFFICULTY</div>
-        <div id="mission-difficulty" class="stat-value">HIGH</div>
+        <div id="mission-difficulty" class="stat-value">MEDIUM</div>
       </div>
       <div class="stat-box">
         <div class="stat-label">PAYMENT</div>
-        <div id="mission-payment" class="stat-value">$15,000</div>
+        <div id="mission-payment" class="stat-value">$10,000</div>
       </div>
       <div class="stat-box">
         <div class="stat-label">DURATION</div>
-        <div id="mission-duration" class="stat-value">2.5 HRS</div>
+        <div id="mission-duration" class="stat-value">2 HRS</div>
       </div>
       <div class="stat-box">
         <div class="stat-label">TEAM SIZE</div>
         <div id="mission-team-size" class="stat-value">SQUAD (4-8)</div>
+      </div>
+    </div>
+    <button id="mission-intel-button" class="intel-button">VIEW INTEL</button>
+  </div>
+  
+  <!-- Intel Panel -->
+  <div id="intel-panel">
+    <div id="intel-header">
+      <div id="intel-title">MISSION INTEL</div>
+      <button id="close-intel">X</button>
+    </div>
+    <div class="intel-section">
+      <div id="intel-content" class="intel-content">
+        <!-- Intel content will be loaded dynamically -->
       </div>
     </div>
   </div>
@@ -120,6 +107,9 @@
   </audio>
   <audio id="mission-sound">
     <source src="sounds/mission-sound.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="intel-sound">
+    <source src="sounds/intel-sound.mp3" type="audio/mpeg">
   </audio>
 
   <!-- Scripts -->

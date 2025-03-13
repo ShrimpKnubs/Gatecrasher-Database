@@ -134,89 +134,6 @@
   background: var(--background-light);
 }
 
-/* Sidebar System */
-.sidebar {
-  position: fixed;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 0;
-  opacity: 1;
-}
-
-.tab {
-  background: var(--background-medium);
-  color: var(--text-primary);
-  padding: 15px 20px 15px 40px;
-  text-decoration: none;
-  width: 200px;
-  border-right: 4px solid var(--accent-color);
-  font-size: 1.1em;
-  transition: transform 0.3s ease;
-  position: relative;
-  text-align: right;
-  transform: translateX(-150px); /* Start off-screen */
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.tab:after {
-  content: '>';
-  position: absolute;
-  right: 15px;
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.tab:hover {
-  transform: translateX(0); /* Slide into view on hover */
-  background: var(--background-light);
-  color: var(--highlight-color);
-}
-
-.tab:hover:after {
-  opacity: 1;
-  transform: translateX(5px);
-  color: var(--highlight-color);
-}
-
-.tab.active {
-  transform: translateX(0);
-  background: var(--background-light);
-  border-right: 4px solid var(--highlight-color);
-  color: var(--highlight-color);
-}
-
-/* Image Panel */
-#image-panel {
-  position: fixed;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 30vw;
-  height: 70vh;
-  background: rgba(0, 41, 32, 0.8);
-  z-index: 1;
-  border-right: 2px solid var(--accent-color);
-  transition: opacity 0.3s ease;
-  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-}
-
-#tab-image {
-  max-width: 90%;
-  max-height: 90%;
-  border: 1px solid var(--border-color);
-  opacity: 0.7;
-}
-
 /* Mission Info Panel */
 #mission-panel {
   position: fixed;
@@ -301,6 +218,79 @@
 .stat-value {
   color: var(--text-primary);
   font-size: 1.2em;
+}
+
+/* Intel Panel */
+#intel-panel {
+  position: fixed;
+  left: -40vw; /* Start off-screen */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35vw;
+  height: 70vh;
+  background: var(--background-medium);
+  border-right: 2px solid var(--accent-color);
+  z-index: 4;
+  transition: left 0.4s cubic-bezier(0.215, 0.610, 0.355, 1.000);
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#intel-panel.active {
+  left: 0;
+}
+
+#intel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#intel-title {
+  color: var(--highlight-color);
+  font-size: 1.5em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+#close-intel {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.intel-section {
+  margin-bottom: 15px;
+}
+
+.intel-content {
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+/* Add styling for mission and intel images */
+.mission-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  margin: 10px 0;
+  border: 1px solid var(--border-color);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.intel-image {
+  width: 100%;
+  max-height: 250px;
+  object-fit: contain;
+  margin: 10px 0;
+  border: 1px solid var(--border-color);
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 /* Status Bar */
@@ -394,7 +384,23 @@
   cursor: pointer !important;
 }
 
-/* LCD Screen Effect - Greatly enhanced for visibility */
+/* Intel button */
+.intel-button {
+  background: var(--background-light);
+  color: var(--highlight-color);
+  border: 1px solid var(--border-color);
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
+  margin-top: 15px;
+  transition: background 0.2s ease;
+}
+
+.intel-button:hover {
+  background: var(--accent-color);
+}
+
+/* LCD Screen Effect - Enhanced but with reduced flicker */
 #lcd-overlay {
   position: fixed;
   top: 0;
@@ -419,7 +425,7 @@
   );
   background-size: 100% 8px; /* Increased size of scanlines */
   z-index: 1;
-  opacity: 0.3; /* Increased opacity */
+  opacity: 0.25; /* Moderate opacity */
   pointer-events: none;
 }
 
@@ -429,10 +435,11 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 50, 30, 0.25); /* Increased green tint opacity */
+  background: rgba(0, 50, 30, 0.2); /* Green tint */
   z-index: 2;
   pointer-events: none;
-  animation: flicker 0.3s infinite;
+  /* Reduced flicker animation */
+  animation: flicker 2.5s infinite; /* Slower animation */
 }
 
 .interlace {
@@ -443,7 +450,7 @@
   height: 100%;
   background: repeating-linear-gradient(
     transparent 0px,
-    rgba(0, 0, 0, 0.1) 1px, /* Increased opacity */
+    rgba(0, 0, 0, 0.08) 1px,
     transparent 2px
   );
   z-index: 3;
@@ -458,8 +465,8 @@
   height: 100%;
   border-radius: 15px; /* Increased curvature */
   box-shadow: 
-    inset 0 0 150px rgba(0, 0, 0, 0.9), /* Much darker shadow at corners */
-    0 0 70px rgba(0, 150, 100, 0.35); /* Brighter glow */
+    inset 0 0 150px rgba(0, 0, 0, 0.8), /* Darker shadow at corners */
+    0 0 70px rgba(0, 150, 100, 0.3); /* Green glow */
   z-index: 4;
   pointer-events: none;
 }
@@ -480,26 +487,19 @@
   pointer-events: none;
 }
 
+/* Reduced flicker intensity with longer cycle */
 @keyframes flicker {
-  0% { opacity: 0.25; }
-  5% { opacity: 0.35; }
+  0% { opacity: 0.2; }
+  5% { opacity: 0.2; }
   10% { opacity: 0.25; }
-  15% { opacity: 0.45; }
-  20% { opacity: 0.25; }
-  25% { opacity: 0.35; }
-  30% { opacity: 0.25; }
-  35% { opacity: 0.45; }
-  40% { opacity: 0.25; }
-  45% { opacity: 0.35; }
+  15% { opacity: 0.2; }
+  20% { opacity: 0.2; }
+  30% { opacity: 0.23; }
+  40% { opacity: 0.2; }
   50% { opacity: 0.25; }
-  55% { opacity: 0.45; }
-  60% { opacity: 0.25; }
-  65% { opacity: 0.35; }
-  70% { opacity: 0.25; }
-  75% { opacity: 0.45; }
-  80% { opacity: 0.25; }
-  85% { opacity: 0.35; }
+  60% { opacity: 0.2; }
+  70% { opacity: 0.22; }
+  80% { opacity: 0.2; }
   90% { opacity: 0.25; }
-  95% { opacity: 0.45; }
-  100% { opacity: 0.25; }
+  100% { opacity: 0.2; }
 }
