@@ -147,454 +147,127 @@ async function loadIntel() {
   }
 }
 
-// Initialize 80s Sci-Fi decorative elements
-function initialize80sSciFiElements() {
-  // Hide panels initially
+// Initialize decorative elements
+function initializeDecorativeElements() {
+  // Hide side panels at first
   leftPanel.style.opacity = '0';
   rightPanel.style.opacity = '0';
   
-  // Initialize wireframe grid
-  createWireframeGrid();
-  
-  // Initialize spectrum analyzer
-  createSpectrumAnalyzer();
-  
-  // Initialize binary display
-  initializeBinaryMatrix();
-  
-  // Initialize random coordinates for radar
-  updateRadarCoordinates();
-  
-  // System status updates (flashing statuses)
-  initializeStatusCycle();
-  
-  // Command line output animation
-  initializeCommandLine();
-  
-  // Initialize HEX dump rotation
-  initializeHexDump();
-}
-
-// Create a grid for the wireframe background
-function createWireframeGrid() {
-  const wireframeGrid = document.getElementById('wireframe-grid');
-  const rows = 10;
-  const cols = 10;
-  
-  wireframeGrid.innerHTML = '';
-  
-  for (let i = 0; i < rows; i++) {
-    const row = document.createElement('div');
-    row.className = 'wireframe-row';
-    
-    for (let j = 0; j < cols; j++) {
-      const cell = document.createElement('div');
-      cell.className = 'wireframe-cell';
-      row.appendChild(cell);
-    }
-    
-    wireframeGrid.appendChild(row);
-  }
-}
-
-// Create spectrum analyzer bars
-function createSpectrumAnalyzer() {
-  const spectrumContainer = document.getElementById('spectrum-container');
-  const numBars = 20;
-  
-  spectrumContainer.innerHTML = '';
-  
-  for (let i = 0; i < numBars; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'spectrum-bar';
-    
-    // Set random animation properties
-    const minHeight = 10 + Math.random() * 20;
-    const maxHeight = 40 + Math.random() * 40;
-    
-    bar.style.setProperty('--min-height', `${minHeight}px`);
-    bar.style.setProperty('--max-height', `${maxHeight}px`);
-    
-    // Randomize animation delay
-    bar.style.animationDelay = `${Math.random() * 1}s`;
-    
-    spectrumContainer.appendChild(bar);
-  }
-}
-
-// Initialize the binary matrix with flashing highlights
-function initializeBinaryMatrix() {
-  const binaryColumns = document.querySelectorAll('.binary-column');
-  
-  binaryColumns.forEach(column => {
-    // Generate binary strings for each column
-    const binaryContent = generateBinaryString(300);
-    column.innerHTML = binaryContent;
-    
-    // Clone the content for continuous scrolling
-    column.innerHTML += binaryContent;
-  });
-  
-  // Periodically highlight random binary characters
+  // Create random radar blips
   setInterval(() => {
     if (!systemActive) return;
     
-    // Remove existing highlights
-    document.querySelectorAll('.binary-highlight').forEach(el => {
-      el.classList.remove('binary-highlight');
-    });
+    const radarContainer = document.querySelector('.radar-container');
     
-    // Add new random highlights
-    const allBinaryChars = document.querySelectorAll('.binary-char');
-    const highlightCount = Math.floor(Math.random() * 10) + 5;
+    // Remove old dots that aren't the initial ones
+    const oldDots = document.querySelectorAll('.radar-dot.temp');
+    oldDots.forEach(dot => dot.remove());
     
-    for (let i = 0; i < highlightCount; i++) {
-      const randomIndex = Math.floor(Math.random() * allBinaryChars.length);
-      if (allBinaryChars[randomIndex]) {
-        allBinaryChars[randomIndex].classList.add('binary-highlight');
-      }
-    }
-  }, 1000);
-}
-
-// Generate random binary strings
-function generateBinaryString(length) {
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    const digit = Math.floor(Math.random() * 2);
-    result += `<span class="binary-char">${digit}</span>`;
+    // Add 1-3 new random dots
+    const numDots = Math.floor(Math.random() * 3) + 1;
     
-    // Add a space every 8 digits
-    if ((i + 1) % 8 === 0) result += ' ';
-    
-    // Add a line break every 64 digits
-    if ((i + 1) % 64 === 0) result += '<br>';
-  }
-  return result;
-}
-
-// Update radar coordinates periodically
-function updateRadarCoordinates() {
-  if (!systemActive) return;
-  
-  const radarCoordinates = document.querySelector('.radar-coordinates');
-  
-  // Generate random coordinates
-  const lat = (35 + Math.random() * 10).toFixed(4);
-  const lon = (135 + Math.random() * 10).toFixed(4);
-  
-  // Update display
-  radarCoordinates.innerHTML = `LAT: ${lat}° N&nbsp;&nbsp;&nbsp;LON: ${lon}° E`;
-  
-  // Create random radar dots periodically
-  const radarContainer = document.querySelector('.radar-container');
-  
-  // Remove old dots that aren't the initial ones
-  const oldDots = document.querySelectorAll('.radar-dot.temp');
-  oldDots.forEach(dot => dot.remove());
-  
-  // Remove old markers that aren't the initial ones
-  const oldMarkers = document.querySelectorAll('.radar-marker.temp');
-  oldMarkers.forEach(marker => marker.remove());
-  
-  // Add 1-3 new random dots
-  const numDots = Math.floor(Math.random() * 3) + 1;
-  
-  for (let i = 0; i < numDots; i++) {
-    // Random position within radar
-    const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * 75;
-    const x = 75 + Math.cos(angle) * distance;
-    const y = 75 + Math.sin(angle) * distance;
-    
-    // Create dot
-    const dot = document.createElement('div');
-    dot.className = 'radar-dot temp' + (Math.random() > 0.8 ? ' hostile' : '');
-    dot.style.left = `${x}px`;
-    dot.style.top = `${y}px`;
-    
-    // Add blink effect to some dots
-    if (Math.random() > 0.5) {
-      dot.classList.add('blink');
-    }
-    
-    radarContainer.appendChild(dot);
-    
-    // Add marker for some dots
-    if (Math.random() > 0.7) {
-      const marker = document.createElement('div');
-      marker.className = 'radar-marker temp' + (dot.classList.contains('hostile') ? ' hostile' : '');
+    for (let i = 0; i < numDots; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'radar-dot temp';
       
-      // Generate marker code
-      const markerText = dot.classList.contains('hostile') 
-        ? 'HOSTL' 
-        : `P${Math.floor(Math.random() * 99)}`;
+      // Random position within radar
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 75;
+      const x = 75 + Math.cos(angle) * distance;
+      const y = 75 + Math.sin(angle) * distance;
       
-      marker.textContent = markerText;
-      marker.style.left = `${x}px`;
-      marker.style.top = `${y - 10}px`;
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
       
-      radarContainer.appendChild(marker);
-    }
-  }
-  
-  // Schedule next update
-  setTimeout(updateRadarCoordinates, 3000);
-}
-
-// Initialize status indicators cycle
-function initializeStatusCycle() {
-  if (!systemActive) return;
-  
-  const statuses = [
-    'ACTIVE', 'ONLINE', 'NOMINAL', 'SCANNING', 'ANALYZING', 'SYNCED'
-  ];
-  
-  const statusElements = [
-    document.getElementById('cmd-status'),
-    document.getElementById('decrypt-status'),
-    document.getElementById('systems-status'),
-    document.getElementById('hex-status'),
-    document.getElementById('radar-status'),
-    document.getElementById('spectrum-status'),
-    document.getElementById('wireframe-status'),
-    document.getElementById('waveform-status')
-  ];
-  
-  // Randomly change statuses
-  statusElements.forEach(el => {
-    if (el && Math.random() > 0.7) {
-      // 30% chance to update each status
-      el.textContent = statuses[Math.floor(Math.random() * statuses.length)];
-      
-      // Randomly add/remove active class for blinking
-      if (Math.random() > 0.5) {
-        el.classList.add('active');
+      // Random color based on distance (closer = more likely to be alert color)
+      const colorRandom = Math.random();
+      if (distance < 25 || colorRandom < 0.3) {
+        dot.style.background = 'var(--alert-color)';
+        dot.style.width = '4px';
+        dot.style.height = '4px';
+      } else if (distance < 50 || colorRandom < 0.7) {
+        dot.style.background = 'var(--warning-color)';
       } else {
-        el.classList.remove('active');
-      }
-    }
-  });
-  
-  // Schedule next status cycle
-  setTimeout(initializeStatusCycle, 5000);
-}
-
-// Initialize command line animation
-function initializeCommandLine() {
-  if (!systemActive) return;
-  
-  const commandOutput = document.getElementById('command-output');
-  
-  // List of possible commands and responses
-  const commands = [
-    { cmd: 'scan_perimeter', response: ['Scanning perimeter...', 'No threats detected.'] },
-    { cmd: 'analyze_signal SIG-7654', response: ['Signal analysis running...', 'Encrypted COMM detected at frequency 426.82 MHz'] },
-    { cmd: 'ping_satellite REQ-92', response: ['Pinging satellite...', 'Response received: 163ms'] },
-    { cmd: 'decrypt_transmission AG:45:78', response: ['Decrypting transmission...', 'ERROR: Insufficient security clearance.'] },
-    { cmd: 'upload_tactical_data', response: ['Uploading tactical data...', 'Upload complete. Mission briefing updated.'] },
-    { cmd: 'analyze_threat_matrix', response: ['Analyzing threat matrix...', 'Potential hostiles: 4', 'Threat level: MODERATE'] },
-    { cmd: 'SYS_CHECK C_ARRAY[42]', response: ['Checking system array...', 'Array integrity: 87%'] },
-    { cmd: 'load_topographic_data', response: ['Loading topographic data...', 'Terrain analysis complete.'] }
-  ];
-  
-  // Get random command
-  const commandObj = commands[Math.floor(Math.random() * commands.length)];
-  
-  // Add command to terminal
-  const cmdLine = document.createElement('div');
-  cmdLine.className = 'command-line';
-  cmdLine.innerHTML = `<span class="command-prompt">SYS6></span> ${commandObj.cmd}`;
-  commandOutput.appendChild(cmdLine);
-  
-  // Add responses with delay
-  let delay = 500;
-  
-  commandObj.response.forEach(resp => {
-    setTimeout(() => {
-      const respLine = document.createElement('div');
-      respLine.className = 'command-line';
-      
-      // Add class for colored output if relevant
-      if (resp.includes('ERROR')) {
-        respLine.classList.add('command-error');
-      } else if (resp.includes('complete') || resp.includes('detected')) {
-        respLine.classList.add('command-success');
-      } else if (resp.includes('MODERATE') || resp.includes('WARNING')) {
-        respLine.classList.add('command-warning');
+        dot.style.background = 'var(--highlight-color)';
       }
       
-      respLine.textContent = resp;
-      commandOutput.appendChild(respLine);
+      // Fade out effect
+      dot.style.opacity = '1';
+      dot.style.transition = 'opacity 3s';
       
-      // Scroll to bottom
-      commandOutput.scrollTop = commandOutput.scrollHeight;
-    }, delay);
-    
-    delay += 700;
-  });
+      radarContainer.appendChild(dot);
+      
+      setTimeout(() => {
+        dot.style.opacity = '0';
+        setTimeout(() => dot.remove(), 3000);
+      }, 2000);
+    }
+  }, 2000);
   
-  // Add prompt after all responses
-  setTimeout(() => {
-    const promptLine = document.createElement('div');
-    promptLine.className = 'command-line';
-    promptLine.innerHTML = `<span class="command-prompt">SYS6></span> <span class="command-cursor"></span>`;
-    commandOutput.appendChild(promptLine);
+  // Animate waveform
+  setInterval(() => {
+    if (!systemActive) return;
     
-    // Remove old lines if too many
-    while (commandOutput.children.length > 12) {
-      commandOutput.removeChild(commandOutput.children[0]);
+    const wavePath = document.querySelector('.wave-svg path');
+    if (!wavePath) return;
+    
+    // Generate a different waveform pattern
+    const points = [];
+    const segments = 8;
+    
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * 200;
+      const yOffset = Math.random() * 30 - 15;
+      points.push([x, 25 + yOffset]);
     }
     
-    // Scroll to bottom
-    commandOutput.scrollTop = commandOutput.scrollHeight;
+    // Create SVG path from points
+    let pathData = `M${points[0][0]},${points[0][1]}`;
     
-    // Schedule next command
-    setTimeout(initializeCommandLine, 7000);
-  }, delay);
-}
-
-// Initialize HEX dump display with rotating content
-function initializeHexDump() {
-  if (!systemActive) return;
-  
-  const hexContent = document.getElementById('hex-content');
-  
-  // List of possible hex addresses, values and ASCII representations
-  const hexAddresses = [
-    '0x0000', '0x0010', '0x0020', '0x0030', '0x0040', '0x0050', 
-    '0x0060', '0x0070', '0x0080', '0x0090', '0x00A0', '0x00B0'
-  ];
-  
-  const hexLines = [];
-  
-  // Generate random hex dump lines
-  for (let i = 0; i < 6; i++) {
-    const values = [];
-    const ascii = [];
+    for (let i = 1; i < points.length; i++) {
+      const xc = (points[i][0] + points[i-1][0]) / 2;
+      const yc = (points[i][1] + points[i-1][1]) / 2;
+      pathData += ` Q${points[i-1][0]},${points[i-1][1]} ${xc},${yc}`;
+    }
     
-    // Generate 12 hex values per line
-    for (let j = 0; j < 12; j++) {
-      // Generate random hex value
-      const value = Math.floor(Math.random() * 256).toString(16).padStart(2, '0');
-      values.push(value);
+    // Smooth transition to new path
+    wavePath.style.transition = 'all 1s ease-in-out';
+    wavePath.setAttribute('d', pathData);
+  }, 2000);
+  
+  // Update system values periodically
+  setInterval(() => {
+    if (!systemActive) return;
+    
+    // Update random system values
+    document.querySelectorAll('.system-fill').forEach(fill => {
+      const currentWidth = parseInt(fill.style.width);
+      // Small random fluctuation in system values
+      const fluctuation = Math.random() * 6 - 3; // Range: -3 to +3
+      const newWidth = Math.max(10, Math.min(99, currentWidth + fluctuation));
+      fill.style.width = `${newWidth}%`;
       
-      // Generate ASCII representation (printable chars only)
-      const charCode = parseInt(value, 16);
-      let char = '.';
-      if (charCode >= 32 && charCode <= 126) {
-        char = String.fromCharCode(charCode);
+      // Update percentage text if it exists
+      const valueText = fill.closest('.system-item')?.querySelector('div:last-child');
+      if (valueText) {
+        valueText.textContent = `${Math.round(newWidth)}%`;
       }
-      ascii.push(char);
-    }
-    
-    // Randomly highlight some values
-    if (Math.random() > 0.7) {
-      const highlightStart = Math.floor(Math.random() * 8);
-      const highlightLength = Math.floor(Math.random() * 4) + 1;
       
-      for (let k = highlightStart; k < highlightStart + highlightLength && k < values.length; k++) {
-        values[k] = `<span class="hex-highlight">${values[k]}</span>`;
+      // Change color based on value
+      if (newWidth < 30) {
+        fill.style.background = 'var(--alert-color)';
+        if (valueText) valueText.style.color = 'var(--alert-color)';
+      } else if (newWidth < 65) {
+        fill.style.background = 'var(--warning-color)';
+        if (valueText) valueText.style.color = 'var(--warning-color)';
+      } else if (!fill.hasAttribute('style') || fill.style.background.includes('var(--warning-color)')) {
+        // Don't change color if it already has a custom background
+      } else {
+        fill.style.background = 'var(--highlight-color)';
+        if (valueText) valueText.style.color = 'var(--text-primary)';
       }
-    }
-    
-    hexLines.push({
-      address: hexAddresses[i],
-      values: values.join(' '),
-      ascii: ascii.join('')
     });
-  }
-  
-  // Update hex dump content
-  hexContent.innerHTML = '';
-  
-  hexLines.forEach(line => {
-    const lineElement = document.createElement('div');
-    lineElement.className = 'hex-line';
-    lineElement.innerHTML = `
-      <div class="hex-address">${line.address}</div>
-      <div class="hex-values">${line.values}</div>
-      <div class="hex-ascii">${line.ascii}</div>
-    `;
-    hexContent.appendChild(lineElement);
-  });
-  
-  // Schedule next update
-  setTimeout(initializeHexDump, 3000);
-}
-
-// Update waveform display
-function updateWaveform() {
-  if (!systemActive) return;
-  
-  const waveSvgPath = document.querySelector('.wave-svg path');
-  const waveTime = document.querySelector('.wave-time');
-  const waveStatus = document.querySelector('.wave-status');
-  
-  // Generate a different waveform pattern
-  const points = [];
-  const segments = 8;
-  
-  for (let i = 0; i <= segments; i++) {
-    const x = (i / segments) * 200;
-    const yOffset = Math.random() * 30 - 15;
-    points.push([x, 25 + yOffset]);
-  }
-  
-  // Create SVG path from points
-  let pathData = `M${points[0][0]},${points[0][1]}`;
-  
-  for (let i = 1; i < points.length; i++) {
-    const xc = (points[i][0] + points[i-1][0]) / 2;
-    const yc = (points[i][1] + points[i-1][1]) / 2;
-    pathData += ` Q${points[i-1][0]},${points[i-1][1]} ${xc},${yc}`;
-  }
-  
-  // Update the path
-  waveSvgPath.setAttribute('d', pathData);
-  
-  // Update time
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  const millis = String(now.getMilliseconds()).padStart(3, '0');
-  waveTime.textContent = `T:${hours}:${minutes}:${seconds}.${millis}`;
-  
-  // Update status
-  const noiseLevel = (5 + Math.random() * 15).toFixed(1);
-  waveStatus.textContent = `ENV_NOISE: ${noiseLevel}dB`;
-  
-  // Schedule next update
-  setTimeout(updateWaveform, 2000);
-}
-
-// Update wireframe display
-function updateWireframe() {
-  if (!systemActive) return;
-  
-  // Update wireframe cube rotation
-  const cube = document.getElementById('wireframe-cube');
-  if (cube) {
-    // Random rotation speed
-    const rotX = Math.random() * 360;
-    const rotY = Math.random() * 360;
-    cube.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-  }
-  
-  // Update coordinates
-  const coordX = document.querySelector('.wireframe-coordinate-x');
-  const coordY = document.querySelector('.wireframe-coordinate-y');
-  const coordZ = document.querySelector('.wireframe-coordinate-z');
-  
-  if (coordX && coordY && coordZ) {
-    coordX.textContent = `X:${(100 + Math.random() * 100).toFixed(2)}`;
-    coordY.textContent = `Y:${(50 + Math.random() * 100).toFixed(2)}`;
-    coordZ.textContent = `Z:${(150 + Math.random() * 100).toFixed(2)}`;
-  }
-  
-  // Schedule next update
-  setTimeout(updateWireframe, 3000);
+  }, 5000);
 }
 
 // Boot Sequence System
@@ -669,14 +342,6 @@ function activateSystem() {
     rightPanel.style.transition = 'opacity 1s ease-in';
     leftPanel.style.opacity = '1';
     rightPanel.style.opacity = '1';
-    
-    // Start all the 80s sci-fi panel animations
-    updateRadarCoordinates();
-    initializeStatusCycle();
-    initializeCommandLine();
-    initializeHexDump();
-    updateWaveform();
-    updateWireframe();
   }, 500);
 }
 
@@ -1098,7 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeMissionPanel();
   initializeIntelPanel();
   initializeGlobe();
-  initialize80sSciFiElements();
+  initializeDecorativeElements();
   
   // Fix volume icon if not showing
   const volumeIcon = document.getElementById('volume-icon');
