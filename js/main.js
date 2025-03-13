@@ -1,10 +1,29 @@
-// Initialize background
-document.getElementById('vanta-background').style.backgroundImage = "url('textures/background.png')";
-document.getElementById('vanta-background').style.backgroundSize = "cover";
-document.getElementById('vanta-background').style.backgroundRepeat = "no-repeat";
+// Firebase configuration - Replace with your actual firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBKhc_Nl4kMAUfd3Ze43jG6hM1nt9FCsIg",
+  authDomain: "gatecrasher-database.firebaseapp.com",
+  projectId: "gatecrasher-database",
+  storageBucket: "gatecrasher-database.firebasestorage.app",
+  messagingSenderId: "221759991275",
+  appId: "1:221759991275:web:4b1a92d2647d9f48c8bdae",
+  measurementId: "G-QH1TYL025K"
+};
+
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
 // DOM Elements
 const bootOverlay = document.getElementById('boot-overlay');
+const loginOverlay = document.getElementById('login-overlay');
+const loginForm = document.getElementById('login-form');
+const userIdInput = document.getElementById('user-id');
+const passwordInput = document.getElementById('password');
+const loginButton = document.getElementById('login-button');
+const continueAsGruntButton = document.getElementById('continue-as-grunt');
+const errorMessage = document.getElementById('error-message');
 const activateButton = document.getElementById('activate-button');
 const terminalText = document.getElementById('terminal-text');
 const logoScreen = document.getElementById('logo-screen');
@@ -26,16 +45,19 @@ const missionIntelButton = document.getElementById('mission-intel-button');
 const lcdOverlay = document.getElementById('lcd-overlay');
 const leftPanel = document.getElementById('left-panel');
 const rightPanel = document.getElementById('right-panel');
+const hqButton = document.getElementById('hq-button');
+const hqPanel = document.getElementById('hq-panel');
+const closeHqButton = document.getElementById('close-hq');
 
-// Add background image to logo screen and boot overlay too
+// Add background image to logo screen and login overlay too
 logoScreen.style.backgroundImage = "url('textures/background.png')";
 logoScreen.style.backgroundSize = "cover";
 logoScreen.style.backgroundRepeat = "no-repeat";
 
-bootOverlay.style.backgroundImage = "url('textures/background.png')";
-bootOverlay.style.backgroundSize = "cover";
-bootOverlay.style.backgroundRepeat = "no-repeat";
-bootOverlay.style.backgroundColor = "rgba(0, 31, 24, 0.85)"; // Semi-transparent overlay
+loginOverlay.style.backgroundImage = "url('textures/background.png')";
+loginOverlay.style.backgroundSize = "cover";
+loginOverlay.style.backgroundRepeat = "no-repeat";
+loginOverlay.style.backgroundColor = "rgba(0, 31, 24, 0.85)"; // Semi-transparent overlay
 
 // System State
 let systemActive = false;
@@ -45,105 +67,279 @@ let lastInteractionTime = 0;
 let rotationTimeout = null;
 let velocity = { x: 0, y: 0 };
 const friction = 0.95;
+let currentUser = null;
+let userRole = null;
+let missionMarkers = [];
+let deploymentMarkers = [];
+let scene = null; // Will be initialized with Three.js scene
 
 // Logo Screen Handling (No fading, instant transition)
 setTimeout(() => {
   logoScreen.style.display = 'none';
+  loginOverlay.style.display = 'flex'; // Show login screen instead of boot screen
 }, 2000);
 
-// Load mission data from external file
-async function loadMissions() {
+// Authentication state listener
+auth.onAuthStateChanged(user => {
+  if (user) {
+    // User is signed in
+    currentUser = user;
+    
+    // Get user data from Firestore
+    db.collection('users').doc(user.uid).get()
+      .then(doc => {
+        if (doc.exists) {
+          const userData = doc.data();
+          userRole = userData.role;
+          
+          // Show appropriate features based on role
+          showUserDashboard(userRole);
+          
+          // Hide login overlay
+          loginOverlay.style.display = 'none';
+          
+          // Initialize appropriate systems based on role
+          if (userRole === 'admin') {
+            initializeAdminFeatures();
+          } else if (userRole === 'squadLead') {
+            initializeSquadLeadFeatures();
+          } else {
+            initializeGruntFeatures();
+          }
+          
+          // Initialize common features
+          initializeUIAfterLogin();
+        }
+      })
+      .catch(error => {
+        console.error('Error getting user data:', error);
+        showNotification('ERROR LOADING USER DATA');
+      });
+  } else {
+    // User is signed out, show login screen
+    currentUser = null;
+    userRole = null;
+    systemActive = false;
+    loginOverlay.style.display = 'flex';
+    
+    // Hide panels
+    leftPanel.style.opacity = '0';
+    rightPanel.style.opacity = '0';
+    
+    // Reset status
+    if (statusText) {
+      statusText.textContent = 'STATUS: LOGGED OUT';
+    }
+  }
+});
+
+// Login form submission
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const userId = userIdInput.value.trim();
+  const password = passwordInput.value.trim();
+  
+  if (!userId || !password) {
+    errorMessage.textContent = 'ID and password required';
+    return;
+  }
+  
   try {
-    const response = await fetch('data/missions.json');
-    const missions = await response.json();
+    // This uses email auth format - you can customize auth methods
+    const email = `${userId}@yourarma3ops.com`;
+    await auth.signInWithEmailAndPassword(email, password);
     
-    // Log loaded missions for debugging
-    console.log('Loaded missions:', missions);
+    // Auth state listener will handle the rest
     
-    if (!missions || missions.length === 0) {
-      throw new Error('No missions found in JSON file');
+    // Clear form
+    loginForm.reset();
+    errorMessage.textContent = '';
+  } catch (error) {
+    console.error('Login error:', error);
+    errorMessage.textContent = 'Invalid ID or password';
+  }
+});
+
+// Continue as grunt
+continueAsGruntButton.addEventListener('click', () => {
+  userRole = 'grunt';
+  showUserDashboard(userRole);
+  loginOverlay.style.display = 'none';
+  
+  // Initialize grunt-only features
+  initializeGruntFeatures();
+  
+  // Play activation sounds and show notification
+  activationSound.play().catch(console.error);
+  showNotification('ACCESS GRANTED - GRUNT VIEW ONLY');
+  
+  // Initialize UI
+  initializeUIAfterLogin();
+});
+
+// Initialize UI after successful login
+function initializeUIAfterLogin() {
+  // Set system as active
+  systemActive = true;
+  
+  // Play activation sound
+  activationSound.play().catch(console.error);
+  
+  // Set music volume based on slider and play music
+  music.volume = volumeSlider.value;
+  music.play().catch(console.error);
+  
+  // Apply LCD screen overlay
+  lcdOverlay.style.display = 'block';
+  
+  // Fade in side panels
+  setTimeout(() => {
+    leftPanel.style.transition = 'opacity 1s ease-in';
+    rightPanel.style.transition = 'opacity 1s ease-in';
+    leftPanel.style.opacity = '1';
+    rightPanel.style.opacity = '1';
+  }, 500);
+  
+  // Update status based on role
+  statusText.textContent = `STATUS: ${userRole.toUpperCase()} - OPERATIONAL`;
+  
+  // Initialize updating features
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+  
+  // Show notification
+  showNotification('SYSTEM ACTIVATED - GLOBE TRACKING OPERATIONAL');
+  
+  // Setup upgrade check interval
+  setInterval(checkUpgrades, 60000); // Check every minute
+  
+  // Setup healing interval
+  initializeHealTimer();
+}
+
+// Show appropriate dashboard based on user role
+function showUserDashboard(role) {
+  // Show HQ button for all users
+  hqButton.style.display = 'block';
+  
+  if (role === 'admin') {
+    // Show admin controls
+    document.getElementById('admin-controls').style.display = 'block';
+  } else if (role === 'squadLead') {
+    // Show squad leader controls
+    document.getElementById('squad-controls').style.display = 'block';
+  }
+  
+  // HQ button handler
+  hqButton.addEventListener('click', () => {
+    toggleHqPanel(true);
+  });
+  
+  closeHqButton.addEventListener('click', () => {
+    toggleHqPanel(false);
+  });
+}
+
+// Toggle HQ panel
+function toggleHqPanel(show) {
+  if (show) {
+    // Show HQ panel
+    hqPanel.style.display = 'block';
+    
+    // Close other panels
+    if (missionPanel.classList.contains('active')) {
+      missionPanel.classList.remove('active');
     }
     
-    return missions;
-  } catch (error) {
-    console.error('Error loading missions:', error);
-    // Fallback to sample missions if file not found or empty
-    return [
-      {
-        id: 'mission1',
-        name: 'OPERATION BLACKOUT',
-        location: 'ALTIS - COORDINATES: 38.9072N, 77.0369E',
-        difficulty: 'HIGH',
-        payment: '$15,000',
-        duration: '2.5 HRS',
-        teamSize: 'SQUAD (4-8)',
-        coordinates: { lat: 38.9072, lon: -77.0369 }
-      },
-      {
-        id: 'mission2',
-        name: 'OPERATION RED STORM',
-        location: 'TANOA - COORDINATES: 51.5074N, 0.1278E',
-        difficulty: 'MEDIUM',
-        payment: '$12,000',
-        duration: '2 HRS',
-        teamSize: 'FIRETEAM (4)',
-        coordinates: { lat: 51.5074, lon: -0.1278 }
-      },
-      {
-        id: 'mission3',
-        name: 'OPERATION FROZEN THUNDER',
-        location: 'CHERNARUS - COORDINATES: 55.7558N, 37.6173E',
-        difficulty: 'EXTREME',
-        payment: '$22,000',
-        duration: '3 HRS',
-        teamSize: 'PLATOON (12-16)',
-        coordinates: { lat: 55.7558, lon: 37.6173 }
-      },
-      {
-        id: 'mission4',
-        name: 'OPERATION DESERT HAWK',
-        location: 'TAKISTAN - COORDINATES: 39.9042N, 116.4074E',
-        difficulty: 'LOW',
-        payment: '$8,000',
-        duration: '4 HRS',
-        teamSize: 'RECON TEAM (2-3)',
-        coordinates: { lat: 39.9042, lon: 116.4074 }
-      }
-    ];
+    if (intelPanel.classList.contains('active')) {
+      intelPanel.classList.remove('active');
+    }
+    
+    // Load team data
+    loadBaseTeams();
+    
+    // Play tab sound
+    tabSound.play().catch(console.error);
+    
+    // Show notification
+    showNotification('HEADQUARTERS MANAGEMENT ACTIVE');
+  } else {
+    // Hide HQ panel
+    hqPanel.style.display = 'none';
   }
 }
 
-// Load intel data from external file
-async function loadIntel() {
+// Initialize features for different roles
+function initializeAdminFeatures() {
+  // Admin-specific features
+  loadAllMissions(true); // true = admin mode
+  initializeMissionCreationTools();
+}
+
+function initializeSquadLeadFeatures() {
+  // Squad leader features
+  loadAvailableMissions();
+  initializeDeploymentSystem();
+  initializeBaseManagement();
+  initializeResourceManagement();
+}
+
+function initializeGruntFeatures() {
+  // Grunt features - view only
+  loadAvailableMissions();
+  initializeViewOnlyMode();
+}
+
+// Initialize view-only mode for grunts
+function initializeViewOnlyMode() {
+  // Hide upgrade buttons and controls
+  document.querySelectorAll('.upgrade-button, .deployment-button, .send-deployment-button').forEach(button => {
+    button.style.display = 'none';
+  });
+}
+
+// Initialize resource management for squad leaders
+function initializeResourceManagement() {
+  // Get user data regularly and update display
+  updateResourceDisplay();
+  setInterval(updateResourceDisplay, 60000); // Update every minute
+}
+
+// Update resource display
+async function updateResourceDisplay() {
+  if (!currentUser) return;
+  
   try {
-    const response = await fetch('data/intel.json');
-    const intel = await response.json();
-    return intel;
+    const userDoc = await db.collection('users').doc(currentUser.uid).get();
+    const userData = userDoc.data();
+    
+    if (!userData) return;
+    
+    // Update money display
+    const moneyDisplay = document.createElement('div');
+    moneyDisplay.className = 'resource-item';
+    moneyDisplay.innerHTML = `
+      <div class="resource-name">MONEY:</div>
+      <div class="resource-value">$${userData.money.toLocaleString()}</div>
+    `;
+    
+    // Update resources display
+    const resourceDisplay = document.getElementById('resource-display');
+    resourceDisplay.innerHTML = '';
+    resourceDisplay.appendChild(moneyDisplay);
+    
+    for (const [resource, amount] of Object.entries(userData.resources)) {
+      const resourceItem = document.createElement('div');
+      resourceItem.className = 'resource-item';
+      resourceItem.innerHTML = `
+        <div class="resource-name">${resource.toUpperCase()}:</div>
+        <div class="resource-value">${amount}</div>
+      `;
+      resourceDisplay.appendChild(resourceItem);
+    }
   } catch (error) {
-    console.error('Error loading intel:', error);
-    // Fallback to sample intel if file not found
-    return {
-      "mission1": {
-        "title": "OPERATION BLACKOUT INTEL",
-        "content": "",
-        "images": ["blackout_sat.jpg", "blackout_compound.jpg"]
-      },
-      "mission2": {
-        "title": "OPERATION RED STORM INTEL",
-        "content": "",
-        "images": ["redstorm_village.jpg", "redstorm_hostages.jpg"]
-      },
-      "mission3": {
-        "title": "OPERATION FROZEN THUNDER INTEL",
-        "content": "",
-        "images": ["frozen_array.jpg", "frozen_thermal.jpg"]
-      },
-      "mission4": {
-        "title": "OPERATION DESERT HAWK INTEL",
-        "content": "",
-        "images": ["desert_topo.jpg", "desert_vehicle.jpg"]
-      }
-    };
+    console.error('Error updating resource display:', error);
   }
 }
 
@@ -270,81 +466,6 @@ function initializeDecorativeElements() {
   }, 5000);
 }
 
-// Boot Sequence System
-function initializeBootSequence() {
-  // Initialize States
-  activateButton.style.display = 'none';
-  
-  // Animate Terminal
-  const lines = terminalText.querySelectorAll('p');
-  let delay = 0;
-  lines.forEach((line, index) => {
-    const text = line.textContent;
-    line.textContent = '';
-    typeWriter(line, text, delay, () => {
-      if (index === lines.length - 1) {
-        setTimeout(() => {
-          activateButton.style.display = 'block';
-          activateButton.style.opacity = '1';
-        }, 500);
-      }
-    });
-    delay += text.length * 25 + 250;
-  });
-  
-  // Activation Protocol
-  activateButton.addEventListener('click', activateSystem);
-}
-
-// Typewriter Effect
-function typeWriter(element, text, delay, callback) {
-  let i = 0;
-  const speed = 25;
-  
-  function type() {
-    if (i < text.length) {
-      element.innerHTML += text.charAt(i);
-      i++;
-      setTimeout(type, speed);
-    } else if (callback) {
-      callback();
-    }
-  }
-  
-  setTimeout(type, delay);
-}
-
-// System Activation
-function activateSystem() {
-  systemActive = true;
-  activationSound.play().catch(console.error);
-  
-  // Set music volume based on slider
-  music.volume = volumeSlider.value;
-  music.play().catch(console.error);
-  
-  // Instant hide of boot overlay (no fade)
-  bootOverlay.style.display = 'none';
-  
-  // Initialize updating features
-  updateDateTime();
-  setInterval(updateDateTime, 1000);
-  
-  // Show notification
-  showNotification('SYSTEM ACTIVATED - GLOBE TRACKING OPERATIONAL');
-  
-  // Apply LCD screen overlay
-  lcdOverlay.style.display = 'block';
-  
-  // Fade in side panels
-  setTimeout(() => {
-    leftPanel.style.transition = 'opacity 1s ease-in';
-    rightPanel.style.transition = 'opacity 1s ease-in';
-    leftPanel.style.opacity = '1';
-    rightPanel.style.opacity = '1';
-  }, 500);
-}
-
 // Mission Panel System
 function initializeMissionPanel() {
   closeMissionButton.addEventListener('click', () => {
@@ -358,7 +479,7 @@ function initializeMissionPanel() {
   // Intel button functionality
   missionIntelButton.addEventListener('click', () => {
     if (activeMission) {
-      openIntelPanel(activeMission);
+      openIntelPanel(activeMission.id);
     }
   });
 }
@@ -370,109 +491,59 @@ function initializeIntelPanel() {
   });
 }
 
+// Load mission intel
 async function openIntelPanel(missionId) {
-  // Load intel data
-  const intelData = await loadIntel();
-  const missionIntel = intelData[missionId];
-  
-  if (!missionIntel) {
-    showNotification('NO INTEL AVAILABLE FOR THIS MISSION');
-    return;
-  }
-  
-  // Play intel sound
-  if (intelSound && intelSound.readyState >= 2) {
-    intelSound.currentTime = 0;
-    intelSound.play().catch(console.error);
-  }
-  
-  // Update intel panel content
-  document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
-  
-  // Create intel content container
-  let intelContent = '';
-  
-  // Only add content paragraph if there's actual content
-  if (missionIntel.content && missionIntel.content.trim() !== '') {
-    intelContent += `<p>${missionIntel.content}</p>`;
-  }
-  
-  // Add images if available
-  if (missionIntel.images && missionIntel.images.length > 0) {
-    missionIntel.images.forEach(imgSrc => {
-      intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
-    });
-  }
-  
-  // If there's no content and no images, show a placeholder message
-  if (intelContent === '') {
-    intelContent = '<p>No intel data available.</p>';
-  }
-  
-  document.getElementById('intel-content').innerHTML = intelContent;
-  
-  // Show intel panel
-  intelPanel.classList.add('active');
-  
-  // Show notification
-  showNotification('ACCESSING MISSION INTEL');
-}
-
-async function displayMission(missionId) {
-  // Load mission data
-  const missions = await loadMissions();
-  const mission = missions.find(m => m.id === missionId);
-  
-  if (!mission) {
-    showNotification('MISSION DATA NOT FOUND');
-    return;
-  }
-  
-  // Play mission sound
-  if (missionSound && missionSound.readyState >= 2) {
-    missionSound.currentTime = 0;
-    missionSound.play().catch(console.error);
-  }
-  
-  // Update mission panel content
-  document.getElementById('mission-title').textContent = mission.name;
-  document.getElementById('mission-location').textContent = mission.location;
-  document.getElementById('mission-difficulty').textContent = mission.difficulty;
-  document.getElementById('mission-payment').textContent = mission.payment;
-  document.getElementById('mission-duration').textContent = mission.duration;
-  document.getElementById('mission-team-size').textContent = mission.teamSize;
-  
-  // Display mission image if available
-  const missionPanel = document.getElementById('mission-panel');
-  let missionImageElement = missionPanel.querySelector('.mission-image');
-  
-  if (mission.image) {
-    // Create or update mission image element
-    if (!missionImageElement) {
-      missionImageElement = document.createElement('img');
-      missionImageElement.className = 'mission-image';
-      
-      // Insert after mission location
-      const locationElement = document.getElementById('mission-location').parentElement;
-      locationElement.parentNode.insertBefore(missionImageElement, locationElement.nextSibling);
+  try {
+    // Get intel from Firestore
+    const intelDoc = await db.collection('intel').doc(missionId).get();
+    
+    if (!intelDoc.exists) {
+      showNotification('NO INTEL AVAILABLE FOR THIS MISSION');
+      return;
     }
     
-    missionImageElement.src = `data/images/${mission.image}`;
-    missionImageElement.style.display = 'block';
-  } else if (missionImageElement) {
-    // Hide mission image if none available
-    missionImageElement.style.display = 'none';
+    const missionIntel = intelDoc.data();
+    
+    // Play intel sound
+    if (intelSound && intelSound.readyState >= 2) {
+      intelSound.currentTime = 0;
+      intelSound.play().catch(console.error);
+    }
+    
+    // Update intel panel content
+    document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
+    
+    // Create intel content container
+    let intelContent = '';
+    
+    // Only add content paragraph if there's actual content
+    if (missionIntel.content && missionIntel.content.trim() !== '') {
+      intelContent += `<p>${missionIntel.content}</p>`;
+    }
+    
+    // Add images if available
+    if (missionIntel.images && missionIntel.images.length > 0) {
+      missionIntel.images.forEach(imgSrc => {
+        intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+      });
+    }
+    
+    // If there's no content and no images, show a placeholder message
+    if (intelContent === '') {
+      intelContent = '<p>No intel data available.</p>';
+    }
+    
+    document.getElementById('intel-content').innerHTML = intelContent;
+    
+    // Show intel panel
+    intelPanel.classList.add('active');
+    
+    // Show notification
+    showNotification('ACCESSING MISSION INTEL');
+  } catch (error) {
+    console.error('Error loading intel:', error);
+    showNotification('ERROR LOADING MISSION INTEL');
   }
-  
-  // Show mission panel
-  missionPanel.classList.add('active');
-  activeMission = missionId;
-  
-  // Stop rotation when mission is displayed
-  rotating = false;
-  
-  // Show notification
-  showNotification(`MISSION BRIEFING: ${mission.name}`);
 }
 
 // Globe rotation control
@@ -496,9 +567,12 @@ function resumeRotation() {
   rotating = true;
 }
 
-// Globe Visualization System
+// Globe Visualization System (use your existing code with modifications for Firebase)
 async function initializeGlobe() {
-  const scene = new THREE.Scene();
+  // Use most of your existing initializeGlobe code
+  // But instead of loadMissions, call loadAvailableMissions()
+  
+  scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('globe'),
@@ -599,61 +673,6 @@ async function initializeGlobe() {
   // Create the textured globe
   const earthGlobe = createTexturedGlobe();
   
-  // Load missions and add them to the globe
-  const missions = await loadMissions();
-  const missionPoints = [];
-  
-  // Add mission points of interest
-  function addMissionPoint(mission) {
-    const lat = mission.coordinates.lat;
-    const lon = mission.coordinates.lon;
-    const phi = (90 - lat) * Math.PI/180;
-    const theta = (lon + 180) * Math.PI/180;
-    
-    // Create point marker - Dark red color
-    const geometry = new THREE.SphereGeometry(0.15, 8, 8);
-    const material = new THREE.MeshBasicMaterial({ color: 0x8B0000 }); // Dark red
-    const point = new THREE.Mesh(geometry, material);
-    
-    point.position.x = -10 * Math.sin(phi) * Math.cos(theta);
-    point.position.y = 10 * Math.cos(phi);
-    point.position.z = 10 * Math.sin(phi) * Math.sin(theta);
-    
-    // Add mission identifier
-    point.userData = { 
-      missionId: mission.id,
-      type: 'mission-point'
-    };
-    
-    scene.add(point);
-    
-    // Add pulsing effect (ring) - Dark red
-    const ringGeometry = new THREE.RingGeometry(0.2, 0.3, 32);
-    const ringMaterial = new THREE.MeshBasicMaterial({ 
-      color: 0x8B0000, // Dark red
-      transparent: true,
-      opacity: 0.7,
-      side: THREE.DoubleSide
-    });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-    ring.position.copy(point.position);
-    
-    // Orient ring to face outward from globe center
-    ring.lookAt(new THREE.Vector3(0, 0, 0));
-    scene.add(ring);
-    
-    // Store reference for animation
-    point.userData.ring = ring;
-    
-    return point;
-  }
-  
-  // Add mission points
-  missions.forEach(mission => {
-    const point = addMissionPoint(mission);
-    missionPoints.push(point);
-  });
-  
   // Handle clicking on mission points
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -669,10 +688,17 @@ async function initializeGlobe() {
     raycaster.setFromCamera(mouse, camera);
     
     // Check for intersections with mission points
-    const intersects = raycaster.intersectObjects(missionPoints);
+    const intersects = raycaster.intersectObjects(missionMarkers);
     if (intersects.length > 0) {
       const missionId = intersects[0].object.userData.missionId;
-      displayMission(missionId);
+      displayMissionDetails(missionId);
+    }
+    
+    // Check for intersections with deployment points
+    const deploymentIntersects = raycaster.intersectObjects(deploymentMarkers);
+    if (deploymentIntersects.length > 0 && deploymentIntersects[0].object.userData.deploymentId) {
+      const deploymentId = deploymentIntersects[0].object.userData.deploymentId;
+      showDeploymentDetails(deploymentId);
     }
   });
   
@@ -710,14 +736,34 @@ async function initializeGlobe() {
     }
     
     // Animate mission points
-    missionPoints.forEach(point => {
-      if (point.userData.ring) {
-        const ring = point.userData.ring;
-        ring.scale.x = 1 + 0.2 * Math.sin(Date.now() * 0.003);
-        ring.scale.y = 1 + 0.2 * Math.sin(Date.now() * 0.003);
-        ring.material.opacity = 0.7 * (0.5 + 0.5 * Math.sin(Date.now() * 0.003));
-      }
-    });
+    if (missionMarkers.length > 0) {
+      missionMarkers.forEach(point => {
+        if (point.userData.ring) {
+          const ring = point.userData.ring;
+          ring.scale.x = 1 + 0.2 * Math.sin(Date.now() * 0.003);
+          ring.scale.y = 1 + 0.2 * Math.sin(Date.now() * 0.003);
+          ring.material.opacity = 0.7 * (0.5 + 0.5 * Math.sin(Date.now() * 0.003));
+          
+          // Make ring face the camera
+          ring.lookAt(camera.position);
+        }
+      });
+    }
+    
+    // Animate deployment points
+    if (deploymentMarkers.length > 0) {
+      deploymentMarkers.forEach(point => {
+        if (point.userData.ring) {
+          const ring = point.userData.ring;
+          ring.scale.x = 1 + 0.2 * Math.sin(Date.now() * 0.003);
+          ring.scale.y = 1 + 0.2 * Math.sin(Date.now() * 0.003);
+          ring.material.opacity = 0.7 * (0.5 + 0.5 * Math.sin(Date.now() * 0.003));
+          
+          // Make ring face the camera
+          ring.lookAt(camera.position);
+        }
+      });
+    }
     
     renderer.render(scene, camera);
   }
@@ -757,9 +803,15 @@ volumeSlider.addEventListener('input', (e) => {
   }
 });
 
+// Sign out function
+function signOut() {
+  auth.signOut().catch(error => {
+    console.error('Sign out error:', error);
+  });
+}
+
 // Initialize All Systems
 document.addEventListener('DOMContentLoaded', () => {
-  initializeBootSequence();
   initializeMissionPanel();
   initializeIntelPanel();
   initializeGlobe();
@@ -774,4 +826,12 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('volume-control').innerHTML += '<span style="color:#53a774;">VOL</span>';
     };
   }
+  
+  // Add sign out button
+  const statusBar = document.getElementById('status-bar');
+  const signOutButton = document.createElement('button');
+  signOutButton.textContent = 'SIGN OUT';
+  signOutButton.className = 'sign-out-button';
+  signOutButton.addEventListener('click', signOut);
+  statusBar.appendChild(signOutButton);
 });

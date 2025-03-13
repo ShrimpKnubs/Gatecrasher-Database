@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Military Strategic Globe</title>
   <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <!-- Z-Index Layer 1: Background -->
@@ -140,16 +145,213 @@
     <img src="textures/logo.png" alt="Logo">
   </div>
 
-  <div id="boot-overlay">
-    <div id="boot-terminal">
-      <div id="terminal-text">
-        <p>> INITIALIZING SYSTEM...</p>
-        <p>> LOADING CORE MODULES...</p>
-        <p>> CHECKING NETWORK CONNECTIVITY...</p>
-        <p>> VERIFYING USER CREDENTIALS...</p>
-        <p>> SYSTEM READY FOR ACTIVATION...</p>
+  <!-- Login Overlay (replacing boot overlay) -->
+  <div id="login-overlay">
+    <div id="login-container">
+      <div id="login-header">
+        <h1>TACTICAL OPERATIONS SYSTEM</h1>
+        <div class="login-subtitle">AUTHORIZATION REQUIRED</div>
       </div>
-      <button id="activate-button">ACTIVATE SYSTEM</button>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label for="user-id">OPERATIVE ID:</label>
+          <input type="text" id="user-id" placeholder="ENTER ID" autocomplete="off">
+        </div>
+        
+        <div class="form-group">
+          <label for="password">PASSCODE:</label>
+          <input type="password" id="password" placeholder="ENTER PASSCODE">
+        </div>
+        
+        <div id="error-message"></div>
+        
+        <div class="form-actions">
+          <button type="submit" id="login-button">ACCESS SYSTEM</button>
+          <button type="button" id="continue-as-grunt">CONTINUE AS GRUNT</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- HQ Button (Hidden initially) -->
+  <button id="hq-button" class="hq-button">HEADQUARTERS</button>
+
+  <!-- HQ Panel -->
+  <div id="hq-panel">
+    <div id="hq-header">
+      <div id="hq-title">HEADQUARTERS OPERATIONS</div>
+      <button id="close-hq">X</button>
+    </div>
+    
+    <div class="hq-tabs">
+      <button class="hq-tab-button active" data-tab="combat">COMBAT UNIT</button>
+      <button class="hq-tab-button" data-tab="intel">INTEL TEAM</button>
+      <button class="hq-tab-button" data-tab="medical">MEDICAL TEAM</button>
+      <button class="hq-tab-button" data-tab="rnd">R&D PLATFORM</button>
+      <button class="hq-tab-button" data-tab="command">COMMAND</button>
+      <button class="hq-tab-button" data-tab="development">BASE DEV</button>
+    </div>
+    
+    <div class="hq-content">
+      <!-- Combat Unit Tab -->
+      <div class="hq-tab-content active" id="combat-content">
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">COMBAT UNIT</div>
+            <div class="hq-section-level">LEVEL: <span id="combat-level">1</span></div>
+          </div>
+          
+          <div class="hq-stats">
+            <div class="hq-stat">
+              <div class="stat-name">COMBAT POWER:</div>
+              <div class="stat-value" id="combat-power">100</div>
+            </div>
+            <div class="hq-stat">
+              <div class="stat-name">ACTIVE MEMBERS:</div>
+              <div class="stat-value" id="combat-members">10</div>
+            </div>
+            <div class="hq-stat">
+              <div class="stat-name">WOUNDED:</div>
+              <div class="stat-value" id="combat-wounded">0</div>
+            </div>
+          </div>
+          
+          <div class="hq-upgrade-section" id="combat-upgrade-section">
+            <div class="upgrade-details">
+              <div class="upgrade-title">UPGRADE TO LEVEL 2</div>
+              <div class="upgrade-cost">COST: $100,000</div>
+              <div class="upgrade-resources">
+                RESOURCES NEEDED:
+                <ul>
+                  <li>FUEL: 200</li>
+                  <li>MATERIALS: 300</li>
+                </ul>
+              </div>
+              <div class="upgrade-time">TIME: 5 DAYS</div>
+            </div>
+            <button class="upgrade-button" data-team="combat" data-level="2">INITIATE UPGRADE</button>
+          </div>
+        </div>
+        
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">DEPLOYMENTS</div>
+          </div>
+          
+          <div class="deployments-list" id="active-deployments">
+            <!-- Deployment items will be added dynamically -->
+            <div class="no-deployments-message">No active deployments</div>
+          </div>
+          
+          <button class="deployment-button" id="view-deployments-button">VIEW AVAILABLE DEPLOYMENTS</button>
+        </div>
+      </div>
+      
+      <!-- Intel Team Tab -->
+      <div class="hq-tab-content" id="intel-content">
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">INTEL TEAM</div>
+            <div class="hq-section-level">LEVEL: <span id="intel-level">1</span></div>
+          </div>
+          
+          <div class="hq-stats">
+            <div class="hq-stat">
+              <div class="stat-name">INTEL GATHERING RATE:</div>
+              <div class="stat-value" id="intel-rate">1x</div>
+            </div>
+          </div>
+          
+          <div class="hq-upgrade-section" id="intel-upgrade-section">
+            <!-- Upgrade UI will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Medical Team Tab -->
+      <div class="hq-tab-content" id="medical-content">
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">MEDICAL TEAM</div>
+            <div class="hq-section-level">LEVEL: <span id="medical-level">1</span></div>
+          </div>
+          
+          <div class="hq-stats">
+            <div class="hq-stat">
+              <div class="stat-name">HEALING RATE:</div>
+              <div class="stat-value" id="medical-heal-rate">1x</div>
+            </div>
+          </div>
+          
+          <div class="hq-upgrade-section" id="medical-upgrade-section">
+            <!-- Upgrade UI will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- R&D Tab -->
+      <div class="hq-tab-content" id="rnd-content">
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">R&D PLATFORM</div>
+            <div class="hq-section-level">LEVEL: <span id="rnd-level">1</span></div>
+          </div>
+          
+          <div class="hq-stats">
+            <div class="hq-stat">
+              <div class="stat-name">WEAPONS TIER:</div>
+              <div class="stat-value" id="weapons-tier">1</div>
+            </div>
+          </div>
+          
+          <div class="hq-upgrade-section" id="rnd-upgrade-section">
+            <!-- Upgrade UI will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Command Tab -->
+      <div class="hq-tab-content" id="command-content">
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">COMMAND</div>
+            <div class="hq-section-level">LEVEL: <span id="command-level">1</span></div>
+          </div>
+          
+          <div class="hq-stats">
+            <div class="hq-stat">
+              <div class="stat-name">MAX DEPLOYMENTS:</div>
+              <div class="stat-value" id="max-deployments">1</div>
+            </div>
+          </div>
+          
+          <div class="hq-upgrade-section" id="command-upgrade-section">
+            <!-- Upgrade UI will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Base Development Tab -->
+      <div class="hq-tab-content" id="development-content">
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">BASE DEVELOPMENT</div>
+            <div class="hq-section-level">LEVEL: <span id="development-level">1</span></div>
+          </div>
+          
+          <div class="hq-stats">
+            <div class="hq-stat">
+              <div class="stat-name">BUILD TIME REDUCTION:</div>
+              <div class="stat-value" id="build-reduction">0%</div>
+            </div>
+          </div>
+          
+          <div class="hq-upgrade-section" id="development-upgrade-section">
+            <!-- Upgrade UI will be populated dynamically -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -197,6 +399,43 @@
     </div>
   </div>
 
+  <!-- Admin Controls (Hidden initially) -->
+  <div id="admin-controls" class="admin-panel">
+    <div class="admin-header">ADMIN CONTROLS</div>
+    
+    <div class="admin-section">
+      <div class="admin-section-title">MISSION MANAGEMENT</div>
+      <button id="create-mission-button">CREATE MISSION</button>
+      <button id="edit-mission-button">EDIT MISSION</button>
+      <button id="complete-mission-button">COMPLETE MISSION</button>
+    </div>
+    
+    <div class="admin-section">
+      <div class="admin-section-title">USER MANAGEMENT</div>
+      <button id="create-user-button">CREATE USER</button>
+      <button id="edit-user-button">EDIT USER</button>
+    </div>
+  </div>
+
+  <!-- Squad Leader Controls (Hidden initially) -->
+  <div id="squad-controls" class="squad-panel">
+    <div class="squad-header">SQUAD LEADER CONTROLS</div>
+    
+    <div class="squad-section">
+      <div class="squad-section-title">RESOURCES</div>
+      <div class="resource-display" id="resource-display">
+        <!-- Resource values will be populated dynamically -->
+      </div>
+    </div>
+    
+    <div class="squad-section">
+      <div class="squad-section-title">ACTIONS</div>
+      <button id="accept-mission-button">ACCEPT MISSION</button>
+      <button id="send-deployment-button">SEND DEPLOYMENT</button>
+      <button id="shop-button">EQUIPMENT SHOP</button>
+    </div>
+  </div>
+
   <div id="notification">SYSTEM NOTIFICATION</div>
 
   <div id="status-bar">
@@ -229,3 +468,5 @@
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="js/main.js"></script>
+</body>
+</html>
