@@ -1,54 +1,15 @@
 [
     {
-        "id":  "mission1",
-        "name":  "FAILED DIPLOMACY",
-        "location":  "Vietnam",
-        "difficulty":  "MEDIUM",
-        "payment":  "$27,525.75",
-        "duration":  "2.5 HRS",
-        "teamSize":  "SQUAD (3-6)",
-        "coordinates":  {
-                            "lat":  10.536421,
-                            "lon":  106.285339
-                        }
-    },
-    {
-        "id":  "mission2",
-        "name":  "OPERATION RED STORM",
-        "location":  "TANOA - COORDINATES: 51.5074N, 0.1278E",
-        "difficulty":  "MEDIUM",
-        "payment":  "$12,000",
-        "duration":  "2 HRS",
-        "teamSize":  "FIRETEAM (4)",
-        "coordinates":  {
-                            "lat":  51.5074,
-                            "lon":  -0.1278
-                        }
-    },
-    {
-        "id":  "mission3",
-        "name":  "OPERATION FROZEN THUNDER",
-        "location":  "CHERNARUS - COORDINATES: 55.7558N, 37.6173E",
-        "difficulty":  "EXTREME",
-        "payment":  "$22,000",
-        "duration":  "3 HRS",
-        "teamSize":  "PLATOON (12-16)",
-        "coordinates":  {
-                            "lat":  55.7558,
-                            "lon":  37.6173
-                        }
-    },
-    {
-        "id":  "mission4",
-        "name":  "OPERATION DESERT HAWK",
-        "location":  "TAKISTAN - COORDINATES: 39.9042N, 116.4074E",
-        "difficulty":  "LOW",
-        "payment":  "$8,000",
-        "duration":  "4 HRS",
-        "teamSize":  "RECON TEAM (2-3)",
-        "coordinates":  {
-                            "lat":  39.9042,
-                            "lon":  116.4074
-                        }
+        "id": "mission1",
+        "name": "FAILED DIPLOMACY",
+        "location": "Vietnam",
+        "difficulty": "MEDIUM",
+        "payment": "$27,525.75",
+        "duration": "2.5 HRS",
+        "teamSize": "SQUAD (3-6)",
+        "coordinates": {
+            "lat": 10.536421,
+            "lon": 106.285339
+        }
     }
 ]
