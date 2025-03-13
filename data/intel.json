@@ -1,0 +1,22 @@
+{
+  "mission1": {
+    "title": "OPERATION BLACKOUT INTEL",
+    "content": "",
+    "images": ["blackout_sat.jpg", "blackout_compound.jpg"]
+  },
+  "mission2": {
+    "title": "OPERATION RED STORM INTEL",
+    "content": "",
+    "images": ["redstorm_village.jpg", "redstorm_hostages.jpg"]
+  },
+  "mission3": {
+    "title": "OPERATION FROZEN THUNDER INTEL",
+    "content": "",
+    "images": ["frozen_array.jpg", "frozen_thermal.jpg"]
+  },
+  "mission4": {
+    "title": "OPERATION DESERT HAWK INTEL",
+    "content": "",
+    "images": ["desert_topo.jpg", "desert_vehicle.jpg"]
+  }
+}
