@@ -1,14 +1,12 @@
 // Firebase configuration - Replace with your actual firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyBKhc_Nl4kMAUfd3Ze43jG6hM1nt9FCsIg",
-  authDomain: "gatecrasher-database.firebaseapp.com",
-  projectId: "gatecrasher-database",
-  storageBucket: "gatecrasher-database.firebasestorage.app",
-  messagingSenderId: "221759991275",
-  appId: "1:221759991275:web:4b1a92d2647d9f48c8bdae",
-  measurementId: "G-QH1TYL025K"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_ID",
+  appId: "YOUR_APP_ID"
 };
-
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
@@ -48,6 +46,7 @@ const rightPanel = document.getElementById('right-panel');
 const hqButton = document.getElementById('hq-button');
 const hqPanel = document.getElementById('hq-panel');
 const closeHqButton = document.getElementById('close-hq');
+const signOutButton = document.createElement('button');
 
 // Add background image to logo screen and login overlay too
 logoScreen.style.backgroundImage = "url('textures/background.png')";
@@ -216,6 +215,14 @@ function initializeUIAfterLogin() {
   
   // Setup healing interval
   initializeHealTimer();
+  
+  // Add HQ icon to South Africa
+  addHQMarker();
+  
+  // Generate random deployments for admin
+  if (userRole === 'admin') {
+    generateRandomDeployments(5); // Generate 5 random deployments
+  }
 }
 
 // Show appropriate dashboard based on user role
@@ -258,6 +265,22 @@ function toggleHqPanel(show) {
     
     // Load team data
     loadBaseTeams();
+    
+    // Make first tab active
+    document.querySelector('.hq-tab-button.active').classList.remove('active');
+    document.querySelector('.hq-tab-content.active').classList.remove('active');
+    
+    const homeTab = document.querySelector('[data-tab="home"]');
+    const combatTab = document.querySelector('[data-tab="combat"]');
+    const firstTab = homeTab || combatTab;
+    
+    if (firstTab) {
+      firstTab.classList.add('active');
+      document.getElementById(`${firstTab.getAttribute('data-tab')}-content`).classList.add('active');
+    }
+    
+    // Update base visualization
+    updateBaseVisualization();
     
     // Play tab sound
     tabSound.play().catch(console.error);
@@ -567,6 +590,155 @@ function resumeRotation() {
   rotating = true;
 }
 
+// Add HQ marker to the globe at South Africa
+function addHQMarker() {
+  // South Africa coordinates
+  const lat = -30.5595;
+  const lon = 22.9375;
+  const phi = (90 - lat) * Math.PI/180;
+  const theta = (lon + 180) * Math.PI/180;
+  
+  // Create HQ marker - light blue color
+  const geometry = new THREE.SphereGeometry(0.25, 12, 12);
+  const material = new THREE.MeshBasicMaterial({ color: 0x00BFFF }); // Light blue
+  const point = new THREE.Mesh(geometry, material);
+  
+  point.position.x = -10 * Math.sin(phi) * Math.cos(theta);
+  point.position.y = 10 * Math.cos(phi);
+  point.position.z = 10 * Math.sin(phi) * Math.sin(theta);
+  
+  // Add HQ identifier
+  point.userData = { 
+    type: 'hq-point'
+  };
+  
+  scene.add(point);
+  
+  // Add pulsing effect (ring) - Light blue
+  const ringGeometry = new THREE.RingGeometry(0.3, 0.4, 32);
+  const ringMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0x00BFFF, // Light blue
+    transparent: true,
+    opacity: 0.7,
+    side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+  ring.position.copy(point.position);
+  
+  // Orient ring to face outward from globe center
+  ring.lookAt(new THREE.Vector3(0, 0, 0));
+  scene.add(ring);
+  
+  // Store reference for animation
+  point.userData.ring = ring;
+}
+
+// Track movement of deployments
+function updateDeploymentMovement() {
+  if (!activeDeployments || !activeDeployments.length) return;
+  
+  activeDeployments.forEach(deployment => {
+    if (deployment.status === 'moving-to-target' || deployment.status === 'returning') {
+      // Calculate current position based on time
+      updateDeploymentPosition(deployment);
+    }
+  });
+  
+  // Update markers on globe
+  updateGlobeDeploymentMarkers();
+}
+
+// Calculate current position of a moving deployment
+function updateDeploymentPosition(deployment) {
+  // Implementation will depend on your deployment system
+  // This is a placeholder showing the concept
+  if (!deployment.startPosition || !deployment.targetPosition) return;
+  
+  const now = new Date();
+  let progress = 0;
+  
+  if (deployment.status === 'moving-to-target') {
+    const totalTime = deployment.estimatedArrival - deployment.departureTime;
+    const elapsed = now - deployment.departureTime;
+    progress = Math.min(1, Math.max(0, elapsed / totalTime));
+  } else if (deployment.status === 'returning') {
+    const totalTime = deployment.estimatedReturn - deployment.returnDepartureTime;
+    const elapsed = now - deployment.returnDepartureTime;
+    progress = Math.min(1, Math.max(0, elapsed / totalTime));
+  }
+  
+  // Linear interpolation between points
+  deployment.currentPosition = {
+    lat: deployment.startPosition.lat + (deployment.targetPosition.lat - deployment.startPosition.lat) * progress,
+    lon: deployment.startPosition.lon + (deployment.targetPosition.lon - deployment.startPosition.lon) * progress
+  };
+}
+
+// Generate random deployments for admin
+function generateRandomDeployments(count) {
+  // Placeholder function - implementation depends on your deployment system
+  const locations = [
+    { name: "SIBERIA", lat: 61.0137, lon: 99.1967 },
+    { name: "AMAZON", lat: -3.4653, lon: -62.2159 },
+    { name: "AFGHANISTAN", lat: 33.9391, lon: 67.7100 },
+    { name: "NORTHERN EUROPE", lat: 61.9241, lon: 25.7482 },
+    { name: "MIDDLE EAST", lat: 23.8859, lon: 45.0792 }
+  ];
+  
+  for (let i = 0; i < count; i++) {
+    const locationIndex = Math.floor(Math.random() * locations.length);
+    const location = locations[locationIndex];
+    
+    // Add marker for admin to place
+    addDeploymentPlacementMarker(location.lat, location.lon, `DEPLOYMENT: ${location.name}`);
+  }
+}
+
+// Add deployment placement marker
+function addDeploymentPlacementMarker(lat, lon, name) {
+  // Similar to addMissionMarker but for deployments
+  // Implementation depends on your Globe system
+}
+
+// Update base visualization based on team levels
+function updateBaseVisualization() {
+  // Calculate total upgrade level
+  let totalLevel = 0;
+  let maxPossibleLevel = 0;
+  
+  if (baseTeams) {
+    // Count all team levels
+    Object.values(baseTeams).forEach(team => {
+      if (team && team.level) {
+        totalLevel += team.level;
+        maxPossibleLevel += 5; // Max level is 5 for each team
+      }
+    });
+  }
+  
+  // Calculate base expansion phase (1-5)
+  // 5 phases based on percentage of max possible level
+  const expansionPercentage = totalLevel / maxPossibleLevel;
+  const basePhase = Math.ceil(expansionPercentage * 5);
+  
+  // Update base visualization in the HQ panel
+  const baseVisualization = document.getElementById('base-visualization');
+  if (baseVisualization) {
+    baseVisualization.className = `base-visualization phase-${basePhase}`;
+    
+    // Update base stats
+    const basePhaseElement = document.getElementById('base-phase');
+    if (basePhaseElement) {
+      basePhaseElement.textContent = basePhase;
+    }
+    
+    const baseCapacityElement = document.getElementById('base-capacity');
+    if (baseCapacityElement) {
+      baseCapacityElement.textContent = `${Math.round(expansionPercentage * 100)}%`;
+    }
+  }
+}
+
 // Globe Visualization System (use your existing code with modifications for Firebase)
 async function initializeGlobe() {
   // Use most of your existing initializeGlobe code
@@ -829,7 +1001,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Add sign out button
   const statusBar = document.getElementById('status-bar');
-  const signOutButton = document.createElement('button');
   signOutButton.textContent = 'SIGN OUT';
   signOutButton.className = 'sign-out-button';
   signOutButton.addEventListener('click', signOut);

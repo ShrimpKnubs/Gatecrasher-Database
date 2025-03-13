@@ -303,115 +303,6 @@
   transition: none; /* No transition for snap effect */
 }
 
-/* Login Screen */
-#login-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 31, 24, 0.9);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#login-container {
-  width: 400px;
-  background: var(--background-medium);
-  border: 2px solid var(--border-color);
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-  padding: 30px;
-}
-
-#login-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-#login-header h1 {
-  color: var(--highlight-color);
-  font-size: 1.5em;
-  margin-bottom: 5px;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.login-subtitle {
-  color: var(--text-primary);
-  font-size: 1em;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  color: var(--highlight-color);
-  margin-bottom: 5px;
-  font-size: 0.9em;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.form-group input {
-  width: 100%;
-  background: var(--background-dark);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 10px;
-  font-size: 1em;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: var(--highlight-color);
-  box-shadow: 0 0 10px rgba(83, 167, 116, 0.3);
-}
-
-#error-message {
-  color: var(--alert-color);
-  margin-bottom: 20px;
-  font-size: 0.9em;
-  min-height: 20px;
-}
-
-.form-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-#login-button {
-  background: transparent;
-  color: var(--highlight-color);
-  border: 2px solid var(--accent-color);
-  padding: 12px;
-  font-size: 1.1em;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-#login-button:hover {
-  background: var(--accent-color);
-  box-shadow: 0 0 15px rgba(83, 167, 116, 0.3);
-}
-
-#continue-as-grunt {
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: 10px;
-  font-size: 0.9em;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-#continue-as-grunt:hover {
-  background: var(--background-light);
-}
-
 #boot-overlay {
   position: fixed;
   top: 0;
@@ -472,472 +363,7 @@
   background: var(--background-light);
 }
 
-/* HQ Button */
-.hq-button {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 5;
-  padding: 8px 20px;
-  background: var(--background-medium);
-  color: var(--highlight-color);
-  border: none;
-  border-bottom: 2px solid var(--highlight-color);
-  font-size: 1em;
-  font-family: 'Hack-Bold', monospace !important;
-  cursor: pointer;
-  display: none; /* Hidden initially */
-}
-
-.hq-button:hover {
-  background: var(--accent-color);
-}
-
-/* HQ Panel */
-#hq-panel {
-  position: fixed;
-  top: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  height: 80%;
-  background: var(--background-medium);
-  border: 2px solid var(--border-color);
-  z-index: 6;
-  display: none;
-  overflow: hidden;
-}
-
-#hq-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  background: var(--background-dark);
-  border-bottom: 1px solid var(--border-color);
-}
-
-#hq-title {
-  color: var(--highlight-color);
-  font-size: 1.2em;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-#close-hq {
-  background: none;
-  border: none;
-  color: var(--highlight-color);
-  font-size: 1.2em;
-  cursor: pointer;
-}
-
-.hq-tabs {
-  display: flex;
-  background: var(--background-dark);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.hq-tab-button {
-  padding: 10px 15px;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: 0.9em;
-  border-right: 1px solid var(--border-color);
-}
-
-.hq-tab-button.active {
-  background: var(--accent-color);
-  color: var(--highlight-color);
-}
-
-.hq-content {
-  height: calc(100% - 100px);
-  overflow-y: auto;
-}
-
-.hq-tab-content {
-  padding: 20px;
-  display: none;
-}
-
-.hq-tab-content.active {
-  display: block;
-}
-
-.hq-section {
-  margin-bottom: 30px;
-  background: var(--background-dark);
-  border: 1px solid var(--border-color);
-  padding: 15px;
-}
-
-.hq-section-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.hq-section-title {
-  color: var(--highlight-color);
-  font-size: 1.1em;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.hq-section-level {
-  color: var(--text-primary);
-}
-
-.hq-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.hq-stat {
-  flex: 1;
-  min-width: 150px;
-}
-
-.stat-name {
-  color: var(--text-primary);
-  font-size: 0.9em;
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  color: var(--highlight-color);
-  font-size: 1.2em;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.hq-upgrade-section {
-  background: var(--background-light);
-  padding: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.upgrade-details {
-  flex: 1;
-}
-
-.upgrade-title {
-  color: var(--highlight-color);
-  font-size: 1em;
-  margin-bottom: 10px;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.upgrade-cost, .upgrade-time {
-  color: var(--text-primary);
-  margin-bottom: 5px;
-}
-
-.upgrade-resources {
-  color: var(--text-primary);
-  margin-bottom: 10px;
-}
-
-.upgrade-resources ul {
-  list-style: none;
-  padding-left: 15px;
-}
-
-.upgrade-button {
-  background: var(--accent-color);
-  color: var(--highlight-color);
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-  font-family: 'Hack-Bold', monospace !important;
-  transition: background 0.2s ease;
-}
-
-.upgrade-button:hover {
-  background: var(--background-light);
-  box-shadow: 0 0 10px rgba(83, 167, 116, 0.3);
-}
-
-.upgrade-progress {
-  width: 100%;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  background: var(--background-dark);
-  margin: 10px 0;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--highlight-color);
-  transition: width 0.5s ease;
-}
-
-.deployments-list {
-  max-height: 200px;
-  overflow-y: auto;
-  margin-bottom: 15px;
-}
-
-.no-deployments-message {
-  color: var(--text-primary);
-  font-style: italic;
-  padding: 10px;
-}
-
-.deployment-item {
-  background: var(--background-light);
-  margin-bottom: 10px;
-  padding: 10px;
-  border-left: 2px solid var(--highlight-color);
-}
-
-.deployment-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
-}
-
-.deployment-name {
-  color: var(--highlight-color);
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.deployment-status {
-  color: var(--warning-color);
-}
-
-.deployment-status.active {
-  color: var(--highlight-color);
-}
-
-.deployment-status.returning {
-  color: var(--warning-color);
-}
-
-.deployment-location {
-  color: var(--text-primary);
-  margin-bottom: 5px;
-  font-size: 0.9em;
-}
-
-.deployment-progress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 5px;
-}
-
-.deployment-progress .progress-bar {
-  flex: 1;
-  height: 5px;
-  margin: 0;
-}
-
-.progress-text {
-  color: var(--text-primary);
-  font-size: 0.8em;
-  width: 35px;
-  text-align: right;
-}
-
-.deployment-time {
-  color: var(--text-primary);
-  font-size: 0.8em;
-}
-
-.deployment-button {
-  background: var(--accent-color);
-  color: var(--highlight-color);
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-  width: 100%;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.deployment-button:hover {
-  background: var(--background-light);
-}
-
-/* Modal Styles */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9000;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.modal.active {
-  opacity: 1;
-}
-
-.modal-content {
-  background: var(--background-medium);
-  border: 2px solid var(--border-color);
-  width: 80%;
-  max-width: 600px;
-  max-height: 90%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  background: var(--background-dark);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.modal-title {
-  color: var(--highlight-color);
-  font-size: 1.2em;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  color: var(--highlight-color);
-  font-size: 1.2em;
-  cursor: pointer;
-}
-
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding: 15px;
-  background: var(--background-dark);
-  border-top: 1px solid var(--border-color);
-  gap: 10px;
-}
-
-.cancel-button, .confirm-button {
-  padding: 8px 15px;
-  cursor: pointer;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.cancel-button {
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-.confirm-button {
-  background: var(--accent-color);
-  color: var(--highlight-color);
-  border: none;
-}
-
-.confirmation-message {
-  margin-bottom: 15px;
-  color: var(--text-primary);
-}
-
-.confirmation-details, .confirmation-benefits {
-  background: var(--background-dark);
-  padding: 15px;
-  margin-bottom: 15px;
-  color: var(--text-primary);
-}
-
-.resources-header, .benefits-header {
-  color: var(--highlight-color);
-  margin-bottom: 5px;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.resources-list, .benefits-list {
-  padding-left: 15px;
-}
-
-/* Available Deployments */
-.available-deployment {
-  background: var(--background-light);
-  margin-bottom: 15px;
-  padding: 15px;
-  border-left: 2px solid var(--warning-color);
-}
-
-.deployment-expiry {
-  color: var(--warning-color);
-  font-size: 0.8em;
-}
-
-.deployment-details {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 10px 0;
-}
-
-.deployment-details > div {
-  flex: 1;
-  min-width: 150px;
-  color: var(--text-primary);
-}
-
-.deployment-rewards {
-  margin-bottom: 10px;
-}
-
-.deployment-rewards-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 5px;
-}
-
-.deployment-rewards-list > div {
-  background: var(--background-dark);
-  padding: 5px 10px;
-  color: var(--text-primary);
-  font-size: 0.9em;
-}
-
-.send-deployment-button {
-  background: var(--accent-color);
-  color: var(--highlight-color);
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-  width: 100%;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.send-deployment-button:hover {
-  background: var(--background-light);
-}
-
-/* Mission Panel */
+/* Mission Info Panel */
 #mission-panel {
   position: fixed;
   right: -40vw; /* Start off-screen */
@@ -1096,6 +522,541 @@
   background-color: rgba(0, 0, 0, 0.2);
 }
 
+/* Status Bar */
+#status-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--background-medium);
+  color: var(--text-primary);
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 20px;
+  border-top: 2px solid var(--border-color);
+  font-size: 0.9em;
+  z-index: 5;
+}
+
+#status-text {
+  flex-grow: 1;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+#date-time {
+  padding: 0 15px;
+}
+
+/* Volume Control */
+#volume-control {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--background-medium);
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+}
+
+#volume-icon {
+  width: 20px;
+  height: 20px;
+}
+
+#volume-slider {
+  width: 100px;
+  display: none;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  background: var(--background-light);
+  outline: none;
+}
+
+#volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: var(--highlight-color);
+  cursor: pointer;
+  border-radius: 0;
+}
+
+#volume-control:hover #volume-slider {
+  display: block;
+}
+
+/* Notification Box */
+#notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background-medium);
+  border: 2px solid var(--highlight-color);
+  color: var(--highlight-color);
+  padding: 10px 20px;
+  z-index: 6;
+  display: none;
+  text-align: center;
+  min-width: 300px;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+/* For mission points on the globe */
+.mission-point {
+  cursor: pointer !important;
+}
+
+/* Intel button */
+.intel-button {
+  background: var(--background-light);
+  color: var(--highlight-color);
+  border: 1px solid var(--border-color);
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
+  margin-top: 15px;
+  transition: background 0.2s ease;
+}
+
+.intel-button:hover {
+  background: var(--accent-color);
+}
+
+/* Improved LCD Screen Effect with higher z-index */
+#lcd-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9998; /* Just below boot sequence */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.5) 50%
+  );
+  background-size: 100% 8px; /* Increased size of scanlines */
+  z-index: 1;
+  opacity: 0.2; /* Moderate opacity */
+  pointer-events: none;
+}
+
+.flicker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 50, 30, 0.2); /* Green tint */
+  z-index: 2;
+  pointer-events: none;
+  /* Reduced flicker animation */
+  animation: flicker 2.5s infinite; /* Slower animation */
+}
+
+.interlace {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    transparent 0px,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 2px
+  );
+  z-index: 3;
+  pointer-events: none;
+}
+
+.crt-corners {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 15px; /* Increased curvature */
+  box-shadow: 
+    inset 0 0 150px rgba(0, 0, 0, 0.8), /* Darker shadow at corners */
+    0 0 70px rgba(0, 150, 100, 0.3); /* Green glow */
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* Add a slight color distortion effect */
+.crt-corners:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 50%,
+    rgba(83, 167, 116, 0.1) 100%
+  );
+  pointer-events: none;
+}
+
+/* Reduced flicker intensity with longer cycle */
+@keyframes flicker {
+  0% { opacity: 0.15; }
+  5% { opacity: 0.15; }
+  10% { opacity: 0.2; }
+  15% { opacity: 0.15; }
+  20% { opacity: 0.15; }
+  30% { opacity: 0.18; }
+  40% { opacity: 0.15; }
+  50% { opacity: 0.2; }
+  60% { opacity: 0.15; }
+  70% { opacity: 0.17; }
+  80% { opacity: 0.15; }
+  90% { opacity: 0.2; }
+  100% { opacity: 0.15; }
+}
+
+/* Login Screen Styles */
+#login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 31, 24, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#login-container {
+  width: 400px;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+  padding: 30px;
+}
+
+#login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+#login-header h1 {
+  color: var(--highlight-color);
+  font-size: 1.5em;
+  margin-bottom: 5px;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.login-subtitle {
+  color: var(--text-primary);
+  font-size: 1em;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  color: var(--highlight-color);
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.form-group input {
+  width: 100%;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 10px;
+  font-size: 1em;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--highlight-color);
+  box-shadow: 0 0 10px rgba(83, 167, 116, 0.3);
+}
+
+#error-message {
+  color: var(--alert-color);
+  margin-bottom: 20px;
+  font-size: 0.9em;
+  min-height: 20px;
+}
+
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#login-button {
+  background: transparent;
+  color: var(--highlight-color);
+  border: 2px solid var(--accent-color);
+  padding: 12px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+#login-button:hover {
+  background: var(--accent-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.3);
+}
+
+#continue-as-grunt {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+#continue-as-grunt:hover {
+  background: var(--background-light);
+}
+
+/* HQ Button */
+.hq-button {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 8px 20px;
+  background: var(--background-medium);
+  color: var(--highlight-color);
+  border: none;
+  border-bottom: 2px solid var(--highlight-color);
+  font-size: 1em;
+  font-family: 'Hack-Bold', monospace !important;
+  cursor: pointer;
+  display: none; /* Hidden initially */
+}
+
+.hq-button:hover {
+  background: var(--accent-color);
+}
+
+/* HQ Panel */
+#hq-panel {
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 80%;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  z-index: 6;
+  display: none;
+  overflow: hidden;
+}
+
+#hq-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+#hq-title {
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+#close-hq {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+.hq-tabs {
+  display: flex;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hq-tab-button {
+  padding: 10px 15px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.9em;
+  border-right: 1px solid var(--border-color);
+}
+
+.hq-tab-button.active {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+}
+
+.hq-content {
+  height: calc(100% - 100px);
+  overflow-y: auto;
+}
+
+.hq-tab-content {
+  padding: 20px;
+  display: none;
+}
+
+.hq-tab-content.active {
+  display: block;
+}
+
+.hq-section {
+  margin-bottom: 30px;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  padding: 15px;
+}
+
+.hq-section-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hq-section-title {
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.hq-section-level {
+  color: var(--text-primary);
+}
+
+.hq-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.hq-stat {
+  flex: 1;
+  min-width: 150px;
+}
+
+.stat-name {
+  color: var(--text-primary);
+  font-size: 0.9em;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.hq-upgrade-section {
+  background: var(--background-light);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upgrade-title {
+  color: var(--highlight-color);
+  font-size: 1em;
+  margin-bottom: 10px;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.upgrade-cost, .upgrade-time {
+  color: var(--text-primary);
+  margin-bottom: 5px;
+}
+
+.upgrade-resources {
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.upgrade-resources ul {
+  list-style: none;
+  padding-left: 15px;
+}
+
+.upgrade-button {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
+  transition: background 0.2s ease;
+}
+
+.upgrade-button:hover {
+  background: var(--background-light);
+  box-shadow: 0 0 10px rgba(83, 167, 116, 0.3);
+}
+
+.deployments-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.no-deployments-message {
+  color: var(--text-primary);
+  font-style: italic;
+  padding: 10px;
+}
+
+.deployment-button {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  width: 100%;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.deployment-button:hover {
+  background: var(--background-light);
+}
+
 /* Admin Controls */
 .admin-panel {
   position: fixed;
@@ -1194,7 +1155,6 @@
 
 .resource-value {
   color: var(--highlight-color);
-  font-family: 'Hack-Bold', monospace !important;
 }
 
 .squad-panel button {
@@ -1213,349 +1173,134 @@
   color: var(--highlight-color);
 }
 
-/* Status Bar */
-#status-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: var(--background-medium);
-  color: var(--text-primary);
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 20px;
-  border-top: 2px solid var(--border-color);
-  font-size: 0.9em;
-  z-index: 5;
-}
-
-#status-text {
-  flex-grow: 1;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-#date-time {
-  padding: 0 15px;
-}
-
-/* Sign Out Button */
+/* Sign out button */
 .sign-out-button {
   background: transparent;
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  padding: 3px 10px;
+  padding: 4px 8px;
   font-size: 0.8em;
   cursor: pointer;
+  margin-left: 15px;
 }
 
 .sign-out-button:hover {
-  background: var(--background-dark);
-}
-
-/* Volume Control */
-#volume-control {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--background-medium);
-  padding: 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 0;
-}
-
-#volume-icon {
-  width: 20px;
-  height: 20px;
-}
-
-#volume-slider {
-  width: 100px;
-  display: none;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 5px;
-  background: var(--background-light);
-  outline: none;
-}
-
-#volume-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 15px;
-  height: 15px;
-  background: var(--highlight-color);
-  cursor: pointer;
-  border-radius: 0;
-}
-
-#volume-control:hover #volume-slider {
-  display: block;
-}
-
-/* Notification Box */
-#notification {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--background-medium);
-  border: 2px solid var(--highlight-color);
-  color: var(--highlight-color);
-  padding: 10px 20px;
-  z-index: 6;
-  display: none;
-  text-align: center;
-  min-width: 300px;
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-/* For mission points on the globe */
-.mission-point {
-  cursor: pointer !important;
-}
-
-/* Intel button */
-.intel-button {
-  background: var(--background-light);
-  color: var(--highlight-color);
-  border: 1px solid var(--border-color);
-  padding: 8px 15px;
-  cursor: pointer;
-  font-family: 'Hack-Bold', monospace !important;
-  margin-top: 15px;
-  transition: background 0.2s ease;
-}
-
-.intel-button:hover {
   background: var(--accent-color);
+  color: var(--highlight-color);
 }
 
-/* Mission Form Styles */
-.create-mission-modal .form-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.form-group.half {
-  flex: 1;
-}
-
-.form-group select, .form-group textarea {
+/* Base Visualization Styles */
+.base-visualization {
   width: 100%;
+  height: 250px;
+  background-color: var(--background-dark);
+  margin-bottom: 20px;
+  position: relative;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Base structure elements */
+.base-visualization::before {
+  content: "";
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: var(--highlight-color);
+  border-radius: 4px;
+  z-index: 0;
+  transform-origin: center bottom;
+  transition: all 1s ease;
+}
+
+.base-visualization::after {
+  content: "MOTHER BASE";
+  color: var(--highlight-color);
+  font-size: 2em;
+  font-family: 'Hack-Bold', monospace !important;
+  text-align: center;
+  z-index: 1;
+}
+
+/* Phase 1 - Initial small base */
+.base-visualization.phase-1::before {
+  width: 50px;
+  height: 50px;
+}
+
+/* Phase 2 - Expanded base */
+.base-visualization.phase-2::before {
+  width: 100px;
+  height: 60px;
+}
+
+/* Phase 3 - Further expanded base */
+.base-visualization.phase-3::before {
+  width: 150px;
+  height: 80px;
+}
+
+/* Phase 4 - Advanced base */
+.base-visualization.phase-4::before {
+  width: 200px;
+  height: 100px;
+}
+
+/* Phase 5 - Fully expanded base */
+.base-visualization.phase-5::before {
+  width: 250px;
+  height: 120px;
+}
+
+/* Team overview styles */
+.team-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.team-card {
   background: var(--background-dark);
   border: 1px solid var(--border-color);
+  padding: 10px;
+}
+
+.team-card-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.team-name {
+  color: var(--highlight-color);
+  font-weight: bold;
+}
+
+.team-level {
   color: var(--text-primary);
-  padding: 10px;
-  font-size: 1em;
 }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-/* Missions List */
-.missions-list {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.mission-item {
-  background: var(--background-light);
-  margin-bottom: 10px;
-  padding: 10px;
-  border-left: 2px solid var(--highlight-color);
-}
-
-.mission-item.active {
-  border-left-color: var(--warning-color);
-}
-
-.mission-item.completed {
-  border-left-color: var(--highlight-color);
-  opacity: 0.7;
-}
-
-.mission-item-header {
+.team-stat {
   display: flex;
   justify-content: space-between;
   margin-bottom: 5px;
 }
 
-.mission-item-name {
-  color: var(--highlight-color);
-  font-family: 'Hack-Bold', monospace !important;
-}
-
-.mission-item-status {
-  color: var(--warning-color);
-}
-
-.mission-item-status.available {
-  color: var(--highlight-color);
-}
-
-.mission-item-status.completed {
+.team-stat-name {
   color: var(--text-primary);
 }
 
-.mission-item-details {
-  display: flex;
-  justify-content: space-between;
-  color: var(--text-primary);
-  font-size: 0.9em;
-  margin-bottom: 10px;
-}
-
-.mission-item-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.mission-item-actions button {
-  flex: 1;
-  background: var(--accent-color);
+.team-stat-value {
   color: var(--highlight-color);
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 0.9em;
 }
 
-.mission-item-actions button:hover {
-  background: var(--background-dark);
-}
-
-/* Success and Failure Buttons */
-.success-mission-button {
-  background: var(--highlight-color) !important;
-  color: var(--background-dark) !important;
-}
-
-.failure-mission-button {
-  background: var(--alert-color) !important;
-  color: white !important;
-}
-
-/* Improved LCD Screen Effect with higher z-index */
-#lcd-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 3;
-  pointer-events: none;
-  overflow: hidden;
-  display: none; /* Initially hidden, shown after login */
-}
-
-.scanline {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0) 50%,
-    rgba(0, 0, 0, 0.5) 50%
-  );
-  background-size: 100% 8px; /* Increased size of scanlines */
-  z-index: 1;
-  opacity: 0.2; /* Moderate opacity */
-  pointer-events: none;
-}
-
-.flicker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 50, 30, 0.2); /* Green tint */
-  z-index: 2;
-  pointer-events: none;
-  /* Reduced flicker animation */
-  animation: flicker 2.5s infinite; /* Slower animation */
-}
-
-.interlace {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: repeating-linear-gradient(
-    transparent 0px,
-    rgba(0, 0, 0, 0.08) 1px,
-    transparent 2px
-  );
-  z-index: 3;
-  pointer-events: none;
-}
-
-.crt-corners {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: 15px; /* Increased curvature */
-  box-shadow: 
-    inset 0 0 150px rgba(0, 0, 0, 0.8), /* Darker shadow at corners */
-    0 0 70px rgba(0, 150, 100, 0.3); /* Green glow */
-  z-index: 4;
-  pointer-events: none;
-}
-
-/* Add a slight color distortion effect */
-.crt-corners:after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 50%,
-    rgba(83, 167, 116, 0.1) 100%
-  );
-  pointer-events: none;
-}
-
-/* Reduced flicker intensity with longer cycle */
-@keyframes flicker {
-  0% { opacity: 0.15; }
-  5% { opacity: 0.15; }
-  10% { opacity: 0.2; }
-  15% { opacity: 0.15; }
-  20% { opacity: 0.15; }
-  30% { opacity: 0.18; }
-  40% { opacity: 0.15; }
-  50% { opacity: 0.2; }
-  60% { opacity: 0.15; }
-  70% { opacity: 0.17; }
-  80% { opacity: 0.15; }
-  90% { opacity: 0.2; }
-  100% { opacity: 0.15; }
-}
-
-/* Form for creating missions */
-#create-mission-form {
-  color: var(--text-primary);
-}
-
-/* Max level reached display */
-.max-level {
-  text-align: center;
-  padding: 10px;
-  color: var(--highlight-color);
-  font-family: 'Hack-Bold', monospace !important;
+/* Tab icon styles */
+.tab-icon {
+  margin-right: 5px;
+  font-size: 1.2em;
 }

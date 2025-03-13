@@ -5,6 +5,84 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Military Strategic Globe</title>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/login.css">
+  <style>
+    /* Temporary base visualization styles */
+    .base-visualization {
+      width: 100%;
+      height: 250px;
+      background-color: var(--background-dark);
+      margin-bottom: 20px;
+      position: relative;
+      border: 1px solid var(--border-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .base-visualization::after {
+      content: "MOTHER BASE";
+      color: var(--highlight-color);
+      font-size: 2em;
+      font-family: 'Hack-Bold', monospace !important;
+      text-align: center;
+    }
+    
+    .base-visualization.phase-1::before {
+      content: "";
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background-color: var(--highlight-color);
+      border-radius: 4px;
+    }
+    
+    .base-visualization.phase-2::before {
+      content: "";
+      position: absolute;
+      width: 100px;
+      height: 60px;
+      background-color: var(--highlight-color);
+      border-radius: 4px;
+    }
+    
+    .base-visualization.phase-3::before {
+      content: "";
+      position: absolute;
+      width: 150px;
+      height: 80px;
+      background-color: var(--highlight-color);
+      border-radius: 4px;
+    }
+    
+    .base-visualization.phase-4::before {
+      content: "";
+      position: absolute;
+      width: 200px;
+      height: 100px;
+      background-color: var(--highlight-color);
+      border-radius: 4px;
+    }
+    
+    .base-visualization.phase-5::before {
+      content: "";
+      position: absolute;
+      width: 250px;
+      height: 120px;
+      background-color: var(--highlight-color);
+      border-radius: 4px;
+    }
+    
+    .team-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    
+    .tab-icon {
+      margin-right: 5px;
+    }
+  </style>
   
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -185,7 +263,10 @@
     </div>
     
     <div class="hq-tabs">
-      <button class="hq-tab-button active" data-tab="combat">COMBAT UNIT</button>
+      <button class="hq-tab-button active" data-tab="home">
+        <span class="tab-icon">⌂</span> HOME
+      </button>
+      <button class="hq-tab-button" data-tab="combat">COMBAT UNIT</button>
       <button class="hq-tab-button" data-tab="intel">INTEL TEAM</button>
       <button class="hq-tab-button" data-tab="medical">MEDICAL TEAM</button>
       <button class="hq-tab-button" data-tab="rnd">R&D PLATFORM</button>
@@ -194,8 +275,46 @@
     </div>
     
     <div class="hq-content">
+      <!-- Home Tab (Base Overview) -->
+      <div class="hq-tab-content active" id="home-content">
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">MOTHER BASE OVERVIEW</div>
+            <div class="hq-section-level">PHASE: <span id="base-phase">1</span></div>
+          </div>
+          
+          <div class="base-visualization phase-1" id="base-visualization">
+            <!-- Visual representation of the base that changes with phases -->
+          </div>
+          
+          <div class="hq-stats">
+            <div class="hq-stat">
+              <div class="stat-name">CAPACITY:</div>
+              <div class="stat-value" id="base-capacity">20%</div>
+            </div>
+            <div class="hq-stat">
+              <div class="stat-name">LOCATION:</div>
+              <div class="stat-value">SOUTH AFRICA</div>
+            </div>
+            <div class="hq-stat">
+              <div class="stat-name">STATUS:</div>
+              <div class="stat-value">OPERATIONAL</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hq-section">
+          <div class="hq-section-header">
+            <div class="hq-section-title">TEAM OVERVIEW</div>
+          </div>
+          <div class="team-overview">
+            <!-- Team overview cards will be generated dynamically -->
+          </div>
+        </div>
+      </div>
+      
       <!-- Combat Unit Tab -->
-      <div class="hq-tab-content active" id="combat-content">
+      <div class="hq-tab-content" id="combat-content">
         <div class="hq-section">
           <div class="hq-section-header">
             <div class="hq-section-title">COMBAT UNIT</div>
