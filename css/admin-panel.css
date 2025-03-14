@@ -1,0 +1,354 @@
+/* Admin Panel Styles */
+.admin-panel {
+  position: fixed;
+  bottom: 50px; /* Position at bottom, above status bar */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  z-index: 5;
+  padding: 0; /* Reduced padding for header */
+  display: none;
+  box-shadow: var(--panel-glow);
+  transition: height 0.3s ease;
+}
+
+/* Drag handle for movable panel */
+.drag-handle {
+  width: 100%;
+  height: 12px;
+  background: var(--background-dark);
+  cursor: grab;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--highlight-color);
+  font-size: 12px;
+  user-select: none;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.admin-title {
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.admin-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.minimize-btn, .maximize-btn {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.minimize-btn:hover, .maximize-btn:hover {
+  color: var(--text-primary);
+}
+
+.admin-panel.minimized .admin-section {
+  display: none;
+}
+
+.admin-panel.minimized {
+  height: auto;
+}
+
+.admin-content {
+  padding: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.admin-section {
+  margin-bottom: 20px;
+}
+
+.admin-section-title {
+  color: var(--text-primary);
+  font-size: 0.9em;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+}
+
+.admin-panel button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  margin-bottom: 5px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-panel button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 31, 24, 0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.modal.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  width: 80%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px;
+  gap: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+.cancel-button, .confirm-button {
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.cancel-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.confirm-button {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+}
+
+.cancel-button:hover {
+  background: var(--background-light);
+}
+
+.confirm-button:hover {
+  background: var(--highlight-color);
+  color: var(--background-dark);
+}
+
+/* Mission form styles */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  color: var(--highlight-color);
+  margin-bottom: 5px;
+  font-size: 0.9em;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group.half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.missions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.mission-item {
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+}
+
+.mission-item-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.mission-item-name {
+  color: var(--highlight-color);
+  font-weight: bold;
+}
+
+.mission-item-status {
+  font-size: 0.9em;
+}
+
+.mission-item.available .mission-item-status {
+  color: var(--highlight-color);
+}
+
+.mission-item.active .mission-item-status {
+  color: #4CAF50; /* Green */
+}
+
+.mission-item.completed .mission-item-status {
+  color: #FFC107; /* Amber */
+}
+
+.mission-item-details {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+  color: var(--text-primary);
+}
+
+.mission-item-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.mission-item-actions button {
+  flex: 1;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.success-mission-button {
+  background: #4CAF50 !important; /* Green */
+  color: white !important;
+}
+
+.failure-mission-button {
+  background: #F44336 !important; /* Red */
+  color: white !important;
+}
+
+.no-missions {
+  color: var(--text-primary);
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+/* Confirmation modal */
+.confirmation-message {
+  margin-bottom: 20px;
+  font-size: 1.1em;
+  text-align: center;
+}
+
+.confirmation-details {
+  background: var(--background-dark);
+  padding: 15px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
+}
+
+.resources-header, .benefits-header {
+  color: var(--highlight-color);
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.resources-list, .benefits-list {
+  margin-bottom: 10px;
+}
+
+.confirmation-warning {
+  color: var(--warning-color);
+  margin-top: 15px;
+  font-size: 0.9em;
+}
+
+.confirmation-modal .modal-content {
+  max-width: 500px;
+}
+
+.delete-confirm {
+  background: #F44336 !important; /* Red */
+  color: white !important;
+}

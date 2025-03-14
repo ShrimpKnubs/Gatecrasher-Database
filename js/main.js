@@ -1,11 +1,12 @@
 // Firebase configuration - Replace with your actual firebase config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBKhc_Nl4kMAUfd3Ze43jG6hM1nt9FCsIg",
+  authDomain: "gatecrasher-database.firebaseapp.com",
+  projectId: "gatecrasher-database",
+  storageBucket: "gatecrasher-database.firebasestorage.app",
+  messagingSenderId: "221759991275",
+  appId: "1:221759991275:web:4b1a92d2647d9f48c8bdae",
+  measurementId: "G-QH1TYL025K"
 };
 
 // Initialize Firebase
@@ -46,7 +47,6 @@ const rightPanel = document.getElementById('right-panel');
 const hqButton = document.getElementById('hq-button');
 const hqPanel = document.getElementById('hq-panel');
 const closeHqButton = document.getElementById('close-hq');
-const signOutButton = document.createElement('button');
 
 // Add background image to logo screen and login overlay too
 logoScreen.style.backgroundImage = "url('textures/background.png')";
@@ -76,6 +76,9 @@ let scene = null; // Will be initialized with Three.js scene
 setTimeout(() => {
   logoScreen.style.display = 'none';
   loginOverlay.style.display = 'flex'; // Show login screen instead of boot screen
+  
+  // Initialize LCD overlay - fix for LCD not showing
+  lcdOverlay.style.display = 'block';
 }, 2000);
 
 // Authentication state listener
@@ -144,19 +147,53 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
   
+  // Display loading message
+  errorMessage.textContent = 'Authenticating...';
+  errorMessage.style.color = 'var(--text-primary)';
+  
   try {
-    // This uses email auth format - you can customize auth methods
-    const email = `${userId}@yourarma3ops.com`;
+    // This uses email auth format
+    // Make sure email follows a valid format
+    let email;
+    if (userId.includes('@')) {
+      email = userId; // User entered full email
+    } else {
+      email = `${userId}@yourarma3ops.com`;
+    }
+    
+    console.log(`Attempting to sign in with email: ${email}`);
+    
     await auth.signInWithEmailAndPassword(email, password);
     
     // Auth state listener will handle the rest
+    console.log("Authentication successful");
     
-    // Clear form
+    // Clear form and error message
     loginForm.reset();
     errorMessage.textContent = '';
+    
+    // Set system as active
+    systemActive = true;
+    
+    // Play sounds
+    try {
+      if (activationSound.readyState < 2) {
+        activationSound.load();
+      }
+      if (music.readyState < 2) {
+        music.load();
+      }
+      
+      activationSound.play().catch(err => console.error("Error playing activation sound:", err));
+      music.volume = volumeSlider.value;
+      music.play().catch(err => console.error("Error playing music:", err));
+    } catch (audioError) {
+      console.error("Audio error:", audioError);
+    }
   } catch (error) {
     console.error('Login error:', error);
-    errorMessage.textContent = 'Invalid ID or password';
+    errorMessage.textContent = `Login failed: ${error.message}`;
+    errorMessage.style.color = 'var(--alert-color)';
   }
 });
 
@@ -166,11 +203,35 @@ continueAsGruntButton.addEventListener('click', () => {
   showUserDashboard(userRole);
   loginOverlay.style.display = 'none';
   
+  // Set system as active
+  systemActive = true;
+  
   // Initialize grunt-only features
   initializeGruntFeatures();
   
-  // Play activation sounds and show notification
-  activationSound.play().catch(console.error);
+  // Ensure audio is loaded before playing
+  try {
+    if (activationSound.readyState < 2) {
+      activationSound.load();
+    }
+    if (music.readyState < 2) {
+      music.load();
+    }
+    
+    // Play activation sound
+    activationSound.play().catch(error => {
+      console.error("Error playing activation sound:", error);
+    });
+    
+    // Set music volume and play
+    music.volume = volumeSlider.value;
+    music.play().catch(error => {
+      console.error("Error playing music:", error);
+    });
+  } catch (error) {
+    console.error("Audio playback error:", error);
+  }
+  
   showNotification('ACCESS GRANTED - GRUNT VIEW ONLY');
   
   // Initialize UI
@@ -182,12 +243,28 @@ function initializeUIAfterLogin() {
   // Set system as active
   systemActive = true;
   
-  // Play activation sound
-  activationSound.play().catch(console.error);
-  
-  // Set music volume based on slider and play music
-  music.volume = volumeSlider.value;
-  music.play().catch(console.error);
+  try {
+    // Ensure audio elements are loaded
+    if (activationSound.readyState < 2) {
+      activationSound.load();
+    }
+    if (music.readyState < 2) {
+      music.load();
+    }
+    
+    // Play activation sound
+    activationSound.play().catch(error => {
+      console.error("Error playing activation sound:", error);
+    });
+    
+    // Set music volume and play
+    music.volume = volumeSlider.value;
+    music.play().catch(error => {
+      console.error("Error playing music:", error);
+    });
+  } catch (error) {
+    console.error("Audio playback error:", error);
+  }
   
   // Apply LCD screen overlay
   lcdOverlay.style.display = 'block';
@@ -210,23 +287,75 @@ function initializeUIAfterLogin() {
   // Show notification
   showNotification('SYSTEM ACTIVATED - GLOBE TRACKING OPERATIONAL');
   
+  // Load missions from local JSON files
+  loadLocalMissions().then(missions => {
+    console.log("Loaded local missions:", missions);
+    if (missions && missions.length > 0) {
+      missions.forEach(mission => {
+        if (mission.coordinates) {
+          addMissionMarker(mission);
+        }
+      });
+    }
+  }).catch(error => {
+    console.error("Error loading local missions:", error);
+  });
+  
+  // Load missions from Firestore
+  loadMissions().then(missions => {
+    console.log("Loaded Firestore missions:", missions);
+    if (missions && missions.length > 0) {
+      missions.forEach(mission => {
+        if (mission.coordinates) {
+          addMissionPoint(mission);
+        }
+      });
+    }
+  }).catch(error => {
+    console.error("Error loading Firestore missions:", error);
+  });
+  
   // Setup upgrade check interval
   setInterval(checkUpgrades, 60000); // Check every minute
   
   // Setup healing interval
   initializeHealTimer();
-  
-  // Add HQ icon to South Africa
-  addHQMarker();
-  
-  // Generate random deployments for admin
-  if (userRole === 'admin') {
-    generateRandomDeployments(5); // Generate 5 random deployments
+}
+
+// Function to load missions from local JSON files
+async function loadLocalMissions() {
+  try {
+    // Read missions.json file
+    const missionsResponse = await window.fs.readFile('data/missions.json', { encoding: 'utf8' });
+    const missions = JSON.parse(missionsResponse);
+    
+    // Read intel.json file for additional mission info
+    try {
+      const intelResponse = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
+      const intel = JSON.parse(intelResponse);
+      
+      // Merge mission data with intel data
+      missions.forEach(mission => {
+        if (intel[mission.id]) {
+          mission.intel = intel[mission.id];
+        }
+      });
+    } catch (intelError) {
+      console.error('Error loading intel.json:', intelError);
+    }
+    
+    return missions;
+  } catch (error) {
+    console.error('Error loading missions.json:', error);
+    return [];
   }
 }
 
 // Show appropriate dashboard based on user role
 function showUserDashboard(role) {
+  // Set system as active
+  systemActive = true;
+  
   // Show HQ button for all users
   hqButton.style.display = 'block';
   
@@ -245,6 +374,109 @@ function showUserDashboard(role) {
   
   closeHqButton.addEventListener('click', () => {
     toggleHqPanel(false);
+  });
+  
+  // Make HQ tabs clickable
+  document.querySelectorAll('.hq-tab-button').forEach(tabButton => {
+    tabButton.addEventListener('click', () => {
+      const tabId = tabButton.getAttribute('data-tab');
+      
+      // Remove active class from all buttons and content
+      document.querySelectorAll('.hq-tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.hq-tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      // Add active class to current button and content
+      tabButton.classList.add('active');
+      document.getElementById(`${tabId}-content`).classList.add('active');
+      
+      // Play tab sound
+      tabSound.play().catch(console.error);
+    });
+  });
+  
+  // Initialize the admin panel drag functionality
+  const adminPanel = document.getElementById('admin-controls');
+  if (adminPanel) {
+    makeDraggable(adminPanel);
+  }
+}
+
+// Make an element draggable
+function makeDraggable(element) {
+  let isDragging = false;
+  let offsetX, offsetY;
+  
+  // Add a drag handle
+  const dragHandle = document.createElement('div');
+  dragHandle.className = 'drag-handle';
+  dragHandle.innerHTML = '⋮⋮⋮';
+  element.insertBefore(dragHandle, element.firstChild);
+  
+  // Add minimize button
+  const minimizeBtn = document.createElement('button');
+  minimizeBtn.className = 'minimize-btn';
+  minimizeBtn.innerHTML = '−';
+  minimizeBtn.title = 'Minimize';
+  
+  // Add to header
+  const header = element.querySelector('.admin-header');
+  if (header) {
+    header.appendChild(minimizeBtn);
+  } else {
+    element.insertBefore(minimizeBtn, element.firstChild);
+  }
+  
+  // Minimize functionality
+  let isMinimized = false;
+  minimizeBtn.addEventListener('click', () => {
+    const sections = element.querySelectorAll('.admin-section');
+    if (isMinimized) {
+      // Restore
+      sections.forEach(section => section.style.display = 'block');
+      minimizeBtn.innerHTML = '−';
+      element.style.height = 'auto';
+    } else {
+      // Minimize
+      sections.forEach(section => section.style.display = 'none');
+      minimizeBtn.innerHTML = '+';
+      element.style.height = 'auto';
+    }
+    isMinimized = !isMinimized;
+  });
+  
+  // Drag start
+  dragHandle.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - element.getBoundingClientRect().left;
+    offsetY = e.clientY - element.getBoundingClientRect().top;
+    
+    // Add grab cursor
+    dragHandle.style.cursor = 'grabbing';
+    
+    // Prevent text selection during drag
+    e.preventDefault();
+  });
+  
+  // Drag end
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      dragHandle.style.cursor = 'grab';
+    }
+  });
+  
+  // Drag
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      element.style.left = (e.clientX - offsetX) + 'px';
+      element.style.top = (e.clientY - offsetY) + 'px';
+      element.style.bottom = 'auto'; // Remove bottom positioning
+      element.style.transform = 'none'; // Remove any transform
+    }
   });
 }
 
@@ -265,22 +497,6 @@ function toggleHqPanel(show) {
     
     // Load team data
     loadBaseTeams();
-    
-    // Make first tab active
-    document.querySelector('.hq-tab-button.active').classList.remove('active');
-    document.querySelector('.hq-tab-content.active').classList.remove('active');
-    
-    const homeTab = document.querySelector('[data-tab="home"]');
-    const combatTab = document.querySelector('[data-tab="combat"]');
-    const firstTab = homeTab || combatTab;
-    
-    if (firstTab) {
-      firstTab.classList.add('active');
-      document.getElementById(`${firstTab.getAttribute('data-tab')}-content`).classList.add('active');
-    }
-    
-    // Update base visualization
-    updateBaseVisualization();
     
     // Play tab sound
     tabSound.play().catch(console.error);
@@ -331,27 +547,59 @@ function initializeResourceManagement() {
 
 // Update resource display
 async function updateResourceDisplay() {
-  if (!currentUser) return;
+  if (!currentUser) {
+    // For guests, show default resources
+    updateBaseResourceDisplay({
+      money: 100000,
+      resources: {
+        fuel: 500,
+        ammo: 500,
+        medicine: 500,
+        food: 500,
+        materials: 500
+      }
+    });
+    return;
+  }
   
   try {
     const userDoc = await db.collection('users').doc(currentUser.uid).get();
     const userData = userDoc.data();
     
-    if (!userData) return;
+    if (!userData) {
+      // If no user data found, show default resources
+      updateBaseResourceDisplay({
+        money: 100000,
+        resources: {
+          fuel: 500,
+          ammo: 500,
+          medicine: 500,
+          food: 500,
+          materials: 500
+        }
+      });
+      return;
+    }
     
-    // Update money display
+    // Update both resource displays - in squad panel and base tab
+    updateBaseResourceDisplay(userData);
+    
+    // Update squad panel resource display
+    const resourceDisplay = document.getElementById('resource-display');
+    if (!resourceDisplay) return;
+    
+    resourceDisplay.innerHTML = '';
+    
+    // Add money display
     const moneyDisplay = document.createElement('div');
     moneyDisplay.className = 'resource-item';
     moneyDisplay.innerHTML = `
       <div class="resource-name">MONEY:</div>
-      <div class="resource-value">$${userData.money.toLocaleString()}</div>
+      <div class="resource-value">${userData.money.toLocaleString()}</div>
     `;
-    
-    // Update resources display
-    const resourceDisplay = document.getElementById('resource-display');
-    resourceDisplay.innerHTML = '';
     resourceDisplay.appendChild(moneyDisplay);
     
+    // Add other resources
     for (const [resource, amount] of Object.entries(userData.resources)) {
       const resourceItem = document.createElement('div');
       resourceItem.className = 'resource-item';
@@ -366,17 +614,46 @@ async function updateResourceDisplay() {
   }
 }
 
+// Update base resource display in the BASE tab
+function updateBaseResourceDisplay(userData) {
+  const baseResourcesDisplay = document.getElementById('base-resources');
+  if (!baseResourcesDisplay) return;
+  
+  baseResourcesDisplay.innerHTML = '';
+  
+  // Add money display
+  const moneyDisplay = document.createElement('div');
+  moneyDisplay.className = 'resource-item';
+  moneyDisplay.innerHTML = `
+    <div class="resource-name">MONEY:</div>
+    <div class="resource-value">${userData.money.toLocaleString()}</div>
+  `;
+  baseResourcesDisplay.appendChild(moneyDisplay);
+  
+  // Add other resources
+  for (const [resource, amount] of Object.entries(userData.resources)) {
+    const resourceItem = document.createElement('div');
+    resourceItem.className = 'resource-item';
+    resourceItem.innerHTML = `
+      <div class="resource-name">${resource.toUpperCase()}:</div>
+      <div class="resource-value">${amount}</div>
+    `;
+    baseResourcesDisplay.appendChild(resourceItem);
+  }
+}
+
 // Initialize decorative elements
 function initializeDecorativeElements() {
-  // Hide side panels at first
-  leftPanel.style.opacity = '0';
-  rightPanel.style.opacity = '0';
+  // Ensure side panels are visible
+  leftPanel.style.opacity = '1';
+  rightPanel.style.opacity = '1';
   
   // Create random radar blips
   setInterval(() => {
     if (!systemActive) return;
     
     const radarContainer = document.querySelector('.radar-container');
+    if (!radarContainer) return;
     
     // Remove old dots that aren't the initial ones
     const oldDots = document.querySelectorAll('.radar-dot.temp');
@@ -517,56 +794,70 @@ function initializeIntelPanel() {
 // Load mission intel
 async function openIntelPanel(missionId) {
   try {
-    // Get intel from Firestore
+    // First try to get intel from Firestore
     const intelDoc = await db.collection('intel').doc(missionId).get();
     
-    if (!intelDoc.exists) {
-      showNotification('NO INTEL AVAILABLE FOR THIS MISSION');
+    if (intelDoc.exists) {
+      const missionIntel = intelDoc.data();
+      displayIntelData(missionIntel);
       return;
     }
     
-    const missionIntel = intelDoc.data();
+    // If not found in Firestore, try from local intel.json
+    const intelResponse = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
+    const intelData = JSON.parse(intelResponse);
     
-    // Play intel sound
-    if (intelSound && intelSound.readyState >= 2) {
-      intelSound.currentTime = 0;
-      intelSound.play().catch(console.error);
+    if (intelData[missionId]) {
+      displayIntelData(intelData[missionId]);
+      return;
     }
     
-    // Update intel panel content
-    document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
-    
-    // Create intel content container
-    let intelContent = '';
-    
-    // Only add content paragraph if there's actual content
-    if (missionIntel.content && missionIntel.content.trim() !== '') {
-      intelContent += `<p>${missionIntel.content}</p>`;
-    }
-    
-    // Add images if available
-    if (missionIntel.images && missionIntel.images.length > 0) {
-      missionIntel.images.forEach(imgSrc => {
-        intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
-      });
-    }
-    
-    // If there's no content and no images, show a placeholder message
-    if (intelContent === '') {
-      intelContent = '<p>No intel data available.</p>';
-    }
-    
-    document.getElementById('intel-content').innerHTML = intelContent;
-    
-    // Show intel panel
-    intelPanel.classList.add('active');
-    
-    // Show notification
-    showNotification('ACCESSING MISSION INTEL');
+    // If still not found, show notification
+    showNotification('NO INTEL AVAILABLE FOR THIS MISSION');
   } catch (error) {
     console.error('Error loading intel:', error);
     showNotification('ERROR LOADING MISSION INTEL');
   }
+}
+
+// Display intel data
+function displayIntelData(missionIntel) {
+  // Play intel sound
+  if (intelSound && intelSound.readyState >= 2) {
+    intelSound.currentTime = 0;
+    intelSound.play().catch(console.error);
+  }
+  
+  // Update intel panel content
+  document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
+  
+  // Create intel content container
+  let intelContent = '';
+  
+  // Only add content paragraph if there's actual content
+  if (missionIntel.content && missionIntel.content.trim() !== '') {
+    intelContent += `<p>${missionIntel.content}</p>`;
+  }
+  
+  // Add images if available
+  if (missionIntel.images && missionIntel.images.length > 0) {
+    missionIntel.images.forEach(imgSrc => {
+      intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+    });
+  }
+  
+  // If there's no content and no images, show a placeholder message
+  if (intelContent === '') {
+    intelContent = '<p>No intel data available.</p>';
+  }
+  
+  document.getElementById('intel-content').innerHTML = intelContent;
+  
+  // Show intel panel
+  intelPanel.classList.add('active');
+  
+  // Show notification
+  showNotification('ACCESSING MISSION INTEL');
 }
 
 // Globe rotation control
@@ -590,159 +881,16 @@ function resumeRotation() {
   rotating = true;
 }
 
-// Add HQ marker to the globe at South Africa
-function addHQMarker() {
-  // South Africa coordinates
-  const lat = -30.5595;
-  const lon = 22.9375;
-  const phi = (90 - lat) * Math.PI/180;
-  const theta = (lon + 180) * Math.PI/180;
-  
-  // Create HQ marker - light blue color
-  const geometry = new THREE.SphereGeometry(0.25, 12, 12);
-  const material = new THREE.MeshBasicMaterial({ color: 0x00BFFF }); // Light blue
-  const point = new THREE.Mesh(geometry, material);
-  
-  point.position.x = -10 * Math.sin(phi) * Math.cos(theta);
-  point.position.y = 10 * Math.cos(phi);
-  point.position.z = 10 * Math.sin(phi) * Math.sin(theta);
-  
-  // Add HQ identifier
-  point.userData = { 
-    type: 'hq-point'
-  };
-  
-  scene.add(point);
-  
-  // Add pulsing effect (ring) - Light blue
-  const ringGeometry = new THREE.RingGeometry(0.3, 0.4, 32);
-  const ringMaterial = new THREE.MeshBasicMaterial({ 
-    color: 0x00BFFF, // Light blue
-    transparent: true,
-    opacity: 0.7,
-    side: THREE.DoubleSide
-  });
-  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-  ring.position.copy(point.position);
-  
-  // Orient ring to face outward from globe center
-  ring.lookAt(new THREE.Vector3(0, 0, 0));
-  scene.add(ring);
-  
-  // Store reference for animation
-  point.userData.ring = ring;
-}
-
-// Track movement of deployments
-function updateDeploymentMovement() {
-  if (!activeDeployments || !activeDeployments.length) return;
-  
-  activeDeployments.forEach(deployment => {
-    if (deployment.status === 'moving-to-target' || deployment.status === 'returning') {
-      // Calculate current position based on time
-      updateDeploymentPosition(deployment);
-    }
-  });
-  
-  // Update markers on globe
-  updateGlobeDeploymentMarkers();
-}
-
-// Calculate current position of a moving deployment
-function updateDeploymentPosition(deployment) {
-  // Implementation will depend on your deployment system
-  // This is a placeholder showing the concept
-  if (!deployment.startPosition || !deployment.targetPosition) return;
-  
-  const now = new Date();
-  let progress = 0;
-  
-  if (deployment.status === 'moving-to-target') {
-    const totalTime = deployment.estimatedArrival - deployment.departureTime;
-    const elapsed = now - deployment.departureTime;
-    progress = Math.min(1, Math.max(0, elapsed / totalTime));
-  } else if (deployment.status === 'returning') {
-    const totalTime = deployment.estimatedReturn - deployment.returnDepartureTime;
-    const elapsed = now - deployment.returnDepartureTime;
-    progress = Math.min(1, Math.max(0, elapsed / totalTime));
-  }
-  
-  // Linear interpolation between points
-  deployment.currentPosition = {
-    lat: deployment.startPosition.lat + (deployment.targetPosition.lat - deployment.startPosition.lat) * progress,
-    lon: deployment.startPosition.lon + (deployment.targetPosition.lon - deployment.startPosition.lon) * progress
-  };
-}
-
-// Generate random deployments for admin
-function generateRandomDeployments(count) {
-  // Placeholder function - implementation depends on your deployment system
-  const locations = [
-    { name: "SIBERIA", lat: 61.0137, lon: 99.1967 },
-    { name: "AMAZON", lat: -3.4653, lon: -62.2159 },
-    { name: "AFGHANISTAN", lat: 33.9391, lon: 67.7100 },
-    { name: "NORTHERN EUROPE", lat: 61.9241, lon: 25.7482 },
-    { name: "MIDDLE EAST", lat: 23.8859, lon: 45.0792 }
-  ];
-  
-  for (let i = 0; i < count; i++) {
-    const locationIndex = Math.floor(Math.random() * locations.length);
-    const location = locations[locationIndex];
-    
-    // Add marker for admin to place
-    addDeploymentPlacementMarker(location.lat, location.lon, `DEPLOYMENT: ${location.name}`);
-  }
-}
-
-// Add deployment placement marker
-function addDeploymentPlacementMarker(lat, lon, name) {
-  // Similar to addMissionMarker but for deployments
-  // Implementation depends on your Globe system
-}
-
-// Update base visualization based on team levels
-function updateBaseVisualization() {
-  // Calculate total upgrade level
-  let totalLevel = 0;
-  let maxPossibleLevel = 0;
-  
-  if (baseTeams) {
-    // Count all team levels
-    Object.values(baseTeams).forEach(team => {
-      if (team && team.level) {
-        totalLevel += team.level;
-        maxPossibleLevel += 5; // Max level is 5 for each team
-      }
-    });
-  }
-  
-  // Calculate base expansion phase (1-5)
-  // 5 phases based on percentage of max possible level
-  const expansionPercentage = totalLevel / maxPossibleLevel;
-  const basePhase = Math.ceil(expansionPercentage * 5);
-  
-  // Update base visualization in the HQ panel
-  const baseVisualization = document.getElementById('base-visualization');
-  if (baseVisualization) {
-    baseVisualization.className = `base-visualization phase-${basePhase}`;
-    
-    // Update base stats
-    const basePhaseElement = document.getElementById('base-phase');
-    if (basePhaseElement) {
-      basePhaseElement.textContent = basePhase;
-    }
-    
-    const baseCapacityElement = document.getElementById('base-capacity');
-    if (baseCapacityElement) {
-      baseCapacityElement.textContent = `${Math.round(expansionPercentage * 100)}%`;
-    }
-  }
-}
+// Add HQ location in South Africa
+const HQ_LOCATION = {
+  lat: -30.5595, 
+  lon: 22.9375,
+  name: "MOTHER BASE - SOUTH AFRICA"
+};
 
 // Globe Visualization System (use your existing code with modifications for Firebase)
 async function initializeGlobe() {
-  // Use most of your existing initializeGlobe code
-  // But instead of loadMissions, call loadAvailableMissions()
+  // Add HQ marker and deployment paths
   
   scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
@@ -765,10 +913,14 @@ async function initializeGlobe() {
     y: 0
   };
   
-  // Mouse control for globe
+  // Force enable systemActive for globe interaction
+  systemActive = true;
+  
+  // Mouse control for globe - restored from original with debug
   document.addEventListener('mousedown', (e) => {
-    if (!systemActive) return;
+    console.log("Mouse down event captured, systemActive:", systemActive);
     
+    // Always allow dragging regardless of systemActive state
     isDragging = true;
     previousMousePosition = {
       x: e.clientX,
@@ -787,9 +939,7 @@ async function initializeGlobe() {
   });
   
   document.addEventListener('mousemove', (e) => {
-    if (!systemActive) return;
-    
-    // Rotate globe when dragging
+    // Allow dragging regardless of systemActive state
     if (isDragging) {
       pauseRotation();
       
@@ -845,12 +995,15 @@ async function initializeGlobe() {
   // Create the textured globe
   const earthGlobe = createTexturedGlobe();
   
+  // Add HQ marker on the globe
+  addHQMarker();
+  
   // Handle clicking on mission points
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   
   globe.addEventListener('click', (event) => {
-    if (!systemActive) return;
+    // Always allow clicking regardless of systemActive state
     
     // Calculate mouse position in normalized device coordinates
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -977,9 +1130,369 @@ volumeSlider.addEventListener('input', (e) => {
 
 // Sign out function
 function signOut() {
+  // Stop music
+  music.pause();
+  music.currentTime = 0;
+  
+  // Hide panels
+  leftPanel.style.opacity = '0';
+  rightPanel.style.opacity = '0';
+  
+  // Hide mission panel if open
+  if (missionPanel.classList.contains('active')) {
+    missionPanel.classList.remove('active');
+  }
+  
+  // Hide intel panel if open
+  if (intelPanel.classList.contains('active')) {
+    intelPanel.classList.remove('active');
+  }
+  
+  // Hide HQ panel if open
+  if (hqPanel.style.display === 'block') {
+    hqPanel.style.display = 'none';
+  }
+  
+  // Hide admin and squad leader controls
+  document.getElementById('admin-controls').style.display = 'none';
+  document.getElementById('squad-controls').style.display = 'none';
+  
+  // Set system to inactive
+  systemActive = false;
+  
+  // Sign out of Firebase
   auth.signOut().catch(error => {
     console.error('Sign out error:', error);
   });
+  
+  // Show login overlay
+  loginOverlay.style.display = 'flex';
+  
+  // Show notification
+  showNotification('SIGNED OUT');
+}
+
+// Add HQ marker to the globe
+function addHQMarker() {
+  const lat = HQ_LOCATION.lat;
+  const lon = HQ_LOCATION.lon;
+  const phi = (90 - lat) * Math.PI/180;
+  const theta = (lon + 180) * Math.PI/180;
+  
+  // Create HQ marker - Light blue color
+  const geometry = new THREE.SphereGeometry(0.2, 12, 12);
+  const material = new THREE.MeshBasicMaterial({ color: 0x00BFFF }); // Light blue
+  const point = new THREE.Mesh(geometry, material);
+  
+  point.position.x = -10 * Math.sin(phi) * Math.cos(theta);
+  point.position.y = 10 * Math.cos(phi);
+  point.position.z = 10 * Math.sin(phi) * Math.sin(theta);
+  
+  // Add HQ identifier
+  point.userData = { 
+    name: HQ_LOCATION.name,
+    type: 'hq-point'
+  };
+  
+  scene.add(point);
+  
+  // Add pulsing effect (ring) - Light blue
+  const ringGeometry = new THREE.RingGeometry(0.3, 0.4, 32);
+  const ringMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0x00BFFF, // Light blue
+    transparent: true,
+    opacity: 0.7,
+    side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+  ring.position.copy(point.position);
+  
+  // Orient ring to face outward from globe center
+  ring.lookAt(new THREE.Vector3(0, 0, 0));
+  scene.add(ring);
+  
+  // Store reference for animation
+  point.userData.ring = ring;
+  
+  return point;
+}
+
+// Add a mission marker to the globe from local data
+function addMissionMarker(mission) {
+  const lat = mission.coordinates.lat;
+  const lon = mission.coordinates.lon;
+  const phi = (90 - lat) * Math.PI/180;
+  const theta = (lon + 180) * Math.PI/180;
+  
+  // Create marker with red color for mission
+  const geometry = new THREE.SphereGeometry(0.15, 8, 8);
+  const material = new THREE.MeshBasicMaterial({ color: 0x8B0000 }); // Dark red
+  const point = new THREE.Mesh(geometry, material);
+  
+  point.position.x = -10 * Math.sin(phi) * Math.cos(theta);
+  point.position.y = 10 * Math.cos(phi);
+  point.position.z = 10 * Math.sin(phi) * Math.sin(theta);
+  
+  // Add mission identifier
+  point.userData = { 
+    missionId: mission.id,
+    type: 'mission-point'
+  };
+  
+  scene.add(point);
+  
+  // Add pulsing effect (ring)
+  const ringGeometry = new THREE.RingGeometry(0.2, 0.3, 32);
+  const ringMaterial = new THREE.MeshBasicMaterial({ 
+    color: 0x8B0000, // Dark red
+    transparent: true,
+    opacity: 0.7,
+    side: THREE.DoubleSide
+  });
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+  ring.position.copy(point.position);
+  
+  // Orient ring to face outward from globe center
+  ring.lookAt(new THREE.Vector3(0, 0, 0));
+  scene.add(ring);
+  
+  // Store reference for animation
+  point.userData.ring = ring;
+  
+  // Store in mission markers array
+  missionMarkers.push(point);
+  
+  console.log(`Added mission marker for ${mission.id} at coordinates: ${lat}, ${lon}`);
+  
+  return point;
+}
+
+// Create deployment path between HQ and destination
+function createDeploymentPath(deployment) {
+  // Start point (HQ)
+  const startLat = HQ_LOCATION.lat;
+  const startLon = HQ_LOCATION.lon;
+  const startPhi = (90 - startLat) * Math.PI/180;
+  const startTheta = (startLon + 180) * Math.PI/180;
+  
+  const startX = -10 * Math.sin(startPhi) * Math.cos(startTheta);
+  const startY = 10 * Math.cos(startPhi);
+  const startZ = 10 * Math.sin(startPhi) * Math.sin(startTheta);
+  
+  // End point (deployment location)
+  const endLat = deployment.coordinates.lat;
+  const endLon = deployment.coordinates.lon;
+  const endPhi = (90 - endLat) * Math.PI/180;
+  const endTheta = (endLon + 180) * Math.PI/180;
+  
+  const endX = -10 * Math.sin(endPhi) * Math.cos(endTheta);
+  const endY = 10 * Math.cos(endPhi);
+  const endZ = 10 * Math.sin(endPhi) * Math.sin(endTheta);
+  
+  // Create line geometry
+  const points = [];
+  points.push(new THREE.Vector3(startX, startY, startZ));
+  points.push(new THREE.Vector3(endX, endY, endZ));
+  
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({ 
+    color: 0xFFD700, // Gold
+    transparent: true,
+    opacity: 0.6
+  });
+  
+  const line = new THREE.Line(geometry, material);
+  scene.add(line);
+  
+  // Create soldier icon moving along the path
+  const soldierGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+  const soldierMaterial = new THREE.MeshBasicMaterial({ color: 0x32CD32 }); // Green
+  const soldier = new THREE.Mesh(soldierGeometry, soldierMaterial);
+  
+  // Start at HQ
+  soldier.position.set(startX, startY, startZ);
+  scene.add(soldier);
+  
+  // Store deployment data
+  soldier.userData = {
+    deploymentId: deployment.id,
+    startPosition: new THREE.Vector3(startX, startY, startZ),
+    endPosition: new THREE.Vector3(endX, endY, endZ),
+    startTime: deployment.startTime.toDate(),
+    endTime: deployment.endTime.toDate(),
+    isReturning: false,
+    returnStartTime: null,
+    returnEndTime: null,
+    line: line
+  };
+  
+  return soldier;
+}
+
+// Update deployment soldier positions
+function updateDeploymentSoldiers() {
+  if (!scene) return;
+  
+  scene.children.forEach(object => {
+    if (object.userData && object.userData.deploymentId) {
+      const now = new Date();
+      
+      if (!object.userData.isReturning) {
+        // Going to deployment
+        const startTime = object.userData.startTime;
+        const endTime = object.userData.endTime;
+        const totalTime = endTime - startTime;
+        const elapsedTime = now - startTime;
+        const progress = Math.min(1, Math.max(0, elapsedTime / totalTime));
+        
+        // Update position
+        object.position.lerpVectors(
+          object.userData.startPosition,
+          object.userData.endPosition,
+          progress
+        );
+        
+        // Check if reached destination
+        if (progress >= 1) {
+          object.userData.isReturning = true;
+          object.userData.returnStartTime = now;
+          object.userData.returnEndTime = new Date(now.getTime() + (totalTime / 3)); // Return is 1/3 the time
+        }
+      } else {
+        // Returning to HQ
+        const startTime = object.userData.returnStartTime;
+        const endTime = object.userData.returnEndTime;
+        const totalTime = endTime - startTime;
+        const elapsedTime = now - startTime;
+        const progress = Math.min(1, Math.max(0, elapsedTime / totalTime));
+        
+        // Update position (reverse direction)
+        object.position.lerpVectors(
+          object.userData.endPosition,
+          object.userData.startPosition,
+          progress
+        );
+        
+        // Check if reached HQ
+        if (progress >= 1) {
+          // Remove soldier and line when completed
+          if (object.userData.line) {
+            scene.remove(object.userData.line);
+          }
+          scene.remove(object);
+        }
+      }
+    }
+  });
+}
+
+// Display mission details
+async function displayMissionDetails(missionId) {
+  console.log("Displaying mission details for ID:", missionId);
+  
+  try {
+    // Try to find mission in Firebase first
+    const missionDoc = await db.collection('missions').doc(missionId).get();
+    
+    if (missionDoc.exists) {
+      const mission = {
+        id: missionDoc.id,
+        ...missionDoc.data()
+      };
+      displayMissionData(mission);
+      return;
+    }
+    
+    // If not found in Firebase, try local data
+    const missionsResponse = await window.fs.readFile('data/missions.json', { encoding: 'utf8' });
+    const missions = JSON.parse(missionsResponse);
+    
+    const mission = missions.find(m => m.id === missionId);
+    
+    if (mission) {
+      // Also try to get intel data for this mission
+      try {
+        const intelResponse = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
+        const intelData = JSON.parse(intelResponse);
+        
+        if (intelData[missionId]) {
+          mission.intel = intelData[missionId];
+        }
+      } catch (intelError) {
+        console.error('Error loading intel data:', intelError);
+      }
+      
+      displayMissionData(mission);
+      return;
+    }
+    
+    // If still not found, show notification
+    showNotification('MISSION NOT FOUND');
+  } catch (error) {
+    console.error('Error retrieving mission details:', error);
+    showNotification('ERROR LOADING MISSION');
+  }
+}
+
+// Display mission data
+function displayMissionData(mission) {
+  // Set active mission
+  activeMission = mission;
+  
+  // Play mission sound
+  if (missionSound && missionSound.readyState >= 2) {
+    missionSound.currentTime = 0;
+    missionSound.play().catch(console.error);
+  }
+  
+  // Update mission panel content
+  document.getElementById('mission-title').textContent = mission.name;
+  document.getElementById('mission-location').textContent = mission.location;
+  document.getElementById('mission-difficulty').textContent = mission.difficulty;
+  document.getElementById('mission-payment').textContent = mission.payment;
+  document.getElementById('mission-duration').textContent = mission.duration;
+  document.getElementById('mission-team-size').textContent = mission.teamSize;
+  
+  // Display mission image if available
+  const missionPanel = document.getElementById('mission-panel');
+  let missionImageElement = missionPanel.querySelector('.mission-image');
+  
+  if (mission.image) {
+    // Create or update mission image element
+    if (!missionImageElement) {
+      missionImageElement = document.createElement('img');
+      missionImageElement.className = 'mission-image';
+      
+      // Insert after mission location
+      const locationElement = document.getElementById('mission-location').parentElement;
+      locationElement.parentNode.insertBefore(missionImageElement, locationElement.nextSibling);
+    }
+    
+    missionImageElement.src = `data/images/${mission.image}`;
+    missionImageElement.style.display = 'block';
+  } else if (missionImageElement) {
+    // Hide mission image if none available
+    missionImageElement.style.display = 'none';
+  }
+  
+  // Show accept button only for squad leads and available missions
+  const acceptButton = document.getElementById('accept-mission-button');
+  if (acceptButton) {
+    if (userRole === 'squadLead' && (!mission.status || mission.status === 'available')) {
+      acceptButton.style.display = 'block';
+    } else {
+      acceptButton.style.display = 'none';
+    }
+  }
+  
+  // Show mission panel
+  missionPanel.classList.add('active');
+  
+  // Stop rotation when mission is displayed
+  rotating = false;
+  
+  // Show notification
+  showNotification(`MISSION BRIEFING: ${mission.name}`);
 }
 
 // Initialize All Systems
@@ -988,6 +1501,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeIntelPanel();
   initializeGlobe();
   initializeDecorativeElements();
+  
+  // Update deployment soldiers every second
+  setInterval(updateDeploymentSoldiers, 1000);
   
   // Fix volume icon if not showing
   const volumeIcon = document.getElementById('volume-icon');
@@ -1001,8 +1517,16 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Add sign out button
   const statusBar = document.getElementById('status-bar');
+  const signOutButton = document.createElement('button');
   signOutButton.textContent = 'SIGN OUT';
   signOutButton.className = 'sign-out-button';
   signOutButton.addEventListener('click', signOut);
   statusBar.appendChild(signOutButton);
+  
+  // Force side panels to be visible
+  if (leftPanel) leftPanel.style.opacity = '1';
+  if (rightPanel) rightPanel.style.opacity = '1';
+  
+  // Set system as active to allow globe interaction
+  systemActive = true;
 });

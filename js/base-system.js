@@ -148,8 +148,76 @@ function initializeBaseManagement() {
     });
   });
   
+  // Make base platforms clickable to switch tabs
+  const basePlatforms = document.querySelectorAll('.base-platform');
+  basePlatforms.forEach(platform => {
+    platform.addEventListener('click', () => {
+      const tabName = platform.getAttribute('data-tab');
+      if (tabName) {
+        // Find the corresponding tab button and click it
+        const tabButton = document.querySelector(`.hq-tab-button[data-tab="${tabName}"]`);
+        if (tabButton) {
+          tabButton.click();
+        }
+      }
+    });
+  });
+  
+  // Select home tab by default (if it exists)
+  const homeTabButton = document.querySelector('.hq-tab-button[data-tab="home"]');
+  if (homeTabButton) {
+    homeTabButton.click();
+  }
+  
   // Setup upgrade buttons
   setupUpgradeButtons();
+  
+  // Apply center alignment to HQ panel elements
+  centerAlignHQElements();
+}
+
+// Center align HQ panel elements
+function centerAlignHQElements() {
+  // Center align tab buttons
+  const tabsContainer = document.querySelector('.hq-tabs');
+  if (tabsContainer) {
+    tabsContainer.style.justifyContent = 'center';
+  }
+  
+  // Center align section titles
+  const sectionTitles = document.querySelectorAll('.hq-section-title');
+  sectionTitles.forEach(title => {
+    title.style.textAlign = 'center';
+    title.style.width = '100%';
+  });
+  
+  // Center align section headers
+  const sectionHeaders = document.querySelectorAll('.hq-section-header');
+  sectionHeaders.forEach(header => {
+    header.style.textAlign = 'center';
+  });
+  
+  // Center align upgrade sections
+  const upgradeSections = document.querySelectorAll('.hq-upgrade-section');
+  upgradeSections.forEach(section => {
+    section.style.display = 'flex';
+    section.style.flexDirection = 'column';
+    section.style.alignItems = 'center';
+    section.style.textAlign = 'center';
+  });
+  
+  // Make base visualization more attractive
+  const baseVisualization = document.querySelector('.base-visualization');
+  if (baseVisualization) {
+    baseVisualization.style.textAlign = 'center';
+    
+    // Fix base map display
+    const baseMap = document.querySelector('.base-map');
+    if (baseMap) {
+      baseMap.style.margin = '0 auto 20px auto';
+      baseMap.style.maxWidth = '700px';
+    }
+  }
 }
 
 // Load base teams from Firebase
@@ -181,9 +249,45 @@ async function loadBaseTeams() {
     
     // Load current upgrades
     await loadCurrentUpgrades();
+    
+    // Update base stats
+    updateBaseStats();
   } catch (error) {
     console.error('Error loading teams:', error);
     showNotification('ERROR LOADING BASE TEAMS');
+  }
+}
+
+// Update base stats display
+function updateBaseStats() {
+  // Calculate and display total personnel
+  let totalPersonnel = 0;
+  let availablePersonnel = 0;
+  
+  if (baseTeams.combat) {
+    totalPersonnel += baseTeams.combat.totalMembers || 0;
+    availablePersonnel += baseTeams.combat.availableMembers || 0;
+  }
+  
+  const totalPersonnelElement = document.getElementById('total-personnel');
+  if (totalPersonnelElement) {
+    totalPersonnelElement.textContent = totalPersonnel;
+  }
+  
+  // Get active deployments count
+  const activeDeployments = document.getElementById('active-deployments');
+  const activeDeploymentsCount = document.getElementById('active-deployments-count');
+  
+  if (activeDeployments && activeDeploymentsCount) {
+    const deploymentsCount = activeDeployments.querySelectorAll('.deployment-item').length;
+    activeDeploymentsCount.textContent = deploymentsCount;
+  }
+  
+  // Calculate base capacity (ratio of available to total personnel)
+  const baseCapacity = document.getElementById('base-capacity');
+  if (baseCapacity && totalPersonnel > 0) {
+    const capacityPercentage = Math.round((availablePersonnel / totalPersonnel) * 100);
+    baseCapacity.textContent = `${capacityPercentage}%`;
   }
 }
 

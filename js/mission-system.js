@@ -27,32 +27,97 @@ function initializeMissionCreationTools() {
   const editMissionButton = document.getElementById('edit-mission-button');
   const completeMissionButton = document.getElementById('complete-mission-button');
   
-  createMissionButton.addEventListener('click', showCreateMissionModal);
-  editMissionButton.addEventListener('click', showEditMissionsModal);
-  completeMissionButton.addEventListener('click', showCompleteMissionsModal);
+  if (createMissionButton) createMissionButton.addEventListener('click', showCreateMissionModal);
+  if (editMissionButton) editMissionButton.addEventListener('click', showEditMissionsModal);
+  if (completeMissionButton) completeMissionButton.addEventListener('click', showCompleteMissionsModal);
 }
 
-// Load available missions
-async function loadAvailableMissions() {
+// Load missions from local data files
+async function loadMissions() {
+  try {
+    // Try to load from both Firebase and local files
+    const [firestoreMissions, localMissions] = await Promise.all([
+      loadFirestoreMissions(),
+      loadLocalMissions()
+    ]);
+    
+    return [...firestoreMissions, ...localMissions];
+  } catch (error) {
+    console.error('Error loading missions:', error);
+    showNotification('ERROR LOADING MISSIONS');
+    return [];
+  }
+}
+
+// Load missions from local files
+async function loadLocalMissions() {
+  try {
+    // Read missions.json file
+    const missionsResponse = await window.fs.readFile('data/missions.json', { encoding: 'utf8' });
+    const missions = JSON.parse(missionsResponse);
+    
+    console.log('Local missions loaded:', missions);
+    
+    // Try to read intel data
+    try {
+      const intelResponse = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
+      const intelData = JSON.parse(intelResponse);
+      
+      // Merge mission data with intel data
+      missions.forEach(mission => {
+        if (intelData[mission.id]) {
+          mission.intel = intelData[mission.id];
+        }
+      });
+    } catch (intelError) {
+      console.error('Error loading intel data:', intelError);
+    }
+    
+    return missions;
+  } catch (error) {
+    console.error('Error loading local missions:', error);
+    return [];
+  }
+}
+
+// Load missions from Firestore
+async function loadFirestoreMissions() {
   try {
     // Get missions from Firestore
     const missionsRef = db.collection('missions').where('status', '==', 'available');
     const snapshot = await missionsRef.get();
     
-    availableMissions = [];
+    const missions = [];
     snapshot.forEach(doc => {
-      availableMissions.push({
+      missions.push({
         id: doc.id,
         ...doc.data()
       });
     });
+    
+    console.log('Firestore missions loaded:', missions);
+    return missions;
+  } catch (error) {
+    console.error('Error loading Firestore missions:', error);
+    return [];
+  }
+}
+
+// Load available missions
+async function loadAvailableMissions() {
+  try {
+    // Get missions from both Firestore and local files
+    const allMissions = await loadMissions();
+    
+    // Filter available missions
+    availableMissions = allMissions.filter(m => !m.status || m.status === 'available');
     
     // Update globe with mission markers
     updateGlobeMissionMarkers();
     
     console.log('Available missions loaded:', availableMissions);
   } catch (error) {
-    console.error('Error loading missions:', error);
+    console.error('Error loading available missions:', error);
     showNotification('ERROR LOADING MISSIONS');
   }
 }
@@ -62,16 +127,8 @@ async function loadAllMissions(adminMode = false) {
   if (!adminMode && userRole !== 'admin') return;
   
   try {
-    // Get all missions from Firestore
-    const snapshot = await db.collection('missions').get();
-    
-    const allMissions = [];
-    snapshot.forEach(doc => {
-      allMissions.push({
-        id: doc.id,
-        ...doc.data()
-      });
-    });
+    // Get all missions from both Firestore and local files
+    const allMissions = await loadMissions();
     
     // Update globe with mission markers
     updateGlobeMissionMarkers(allMissions);
@@ -86,9 +143,6 @@ async function loadAllMissions(adminMode = false) {
 
 // Update globe with mission markers
 function updateGlobeMissionMarkers(missions = availableMissions) {
-  // This function will integrate with your Three.js globe
-  // You should modify your existing globe code to work with this
-  
   // First clear existing mission markers
   clearMissionMarkers();
   
@@ -102,9 +156,6 @@ function updateGlobeMissionMarkers(missions = availableMissions) {
 
 // Add a mission marker to the globe
 function addMissionMarker(mission) {
-  // Use your existing Three.js code to add mission markers
-  // You'll need to modify this to match your globe implementation
-  
   const lat = mission.coordinates.lat;
   const lon = mission.coordinates.lon;
   const phi = (90 - lat) * Math.PI/180;
@@ -112,7 +163,7 @@ function addMissionMarker(mission) {
   
   // Create a color based on mission status
   let markerColor;
-  if (mission.status === 'available') {
+  if (!mission.status || mission.status === 'available') {
     markerColor = 0x8B0000; // Dark red
   } else if (mission.status === 'active') {
     markerColor = 0x1E90FF; // Blue
@@ -159,6 +210,10 @@ function addMissionMarker(mission) {
   
   // Store in mission markers array
   missionMarkers.push(point);
+  
+  console.log(`Added mission marker for ${mission.id} at coordinates: ${lat}, ${lon}`);
+  
+  return point;
 }
 
 // Clear mission markers from the globe
@@ -178,12 +233,14 @@ function clearMissionMarkers() {
 
 // Display mission details (similar to your existing displayMission function)
 async function displayMissionDetails(missionId) {
-  // Find mission in available missions
-  let mission = availableMissions.find(m => m.id === missionId);
+  console.log("Displaying mission details for ID:", missionId);
   
-  // If not found in available, load from Firebase
-  if (!mission) {
-    try {
+  try {
+    // Try to find mission in available missions
+    let mission = availableMissions.find(m => m.id === missionId);
+    
+    // If not found in available, load from Firebase
+    if (!mission) {
       const missionDoc = await db.collection('missions').doc(missionId).get();
       if (missionDoc.exists) {
         mission = {
@@ -191,73 +248,85 @@ async function displayMissionDetails(missionId) {
           ...missionDoc.data()
         };
       } else {
-        showNotification('MISSION NOT FOUND');
-        return;
+        // Try to load from local data
+        try {
+          const missionsResponse = await window.fs.readFile('data/missions.json', { encoding: 'utf8' });
+          const missions = JSON.parse(missionsResponse);
+          mission = missions.find(m => m.id === missionId);
+          
+          if (!mission) {
+            showNotification('MISSION NOT FOUND');
+            return;
+          }
+        } catch (localError) {
+          console.error('Error loading local mission:', localError);
+          showNotification('MISSION NOT FOUND');
+          return;
+        }
       }
-    } catch (error) {
-      console.error('Error loading mission:', error);
-      showNotification('ERROR LOADING MISSION');
-      return;
-    }
-  }
-  
-  // Set active mission
-  activeMission = mission;
-  
-  // Play mission sound
-  if (missionSound && missionSound.readyState >= 2) {
-    missionSound.currentTime = 0;
-    missionSound.play().catch(console.error);
-  }
-  
-  // Update mission panel content (use your existing code)
-  document.getElementById('mission-title').textContent = mission.name;
-  document.getElementById('mission-location').textContent = mission.location;
-  document.getElementById('mission-difficulty').textContent = mission.difficulty;
-  document.getElementById('mission-payment').textContent = mission.payment;
-  document.getElementById('mission-duration').textContent = mission.duration;
-  document.getElementById('mission-team-size').textContent = mission.teamSize;
-  
-  // Display mission image if available
-  const missionPanel = document.getElementById('mission-panel');
-  let missionImageElement = missionPanel.querySelector('.mission-image');
-  
-  if (mission.image) {
-    // Create or update mission image element
-    if (!missionImageElement) {
-      missionImageElement = document.createElement('img');
-      missionImageElement.className = 'mission-image';
-      
-      // Insert after mission location
-      const locationElement = document.getElementById('mission-location').parentElement;
-      locationElement.parentNode.insertBefore(missionImageElement, locationElement.nextSibling);
     }
     
-    missionImageElement.src = `data/images/${mission.image}`;
-    missionImageElement.style.display = 'block';
-  } else if (missionImageElement) {
-    // Hide mission image if none available
-    missionImageElement.style.display = 'none';
-  }
-  
-  // Show accept button only for squad leads and available missions
-  const acceptButton = document.getElementById('accept-mission-button');
-  if (acceptButton) {
-    if (userRole === 'squadLead' && mission.status === 'available') {
-      acceptButton.style.display = 'block';
-    } else {
-      acceptButton.style.display = 'none';
+    // Set active mission
+    activeMission = mission;
+    
+    // Play mission sound
+    if (missionSound && missionSound.readyState >= 2) {
+      missionSound.currentTime = 0;
+      missionSound.play().catch(console.error);
     }
+    
+    // Update mission panel content
+    document.getElementById('mission-title').textContent = mission.name;
+    document.getElementById('mission-location').textContent = mission.location;
+    document.getElementById('mission-difficulty').textContent = mission.difficulty;
+    document.getElementById('mission-payment').textContent = mission.payment;
+    document.getElementById('mission-duration').textContent = mission.duration;
+    document.getElementById('mission-team-size').textContent = mission.teamSize;
+    
+    // Display mission image if available
+    const missionPanel = document.getElementById('mission-panel');
+    let missionImageElement = missionPanel.querySelector('.mission-image');
+    
+    if (mission.image) {
+      // Create or update mission image element
+      if (!missionImageElement) {
+        missionImageElement = document.createElement('img');
+        missionImageElement.className = 'mission-image';
+        
+        // Insert after mission location
+        const locationElement = document.getElementById('mission-location').parentElement;
+        locationElement.parentNode.insertBefore(missionImageElement, locationElement.nextSibling);
+      }
+      
+      missionImageElement.src = `data/images/${mission.image}`;
+      missionImageElement.style.display = 'block';
+    } else if (missionImageElement) {
+      // Hide mission image if none available
+      missionImageElement.style.display = 'none';
+    }
+    
+    // Show accept button only for squad leads and available missions
+    const acceptButton = document.getElementById('accept-mission-button');
+    if (acceptButton) {
+      if (userRole === 'squadLead' && (!mission.status || mission.status === 'available')) {
+        acceptButton.style.display = 'block';
+      } else {
+        acceptButton.style.display = 'none';
+      }
+    }
+    
+    // Show mission panel
+    missionPanel.classList.add('active');
+    
+    // Stop rotation when mission is displayed
+    rotating = false;
+    
+    // Show notification
+    showNotification(`MISSION BRIEFING: ${mission.name}`);
+  } catch (error) {
+    console.error('Error loading mission:', error);
+    showNotification('ERROR LOADING MISSION');
   }
-  
-  // Show mission panel
-  missionPanel.classList.add('active');
-  
-  // Stop rotation when mission is displayed
-  rotating = false;
-  
-  // Show notification
-  showNotification(`MISSION BRIEFING: ${mission.name}`);
 }
 
 // Squad Leader: Confirm accept mission
@@ -627,11 +696,11 @@ function showEditMissionsModal() {
       
       missions.forEach(mission => {
         const missionItem = document.createElement('div');
-        missionItem.className = `mission-item ${mission.status}`;
+        missionItem.className = `mission-item ${mission.status || 'available'}`;
         missionItem.innerHTML = `
           <div class="mission-item-header">
             <div class="mission-item-name">${mission.name}</div>
-            <div class="mission-item-status">${mission.status.toUpperCase()}</div>
+            <div class="mission-item-status">${(mission.status || 'available').toUpperCase()}</div>
           </div>
           <div class="mission-item-details">
             <div class="mission-item-location">${mission.location}</div>
@@ -753,7 +822,7 @@ function showCompleteMissionsModal() {
         
         activeMissions.forEach(mission => {
           // Get team name from assignedTeam
-          let teamName = mission.assignedTeam;
+          let teamName = mission.assignedTeam || 'Unknown Team';
           
           // Format date
           const acceptedDate = mission.acceptedAt ? mission.acceptedAt.toDate().toLocaleDateString() : 'Unknown';
@@ -867,12 +936,13 @@ async function completeMission(missionId, success) {
   try {
     // Get mission data
     const missionDoc = await db.collection('missions').doc(missionId).get();
-    const mission = missionDoc.data();
     
-    if (!mission) {
+    if (!missionDoc.exists) {
       showNotification('MISSION NOT FOUND');
       return;
     }
+    
+    const mission = missionDoc.data();
     
     // Get assigned team
     const teamId = mission.assignedTeam;
@@ -912,5 +982,311 @@ async function completeMission(missionId, success) {
   } catch (error) {
     console.error('Error completing mission:', error);
     showNotification('ERROR COMPLETING MISSION');
+  }
+}
+
+// Admin: Confirm delete mission
+function confirmDeleteMission(missionId, parentModal) {
+  // Create confirmation modal
+  const modal = document.createElement('div');
+  modal.className = 'modal confirmation-modal';
+  
+  // Create modal content
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content';
+  
+  // Create header
+  const header = document.createElement('div');
+  header.className = 'modal-header';
+  header.innerHTML = `
+    <div class="modal-title">CONFIRM DELETE</div>
+    <button class="modal-close">X</button>
+  `;
+  
+  // Create body
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+  body.innerHTML = `
+    <div class="confirmation-message">
+      Are you sure you want to delete this mission? This action cannot be undone.
+    </div>
+  `;
+  
+  // Create footer
+  const footer = document.createElement('div');
+  footer.className = 'modal-footer';
+  footer.innerHTML = `
+    <button class="cancel-button">CANCEL</button>
+    <button class="confirm-button delete-confirm">DELETE MISSION</button>
+  `;
+  
+  // Add elements to modal
+  modalContent.appendChild(header);
+  modalContent.appendChild(body);
+  modalContent.appendChild(footer);
+  modal.appendChild(modalContent);
+  
+  // Add modal to page
+  document.body.appendChild(modal);
+  
+  // Add event listeners
+  const closeButton = modal.querySelector('.modal-close');
+  const cancelButton = modal.querySelector('.cancel-button');
+  const confirmButton = modal.querySelector('.delete-confirm');
+  
+  closeButton.addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  cancelButton.addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  confirmButton.addEventListener('click', async () => {
+    try {
+      // Delete mission from Firestore
+      await db.collection('missions').doc(missionId).delete();
+      
+      // Try to delete intel document as well
+      try {
+        await db.collection('intel').doc(missionId).delete();
+      } catch (intelError) {
+        console.error('Error deleting intel document:', intelError);
+      }
+      
+      // Show notification
+      showNotification('MISSION DELETED');
+      
+      // Remove mission item from list
+      if (parentModal) {
+        const missionItem = parentModal.querySelector(`[data-id="${missionId}"]`).closest('.mission-item');
+        missionItem.remove();
+      }
+      
+      // Reload missions
+      await loadAllMissions(true);
+    } catch (error) {
+      console.error('Error deleting mission:', error);
+      showNotification('ERROR DELETING MISSION');
+    }
+    
+    // Close modal
+    document.body.removeChild(modal);
+  });
+  
+  // Show modal
+  setTimeout(() => {
+    modal.classList.add('active');
+  }, 10);
+}
+
+// Admin: Show edit mission form
+function showEditMissionForm(missionId, missions) {
+  // Find mission
+  const mission = missions.find(m => m.id === missionId);
+  
+  if (!mission) {
+    showNotification('MISSION NOT FOUND');
+    return;
+  }
+  
+  // Create modal element
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.id = 'edit-mission-modal';
+  
+  // Create modal content
+  const modalContent = document.createElement('div');
+  modalContent.className = 'modal-content create-mission-modal';
+  
+  // Create header
+  const header = document.createElement('div');
+  header.className = 'modal-header';
+  header.innerHTML = `
+    <div class="modal-title">EDIT MISSION</div>
+    <button class="modal-close">X</button>
+  `;
+  
+  // Create body
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+  body.innerHTML = `
+    <form id="edit-mission-form">
+      <div class="form-group">
+        <label for="mission-name">MISSION NAME:</label>
+        <input type="text" id="mission-name" value="${mission.name}" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="mission-location">LOCATION:</label>
+        <input type="text" id="mission-location" value="${mission.location}" required>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="mission-lat">LATITUDE:</label>
+          <input type="number" id="mission-lat" step="0.000001" value="${mission.coordinates.lat}" required>
+        </div>
+        
+        <div class="form-group half">
+          <label for="mission-lon">LONGITUDE:</label>
+          <input type="number" id="mission-lon" step="0.000001" value="${mission.coordinates.lon}" required>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="mission-difficulty">DIFFICULTY:</label>
+          <select id="mission-difficulty" required>
+            <option value="LOW" ${mission.difficulty === 'LOW' ? 'selected' : ''}>LOW</option>
+            <option value="MEDIUM" ${mission.difficulty === 'MEDIUM' ? 'selected' : ''}>MEDIUM</option>
+            <option value="HIGH" ${mission.difficulty === 'HIGH' ? 'selected' : ''}>HIGH</option>
+            <option value="EXTREME" ${mission.difficulty === 'EXTREME' ? 'selected' : ''}>EXTREME</option>
+          </select>
+        </div>
+        
+        <div class="form-group half">
+          <label for="mission-team-size">TEAM SIZE:</label>
+          <input type="text" id="mission-team-size" value="${mission.teamSize}" required>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group half">
+          <label for="mission-payment">PAYMENT:</label>
+          <input type="text" id="mission-payment" value="${mission.payment}" required>
+        </div>
+        
+        <div class="form-group half">
+          <label for="mission-duration">DURATION:</label>
+          <input type="text" id="mission-duration" value="${mission.duration}" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="mission-intel">INTEL:</label>
+        <textarea id="mission-intel" rows="4">${mission.intel ? mission.intel.content || '' : ''}</textarea>
+      </div>
+      
+      <input type="hidden" id="mission-id" value="${mission.id}">
+    </form>
+  `;
+  
+  // Create footer
+  const footer = document.createElement('div');
+  footer.className = 'modal-footer';
+  footer.innerHTML = `
+    <button class="cancel-button">CANCEL</button>
+    <button class="confirm-button" id="edit-mission-submit">SAVE CHANGES</button>
+  `;
+  
+  // Add elements to modal
+  modalContent.appendChild(header);
+  modalContent.appendChild(body);
+  modalContent.appendChild(footer);
+  modal.appendChild(modalContent);
+  
+  // Add modal to page
+  document.body.appendChild(modal);
+  
+  // Add event listeners
+  const closeButton = modal.querySelector('.modal-close');
+  const cancelButton = modal.querySelector('.cancel-button');
+  const submitButton = modal.querySelector('#edit-mission-submit');
+  const form = modal.querySelector('#edit-mission-form');
+  
+  closeButton.addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  cancelButton.addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  submitButton.addEventListener('click', () => {
+    // Trigger form validation
+    if (form.checkValidity()) {
+      updateMission(form);
+      document.body.removeChild(modal);
+    } else {
+      form.reportValidity();
+    }
+  });
+  
+  // Show modal
+  setTimeout(() => {
+    modal.classList.add('active');
+  }, 10);
+  
+  // Play sound
+  tabSound.play().catch(console.error);
+}
+
+// Admin: Update mission
+async function updateMission(form) {
+  if (userRole !== 'admin') {
+    showNotification('UNAUTHORIZED: ADMIN ACCESS REQUIRED');
+    return;
+  }
+  
+  try {
+    // Get form values
+    const id = form.querySelector('#mission-id').value;
+    const name = form.querySelector('#mission-name').value;
+    const location = form.querySelector('#mission-location').value;
+    const lat = parseFloat(form.querySelector('#mission-lat').value);
+    const lon = parseFloat(form.querySelector('#mission-lon').value);
+    const difficulty = form.querySelector('#mission-difficulty').value;
+    const teamSize = form.querySelector('#mission-team-size').value;
+    const payment = form.querySelector('#mission-payment').value;
+    const duration = form.querySelector('#mission-duration').value;
+    const intel = form.querySelector('#mission-intel').value;
+    
+    // Create update object
+    const missionUpdate = {
+      name,
+      location,
+      coordinates: { lat, lon },
+      difficulty,
+      teamSize,
+      payment,
+      duration,
+      updatedAt: firebase.firestore.Timestamp.now()
+    };
+    
+    // Update mission in Firestore
+    await db.collection('missions').doc(id).update(missionUpdate);
+    
+    // Update intel if provided
+    if (intel && intel.trim() !== '') {
+      // Check if intel document exists
+      const intelDoc = await db.collection('intel').doc(id).get();
+      
+      if (intelDoc.exists) {
+        // Update existing intel
+        await db.collection('intel').doc(id).update({
+          title: `${name} INTEL`,
+          content: intel,
+          updatedAt: firebase.firestore.Timestamp.now()
+        });
+      } else {
+        // Create new intel document
+        await db.collection('intel').doc(id).set({
+          title: `${name} INTEL`,
+          content: intel,
+          images: [],
+          createdAt: firebase.firestore.Timestamp.now()
+        });
+      }
+    }
+    
+    // Show notification
+    showNotification(`MISSION UPDATED: ${name}`);
+    
+    // Reload missions
+    await loadAllMissions(true);
+  } catch (error) {
+    console.error('Error updating mission:', error);
+    showNotification('ERROR UPDATING MISSION');
   }
 }

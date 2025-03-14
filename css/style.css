@@ -1304,3 +1304,417 @@
   margin-right: 5px;
   font-size: 1.2em;
 }
+
+/* Admin Controls - Updated position and made draggable */
+.admin-panel {
+  position: fixed;
+  bottom: 50px; /* Position at bottom, but above status bar */
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
+  width: 400px;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  z-index: 5;
+  padding: 15px;
+  display: none;
+  box-shadow: var(--panel-glow);
+}
+
+/* Add drag handle */
+.drag-handle {
+  text-align: center;
+  cursor: grab;
+  margin-bottom: 5px;
+  padding: 3px;
+  color: var(--highlight-color);
+  font-size: 0.9em;
+  background: var(--background-dark);
+  border-radius: 2px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.minimize-btn {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 0;
+  margin-left: 10px;
+}
+
+/* Center align HQ operations menu */
+.hq-tabs {
+  display: flex;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+  justify-content: center; /* Center-aligned tabs */
+}
+
+.hq-tab-button {
+  padding: 10px 15px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.9em;
+  border-right: 1px solid var(--border-color);
+  text-align: center;
+  flex: 1; /* Equal width tabs */
+}
+
+.hq-tab-button.active {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+}
+
+.hq-tab-content {
+  padding: 20px;
+  display: none;
+  text-align: center; /* Center align content */
+}
+
+.hq-section {
+  margin-bottom: 30px;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  padding: 15px;
+  text-align: left; /* Keep section content left-aligned for readability */
+}
+
+.hq-section-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.hq-section-title {
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  font-family: 'Hack-Bold', monospace !important;
+  text-align: center;
+  width: 100%;
+}
+
+/* Fix Base Visualization */
+.base-visualization {
+  width: 100%;
+  padding: 20px;
+  background-color: var(--background-dark);
+  border: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.base-header {
+  color: var(--highlight-color);
+  font-size: 1.4em;
+  margin-bottom: 20px;
+  font-family: 'Hack-Bold', monospace !important;
+  text-align: center;
+}
+
+/* Fix resource container */
+.resource-container {
+  margin-bottom: 20px;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  padding: 15px;
+}
+
+.resource-title {
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  margin-bottom: 10px;
+  font-family: 'Hack-Bold', monospace !important;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+  text-align: center;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+/* Fix and enhance base map */
+.base-map {
+  width: 100%;
+  height: 300px;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  position: relative;
+  margin: 0 auto 20px auto;
+  background-image: url('../textures/base-map.png');
+  background-size: cover;
+  background-position: center;
+  max-width: 700px;
+}
+
+.base-platform {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: rgba(0, 50, 40, 0.7);
+  border: 2px solid var(--highlight-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.base-platform:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.6);
+}
+
+.platform-label {
+  color: var(--highlight-color);
+  font-family: 'Hack-Bold', monospace !important;
+  text-align: center;
+  font-size: 0.9em;
+}
+
+/* Ensure side panels are visible */
+.side-panel {
+  position: fixed;
+  top: 100px;
+  bottom: 50px;
+  width: 200px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  pointer-events: none;
+  opacity: 1 !important; /* Force visibility */
+}
+
+#left-panel {
+  left: 20px;
+}
+
+#right-panel {
+  right: 20px;
+}
+
+.panel-element {
+  width: 100%;
+  background: rgba(0, 41, 32, 0.7);
+  border: 1px solid var(--border-color);
+  border-left: 2px solid var(--highlight-color);
+  box-shadow: var(--panel-glow);
+  height: auto;
+  overflow: hidden;
+}
+
+/* Make HQ panel more prominent */
+#hq-panel {
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 80%;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  z-index: 6;
+  display: none;
+  overflow: hidden;
+  box-shadow: var(--panel-glow);
+}
+
+/* Fix deployments section */
+.deployments-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  background: var(--background-light);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.deployment-item {
+  margin-bottom: 10px;
+  padding: 8px;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+}
+
+.deployment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.deployment-name {
+  color: var(--highlight-color);
+  font-weight: bold;
+}
+
+.deployment-difficulty {
+  font-size: 0.9em;
+}
+
+.deployment-difficulty.LOW {
+  color: #4CAF50; /* Green */
+}
+
+.deployment-difficulty.MEDIUM {
+  color: #FFC107; /* Amber */
+}
+
+.deployment-difficulty.HIGH {
+  color: #FF9800; /* Orange */
+}
+
+.deployment-difficulty.EXTREME {
+  color: #F44336; /* Red */
+}
+
+.no-deployments-message {
+  color: var(--text-primary);
+  font-style: italic;
+  padding: 10px;
+  text-align: center;
+}
+
+/* Enhanced stat display */
+.base-stats {
+  display: flex;
+  justify-content: space-around;
+  background: var(--background-light);
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  margin-top: 20px;
+}
+
+.base-stat {
+  text-align: center;
+}
+
+.stat-name {
+  color: var(--text-primary);
+  font-size: 0.9em;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+/* Fix for upgrade sections */
+.hq-upgrade-section {
+  background: var(--background-light);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.upgrade-button {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
+  transition: background 0.2s ease;
+  margin-top: 10px;
+  width: 200px;
+}
+
+.upgrade-progress {
+  width: 100%;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--background-dark);
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--highlight-color);
+}
+
+/* Enhanced LCD overlay */
+#lcd-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3; /* Lower z-index to not block interactive elements */
+  pointer-events: none;
+  overflow: hidden;
+  display: block !important; /* Force display */
+}
+
+/* Make mission panel more prominent */
+#mission-panel {
+  position: fixed;
+  right: -40vw; /* Start off-screen */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35vw;
+  height: 70vh;
+  background: var(--background-medium);
+  border-left: 2px solid var(--accent-color);
+  z-index: 4;
+  transition: right 0.4s cubic-bezier(0.215, 0.610, 0.355, 1.000);
+  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#mission-panel.active {
+  right: 0;
+  box-shadow: -5px 0 25px rgba(83, 167, 116, 0.3);
+}
+
+/* Make intel panel more prominent */
+#intel-panel {
+  position: fixed;
+  left: -40vw; /* Start off-screen */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35vw;
+  height: 70vh;
+  background: var(--background-medium);
+  border-right: 2px solid var(--accent-color);
+  z-index: 4;
+  transition: left 0.4s cubic-bezier(0.215, 0.610, 0.355, 1.000);
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#intel-panel.active {
+  left: 0;
+  box-shadow: 5px 0 25px rgba(83, 167, 116, 0.3);
+}
