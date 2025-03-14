@@ -906,27 +906,64 @@ async function addToInventory(item) {
   }
 }
 
-// Setup Admin Resource Controls
+// Setup Admin Resource Controls - Enhanced with proper styling
 function setupAdminResourceControls() {
+  // Remove any existing resource sections to prevent duplicates
+  const existingResourceSections = document.querySelectorAll('.admin-section-title');
+  existingResourceSections.forEach(section => {
+    if (section.textContent === 'RESOURCE MANAGEMENT') {
+      const parentSection = section.closest('.admin-section');
+      if (parentSection && parentSection.parentNode) {
+        parentSection.parentNode.removeChild(parentSection);
+      }
+    }
+  });
+  
   // Get admin controls container
   const adminContent = document.querySelector('.admin-content');
   if (!adminContent) return;
   
-  // Add resource management section
+  // Add resource management section with enhanced styling
   const resourceSection = document.createElement('div');
   resourceSection.className = 'admin-section';
   resourceSection.innerHTML = `
-    <div class="admin-section-title">RESOURCE MANAGEMENT</div>
-    <button id="reset-resources-button">RESET DEFAULT RESOURCES</button>
-    <button id="add-resources-button">ADD TEST RESOURCES</button>
+    <div class="admin-section-title resources">RESOURCE MANAGEMENT</div>
+    <div class="admin-resource-buttons">
+      <button id="reset-resources-button" class="resource-button reset">RESET DEFAULT RESOURCES</button>
+      <button id="add-resources-button" class="resource-button add">ADD TEST RESOURCES</button>
+    </div>
   `;
   
   // Add to admin panel
   adminContent.appendChild(resourceSection);
   
   // Add event listeners
-  document.getElementById('reset-resources-button').addEventListener('click', resetUserResources);
-  document.getElementById('add-resources-button').addEventListener('click', addTestResources);
+  const resetButton = document.getElementById('reset-resources-button');
+  const addButton = document.getElementById('add-resources-button');
+  
+  if (resetButton) {
+    resetButton.addEventListener('click', () => {
+      resetUserResources().then(result => {
+        if (result.success) {
+          showNotification('RESOURCES RESET TO DEFAULT VALUES');
+        } else {
+          showNotification('ERROR: ' + (result.error || 'Unknown error'));
+        }
+      });
+    });
+  }
+  
+  if (addButton) {
+    addButton.addEventListener('click', () => {
+      addTestResources().then(result => {
+        if (result.success) {
+          showNotification('TEST RESOURCES ADDED SUCCESSFULLY');
+        } else {
+          showNotification('ERROR: ' + (result.error || 'Unknown error'));
+        }
+      });
+    });
+  }
 }
 
 // CSS for shop

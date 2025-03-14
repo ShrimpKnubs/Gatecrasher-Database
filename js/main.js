@@ -335,6 +335,13 @@ function initializeUIAfterLogin() {
   
   // Initialize UI sounds
   initializeUISounds();
+  
+  // Fix Intel Panel position to always be on the left side
+  const intelPanel = document.getElementById('intel-panel');
+  if (intelPanel) {
+    intelPanel.style.left = '-40vw';
+    intelPanel.style.right = 'auto';
+  }
 }
 
 // IMPROVED MISSION LOADING - Prioritize direct fetch over window.fs.readFile
@@ -1393,7 +1400,7 @@ function addMissionMarker(mission) {
   return point;
 }
 
-// Display mission details - IMPROVED
+// Display mission details - IMPROVED with globe centering
 async function displayMissionDetails(missionId) {
   console.log("Displaying mission details for ID:", missionId);
   
@@ -1453,6 +1460,11 @@ async function displayMissionDetails(missionId) {
     
     // Stop rotation when mission is displayed
     rotating = false;
+    
+    // Center the globe on the mission location
+    if (mission.coordinates) {
+      centerGlobeOnCoordinates(mission.coordinates.lat, mission.coordinates.lon);
+    }
     
     // Show notification
     showNotification(`MISSION BRIEFING: ${mission.name}`);
@@ -1550,4 +1562,114 @@ function addButtonGlowEffect() {
     }
   `;
   document.head.appendChild(style);
+}
+
+
+// Function to center the globe on specific coordinates
+function centerGlobeOnCoordinates(lat, lon) {
+  if (!scene) return;
+  
+  // Convert lat/lon to spherical coordinates
+  const phi = (90 - lat) * Math.PI/180;
+  const theta = (lon + 180) * Math.PI/180;
+  
+  // Calculate target rotation
+  const targetX = -Math.sin(phi) * Math.cos(theta);
+  const targetY = Math.cos(phi);
+  const targetZ = Math.sin(phi) * Math.sin(theta);
+  
+  // Create quaternion for smooth rotation
+  const targetQuaternion = new THREE.Quaternion();
+  const targetRotation = new THREE.Euler(
+    Math.atan2(targetX, targetY), // X rotation
+    Math.atan2(targetZ, Math.sqrt(targetX * targetX + targetY * targetY)), // Y rotation
+    0 // Z rotation
+  );
+  
+  targetQuaternion.setFromEuler(targetRotation);
+  
+  // Smoothly animate rotation
+  const duration = 1.5; // Duration in seconds
+  const startTime = Date.now();
+  const startQuaternion = scene.quaternion.clone();
+  
+  function animateRotation() {
+    const elapsed = (Date.now() - startTime) / 1000;
+    const t = Math.min(1, elapsed / duration);
+    
+    // Interpolate with easing
+    const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    
+    // Apply rotation
+    THREE.Quaternion.slerp(startQuaternion, targetQuaternion, scene.quaternion, easedT);
+    
+    // Continue animation until complete
+    if (t < 1) {
+      requestAnimationFrame(animateRotation);
+    } else {
+      // Ensure we end at exactly the target rotation
+      scene.quaternion.copy(targetQuaternion);
+    }
+  }
+  
+  // Start animation
+  animateRotation();
+  
+  // Keep rotation paused
+  rotating = false;
+}
+
+
+// Function to center the globe on specific coordinates
+function centerGlobeOnCoordinates(lat, lon) {
+  if (!scene) return;
+  
+  // Convert lat/lon to spherical coordinates
+  const phi = (90 - lat) * Math.PI/180;
+  const theta = (lon + 180) * Math.PI/180;
+  
+  // Calculate target rotation
+  const targetX = -Math.sin(phi) * Math.cos(theta);
+  const targetY = Math.cos(phi);
+  const targetZ = Math.sin(phi) * Math.sin(theta);
+  
+  // Create quaternion for smooth rotation
+  const targetQuaternion = new THREE.Quaternion();
+  const targetRotation = new THREE.Euler(
+    Math.atan2(targetX, targetY), // X rotation
+    Math.atan2(targetZ, Math.sqrt(targetX * targetX + targetY * targetY)), // Y rotation
+    0 // Z rotation
+  );
+  
+  targetQuaternion.setFromEuler(targetRotation);
+  
+  // Smoothly animate rotation
+  const duration = 1.5; // Duration in seconds
+  const startTime = Date.now();
+  const startQuaternion = scene.quaternion.clone();
+  
+  function animateRotation() {
+    const elapsed = (Date.now() - startTime) / 1000;
+    const t = Math.min(1, elapsed / duration);
+    
+    // Interpolate with easing
+    const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    
+    // Apply rotation
+    THREE.Quaternion.slerp(startQuaternion, targetQuaternion, scene.quaternion, easedT);
+    
+    // Continue animation until complete
+    if (t < 1) {
+      requestAnimationFrame(animateRotation);
+    } else {
+      // Ensure we end at exactly the target rotation
+      scene.quaternion.copy(targetQuaternion);
+    }
+  }
+  
+  // Start animation
+  animateRotation();
+  
+  // Keep rotation paused
+  rotating = false;
 }

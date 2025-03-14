@@ -589,10 +589,10 @@
   font-size: 1.2em;
 }
 
-/* Intel Panel */
+/* Intel Panel - Always slides in from the left */
 #intel-panel {
   position: fixed;
-  left: -40vw; /* Start off-screen */
+  left: -40vw; /* Start off-screen to the left */
   top: 50%;
   transform: translateY(-50%);
   width: 35vw;
@@ -604,10 +604,12 @@
   box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
   padding: 20px;
   overflow-y: auto;
+  right: auto !important; /* Ensure it's never positioned from the right */
 }
 
 #intel-panel.active {
   left: 0;
+  box-shadow: 5px 0 25px rgba(83, 167, 116, 0.3); /* Green glow when active */
 }
 
 #intel-header {

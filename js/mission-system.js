@@ -471,7 +471,7 @@ async function displayMissionDetails(missionId) {
   }
 }
 
-// Open intel panel with improved intel loading - ensures it appears on the left side
+// Open intel panel with improved intel loading - always appears from the left side
 async function openIntelPanel(missionId) {
   try {
     // Load intel data for the mission
@@ -513,12 +513,12 @@ async function openIntelPanel(missionId) {
     
     document.getElementById('intel-content').innerHTML = intelContent;
     
-    // Make sure the intel panel is on the left side
+    // ALWAYS position intel panel on the left side - FIXED
     const intelPanel = document.getElementById('intel-panel');
-    intelPanel.style.left = '0';
+    intelPanel.style.left = '-40vw'; // Start offscreen to the left
     intelPanel.style.right = 'auto';
     
-    // Show intel panel by adding active class
+    // Show intel panel by adding active class which will animate it in
     intelPanel.classList.add('active');
   } catch (error) {
     console.error('Error loading intel:', error);
