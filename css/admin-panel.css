@@ -52,7 +52,7 @@
   gap: 10px;
 }
 
-.minimize-btn, .maximize-btn {
+.minimize-btn {
   background: none;
   border: none;
   color: var(--highlight-color);
@@ -66,16 +66,8 @@
   align-items: center;
 }
 
-.minimize-btn:hover, .maximize-btn:hover {
+.minimize-btn:hover {
   color: var(--text-primary);
-}
-
-.admin-panel.minimized .admin-section {
-  display: none;
-}
-
-.admin-panel.minimized {
-  height: auto;
 }
 
 .admin-content {
@@ -207,7 +199,7 @@
   color: var(--background-dark);
 }
 
-/* Mission form styles */
+/* Form Styles */
 .form-group {
   margin-bottom: 15px;
 }
@@ -238,6 +230,44 @@
   margin-bottom: 0;
 }
 
+/* Checkbox Group Styles */
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 5px;
+}
+
+/* Load Button Styles */
+.load-button {
+  margin-top: 10px;
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.load-button:hover {
+  background: var(--background-light);
+  color: var(--highlight-color);
+}
+
+/* Missions list */
 .missions-list {
   display: flex;
   flex-direction: column;
@@ -351,4 +381,93 @@
 .delete-confirm {
   background: #F44336 !important; /* Red */
   color: white !important;
+}
+
+/* Enhanced modal styles */
+.modal-body h3 {
+  color: var(--highlight-color);
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-family: 'Hack-Bold', monospace !important;
+  font-size: 1.1em;
+}
+
+/* UI Sound Testing */
+.sound-test-button {
+  margin-top: 20px;
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.sound-test-button:hover {
+  background: var(--background-light);
+}
+
+/* Deployments display */
+.deployments-section {
+  margin-bottom: 20px;
+}
+
+.deployments-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  background: var(--background-dark);
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.deployment-item {
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 10px;
+  background: var(--background-medium);
+}
+
+.deployment-progress {
+  margin-top: 10px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--background-dark);
+  margin-top: 5px;
+  margin-bottom: 3px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--highlight-color);
+}
+
+.progress-text {
+  text-align: right;
+  font-size: 0.8em;
+  color: var(--text-primary);
+}
+
+/* Temporary notification */
+.temp-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--background-medium);
+  border: 2px solid var(--highlight-color);
+  color: var(--highlight-color);
+  padding: 10px 20px;
+  z-index: 9999;
+  text-align: center;
+  min-width: 300px;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.temp-notification.error {
+  border-color: var(--alert-color);
+  color: var(--alert-color);
 }

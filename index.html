@@ -176,6 +176,14 @@
     </div>
   </div>
 
+  <!-- Top Left Resources Panel -->
+  <div id="resources-panel" class="resources-panel" style="display: none;">
+    <div class="panel-header">RESOURCE MONITOR</div>
+    <div class="panel-content" id="resource-monitor-content">
+      <!-- Resources will be dynamically populated -->
+    </div>
+  </div>
+
   <!-- HQ Button (Hidden initially) -->
   <button id="hq-button" class="hq-button">HEADQUARTERS</button>
 
@@ -553,6 +561,17 @@
   <audio id="intel-sound">
     <source src="sounds/intel-sound.mp3" type="audio/mpeg">
   </audio>
+  
+  <!-- New UI Sounds -->
+  <audio id="hover-sound">
+    <source src="sounds/mouse-hover.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="click-sound">
+    <source src="sounds/mouse-click.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="error-sound">
+    <source src="sounds/error.mp3" type="audio/mpeg">
+  </audio>
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
@@ -561,5 +580,6 @@
   <script src="js/base-system.js"></script>
   <script src="js/deployment-system.js"></script>
   <script src="js/resource-system.js"></script>
+  <script src="js/admin-panel.js"></script>
 </body>
 </html>

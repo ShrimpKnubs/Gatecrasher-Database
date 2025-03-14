@@ -31,7 +31,9 @@ const activationSound = document.getElementById('activation-sound');
 const tabSound = document.getElementById('tab-sound');
 const missionSound = document.getElementById('mission-sound');
 const intelSound = document.getElementById('intel-sound');
-const statusText = document.getElementById('status-text');
+const hoverSound = document.getElementById('hover-sound');
+const clickSound = document.getElementById('click-sound');
+const errorSound = document.getElementById('error-sound');
 const dateTimeDisplay = document.getElementById('date-time');
 const notification = document.getElementById('notification');
 const volumeSlider = document.getElementById('volume-slider');
@@ -115,7 +117,6 @@ auth.onAuthStateChanged(user => {
       })
       .catch(error => {
         console.error('Error getting user data:', error);
-        showNotification('ERROR LOADING USER DATA');
       });
   } else {
     // User is signed out, show login screen
@@ -128,12 +129,35 @@ auth.onAuthStateChanged(user => {
     leftPanel.style.opacity = '0';
     rightPanel.style.opacity = '0';
     
-    // Reset status
-    if (statusText) {
-      statusText.textContent = 'STATUS: LOGGED OUT';
+    // Stop music
+    if (music) {
+      music.pause();
+      music.currentTime = 0;
     }
   }
 });
+
+// Initialize UI Sounds
+function initializeUISounds() {
+  // Add hover sound to buttons and clickable elements
+  document.querySelectorAll('button, .mission-point, .base-platform').forEach(element => {
+    element.addEventListener('mouseenter', () => {
+      if (hoverSound && systemActive) {
+        hoverSound.currentTime = 0;
+        hoverSound.volume = 0.3;
+        hoverSound.play().catch(error => console.error("Error playing hover sound:", error));
+      }
+    });
+    
+    element.addEventListener('click', () => {
+      if (clickSound && systemActive) {
+        clickSound.currentTime = 0;
+        clickSound.volume = 0.5;
+        clickSound.play().catch(error => console.error("Error playing click sound:", error));
+      }
+    });
+  });
+}
 
 // Login form submission
 loginForm.addEventListener('submit', async (e) => {
@@ -144,6 +168,10 @@ loginForm.addEventListener('submit', async (e) => {
   
   if (!userId || !password) {
     errorMessage.textContent = 'ID and password required';
+    if (errorSound) {
+      errorSound.currentTime = 0;
+      errorSound.play().catch(error => console.error("Error playing error sound:", error));
+    }
     return;
   }
   
@@ -177,16 +205,16 @@ loginForm.addEventListener('submit', async (e) => {
     
     // Play sounds
     try {
-      if (activationSound.readyState < 2) {
+      if (activationSound) {
         activationSound.load();
-      }
-      if (music.readyState < 2) {
-        music.load();
+        activationSound.play().catch(err => console.error("Error playing activation sound:", err));
       }
       
-      activationSound.play().catch(err => console.error("Error playing activation sound:", err));
-      music.volume = volumeSlider.value;
-      music.play().catch(err => console.error("Error playing music:", err));
+      if (music) {
+        music.load();
+        music.volume = volumeSlider ? volumeSlider.value : 0.5;
+        music.play().catch(err => console.error("Error playing music:", err));
+      }
     } catch (audioError) {
       console.error("Audio error:", audioError);
     }
@@ -194,6 +222,12 @@ loginForm.addEventListener('submit', async (e) => {
     console.error('Login error:', error);
     errorMessage.textContent = `Login failed: ${error.message}`;
     errorMessage.style.color = 'var(--alert-color)';
+    
+    // Play error sound
+    if (errorSound) {
+      errorSound.currentTime = 0;
+      errorSound.play().catch(error => console.error("Error playing error sound:", error));
+    }
   }
 });
 
@@ -209,30 +243,45 @@ continueAsGruntButton.addEventListener('click', () => {
   // Initialize grunt-only features
   initializeGruntFeatures();
   
-  // Ensure audio is loaded before playing
+  // Force load the audio elements and play them
   try {
-    if (activationSound.readyState < 2) {
+    // Activation sound
+    if (activationSound) {
+      // First load the audio
       activationSound.load();
+      // Then play after a small delay (helps with some browsers)
+      setTimeout(() => {
+        activationSound.currentTime = 0;
+        activationSound.volume = 1.0;
+        const playPromise = activationSound.play();
+        if (playPromise) {
+          playPromise.catch(error => {
+            console.error("Error playing activation sound:", error);
+          });
+        }
+      }, 100);
     }
-    if (music.readyState < 2) {
+    
+    // Background music
+    if (music) {
+      // Load music
       music.load();
+      // Then play after a small delay
+      setTimeout(() => {
+        music.currentTime = 0;
+        music.volume = volumeSlider ? volumeSlider.value : 0.5;
+        music.loop = true;
+        const playPromise = music.play();
+        if (playPromise) {
+          playPromise.catch(error => {
+            console.error("Error playing background music:", error);
+          });
+        }
+      }, 300);
     }
-    
-    // Play activation sound
-    activationSound.play().catch(error => {
-      console.error("Error playing activation sound:", error);
-    });
-    
-    // Set music volume and play
-    music.volume = volumeSlider.value;
-    music.play().catch(error => {
-      console.error("Error playing music:", error);
-    });
   } catch (error) {
     console.error("Audio playback error:", error);
   }
-  
-  showNotification('ACCESS GRANTED - GRUNT VIEW ONLY');
   
   // Initialize UI
   initializeUIAfterLogin();
@@ -245,23 +294,27 @@ function initializeUIAfterLogin() {
   
   try {
     // Ensure audio elements are loaded
-    if (activationSound.readyState < 2) {
+    if (activationSound && activationSound.readyState < 2) {
       activationSound.load();
     }
-    if (music.readyState < 2) {
+    if (music && music.readyState < 2) {
       music.load();
     }
     
     // Play activation sound
-    activationSound.play().catch(error => {
-      console.error("Error playing activation sound:", error);
-    });
+    if (activationSound) {
+      activationSound.play().catch(error => {
+        console.error("Error playing activation sound:", error);
+      });
+    }
     
     // Set music volume and play
-    music.volume = volumeSlider.value;
-    music.play().catch(error => {
-      console.error("Error playing music:", error);
-    });
+    if (music) {
+      music.volume = volumeSlider ? volumeSlider.value : 0.5;
+      music.play().catch(error => {
+        console.error("Error playing music:", error);
+      });
+    }
   } catch (error) {
     console.error("Audio playback error:", error);
   }
@@ -277,15 +330,10 @@ function initializeUIAfterLogin() {
     rightPanel.style.opacity = '1';
   }, 500);
   
-  // Update status based on role
-  statusText.textContent = `STATUS: ${userRole.toUpperCase()} - OPERATIONAL`;
-  
   // Initialize updating features
   updateDateTime();
-  setInterval(updateDateTime, 1000);
-  
-  // Show notification
-  showNotification('SYSTEM ACTIVATED - GLOBE TRACKING OPERATIONAL');
+  // Ensure clock is updated every second - FIXED CLOCK ISSUE
+  clockInterval = setInterval(updateDateTime, 1000);
   
   // Load missions from local JSON files
   loadLocalMissions().then(missions => {
@@ -320,6 +368,9 @@ function initializeUIAfterLogin() {
   
   // Setup healing interval
   initializeHealTimer();
+  
+  // Initialize UI sounds
+  initializeUISounds();
 }
 
 // Function to load missions from local JSON files
@@ -410,43 +461,17 @@ function makeDraggable(element) {
   let isDragging = false;
   let offsetX, offsetY;
   
-  // Add a drag handle
-  const dragHandle = document.createElement('div');
-  dragHandle.className = 'drag-handle';
-  dragHandle.innerHTML = '⋮⋮⋮';
-  element.insertBefore(dragHandle, element.firstChild);
+  // Get drag handle
+  const dragHandle = element.querySelector('.drag-handle');
+  if (!dragHandle) return;
   
-  // Add minimize button
-  const minimizeBtn = document.createElement('button');
-  minimizeBtn.className = 'minimize-btn';
-  minimizeBtn.innerHTML = '−';
-  minimizeBtn.title = 'Minimize';
-  
-  // Add to header
-  const header = element.querySelector('.admin-header');
-  if (header) {
-    header.appendChild(minimizeBtn);
-  } else {
-    element.insertBefore(minimizeBtn, element.firstChild);
-  }
-  
-  // Minimize functionality
-  let isMinimized = false;
-  minimizeBtn.addEventListener('click', () => {
-    const sections = element.querySelectorAll('.admin-section');
-    if (isMinimized) {
-      // Restore
-      sections.forEach(section => section.style.display = 'block');
-      minimizeBtn.innerHTML = '−';
-      element.style.height = 'auto';
-    } else {
-      // Minimize
-      sections.forEach(section => section.style.display = 'none');
-      minimizeBtn.innerHTML = '+';
-      element.style.height = 'auto';
+  // Make only one minimize button visible
+  const minimizeButtons = element.querySelectorAll('.minimize-btn');
+  if (minimizeButtons.length > 1) {
+    for (let i = 1; i < minimizeButtons.length; i++) {
+      minimizeButtons[i].style.display = 'none';
     }
-    isMinimized = !isMinimized;
-  });
+  }
   
   // Drag start
   dragHandle.addEventListener('mousedown', (e) => {
@@ -500,9 +525,6 @@ function toggleHqPanel(show) {
     
     // Play tab sound
     tabSound.play().catch(console.error);
-    
-    // Show notification
-    showNotification('HEADQUARTERS MANAGEMENT ACTIVE');
   } else {
     // Hide HQ panel
     hqPanel.style.display = 'none';
@@ -595,19 +617,21 @@ async function updateResourceDisplay() {
     moneyDisplay.className = 'resource-item';
     moneyDisplay.innerHTML = `
       <div class="resource-name">MONEY:</div>
-      <div class="resource-value">${userData.money.toLocaleString()}</div>
+      <div class="resource-value">$${userData.money.toLocaleString()}</div>
     `;
     resourceDisplay.appendChild(moneyDisplay);
     
     // Add other resources
-    for (const [resource, amount] of Object.entries(userData.resources)) {
-      const resourceItem = document.createElement('div');
-      resourceItem.className = 'resource-item';
-      resourceItem.innerHTML = `
-        <div class="resource-name">${resource.toUpperCase()}:</div>
-        <div class="resource-value">${amount}</div>
-      `;
-      resourceDisplay.appendChild(resourceItem);
+    if (userData.resources) {
+      for (const [resource, amount] of Object.entries(userData.resources)) {
+        const resourceItem = document.createElement('div');
+        resourceItem.className = 'resource-item';
+        resourceItem.innerHTML = `
+          <div class="resource-name">${resource.toUpperCase()}:</div>
+          <div class="resource-value">${amount}</div>
+        `;
+        resourceDisplay.appendChild(resourceItem);
+      }
     }
   } catch (error) {
     console.error('Error updating resource display:', error);
@@ -626,19 +650,21 @@ function updateBaseResourceDisplay(userData) {
   moneyDisplay.className = 'resource-item';
   moneyDisplay.innerHTML = `
     <div class="resource-name">MONEY:</div>
-    <div class="resource-value">${userData.money.toLocaleString()}</div>
+    <div class="resource-value">$${userData.money.toLocaleString()}</div>
   `;
   baseResourcesDisplay.appendChild(moneyDisplay);
   
   // Add other resources
-  for (const [resource, amount] of Object.entries(userData.resources)) {
-    const resourceItem = document.createElement('div');
-    resourceItem.className = 'resource-item';
-    resourceItem.innerHTML = `
-      <div class="resource-name">${resource.toUpperCase()}:</div>
-      <div class="resource-value">${amount}</div>
-    `;
-    baseResourcesDisplay.appendChild(resourceItem);
+  if (userData.resources) {
+    for (const [resource, amount] of Object.entries(userData.resources)) {
+      const resourceItem = document.createElement('div');
+      resourceItem.className = 'resource-item';
+      resourceItem.innerHTML = `
+        <div class="resource-name">${resource.toUpperCase()}:</div>
+        <div class="resource-value">${amount}</div>
+      `;
+      baseResourcesDisplay.appendChild(resourceItem);
+    }
   }
 }
 
@@ -812,11 +838,10 @@ async function openIntelPanel(missionId) {
       return;
     }
     
-    // If still not found, show notification
-    showNotification('NO INTEL AVAILABLE FOR THIS MISSION');
+    // If still not found, log it (no notification)
+    console.log('No intel available for this mission');
   } catch (error) {
     console.error('Error loading intel:', error);
-    showNotification('ERROR LOADING MISSION INTEL');
   }
 }
 
@@ -855,9 +880,6 @@ function displayIntelData(missionIntel) {
   
   // Show intel panel
   intelPanel.classList.add('active');
-  
-  // Show notification
-  showNotification('ACCESSING MISSION INTEL');
 }
 
 // Globe rotation control
@@ -1102,23 +1124,24 @@ async function initializeGlobe() {
   });
 }
 
-// Utility Functions
+// Utility Functions - NOTIFICATION SYSTEM REMOVED
 function showNotification(text) {
-  notification.textContent = text;
-  notification.style.display = 'block';
-  
-  // Use setTimeout for immediate display and removal rather than fade
-  setTimeout(() => {
-    notification.style.display = 'none';
-  }, 3000);
+  // This function is now disabled - just log to console
+  console.log("Notification (disabled):", text);
 }
 
+// CLOCK FIX - Update the time every second
 function updateDateTime() {
   const now = new Date();
   const hours = String(now.getUTCHours()).padStart(2, '0');
   const minutes = String(now.getUTCMinutes()).padStart(2, '0');
   const seconds = String(now.getUTCSeconds()).padStart(2, '0');
-  dateTimeDisplay.textContent = `${hours}:${minutes}:${seconds} UTC`;
+  
+  if (dateTimeDisplay) {
+    dateTimeDisplay.textContent = `${hours}:${minutes}:${seconds} UTC`;
+  } else {
+    console.error("Date time display element not found");
+  }
 }
 
 // Volume Control
@@ -1167,9 +1190,6 @@ function signOut() {
   
   // Show login overlay
   loginOverlay.style.display = 'flex';
-  
-  // Show notification
-  showNotification('SIGNED OUT');
 }
 
 // Add HQ marker to the globe
@@ -1426,11 +1446,10 @@ async function displayMissionDetails(missionId) {
       return;
     }
     
-    // If still not found, show notification
-    showNotification('MISSION NOT FOUND');
+    // If still not found, show log message
+    console.log('Mission not found:', missionId);
   } catch (error) {
     console.error('Error retrieving mission details:', error);
-    showNotification('ERROR LOADING MISSION');
   }
 }
 
@@ -1490,9 +1509,6 @@ function displayMissionData(mission) {
   
   // Stop rotation when mission is displayed
   rotating = false;
-  
-  // Show notification
-  showNotification(`MISSION BRIEFING: ${mission.name}`);
 }
 
 // Initialize All Systems
@@ -1529,4 +1545,13 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Set system as active to allow globe interaction
   systemActive = true;
+  
+  // Initialize UI sound system
+  initializeUISounds();
+  
+  // Initial clock update
+  updateDateTime();
+  
+  // Set interval for updating the clock - FIXES CLOCK ISSUE
+  window.clockInterval = setInterval(updateDateTime, 1000);
 });
