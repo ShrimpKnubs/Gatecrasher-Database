@@ -128,17 +128,145 @@
   color: var(--text-primary);
 }
 
-/* New Top Left Resource Monitor */
+/* Enhanced Sci-Fi Resource Monitor in Top Left */
 .resources-panel {
   position: fixed;
   top: 20px;
   left: 20px;
-  width: 200px;
-  background: rgba(0, 41, 32, 0.7);
+  width: 280px;
+  background: rgba(0, 31, 24, 0.85);
   border: 1px solid var(--border-color);
-  border-left: 2px solid var(--highlight-color);
-  box-shadow: var(--panel-glow);
+  border-left: 3px solid var(--mission-color);
+  box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
   z-index: 5;
+  overflow: hidden;
+}
+
+.resources-panel .panel-header {
+  background: rgba(139, 0, 0, 0.6);
+  color: #ffcc00;
+  font-size: 0.9em;
+  padding: 6px 10px;
+  text-shadow: 0 0 5px rgba(255, 204, 0, 0.7);
+  position: relative;
+  overflow: hidden;
+}
+
+.resources-panel .panel-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 204, 0, 0.15) 50%, transparent 100%);
+  animation: scanner 3s infinite linear;
+}
+
+@keyframes scanner {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+.resources-panel .panel-content {
+  padding: 10px;
+}
+
+.resource-monitor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.resource-monitor-label {
+  color: #ffcc00;
+  font-size: 0.85em;
+  width: 100px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.resource-monitor-label::before {
+  content: "■";
+  margin-right: 5px;
+  font-size: 0.8em;
+  color: var(--mission-color);
+}
+
+.resource-monitor-value {
+  font-family: 'Hack-Bold', monospace !important;
+  color: #ffcc00;
+  text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 8px;
+  border: 1px solid var(--mission-color);
+  position: relative;
+  overflow: hidden;
+  min-width: 100px;
+  text-align: right;
+}
+
+.resource-monitor-value::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 204, 0, 0.15), transparent);
+  animation: value-pulse 2s infinite;
+  pointer-events: none;
+}
+
+@keyframes value-pulse {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.resource-bar {
+  height: 3px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin-top: 2px;
+  overflow: hidden;
+}
+
+.resource-fill {
+  height: 100%;
+  background: var(--mission-color);
+  position: relative;
+  animation: resource-pulse 3s infinite;
+}
+
+.resource-fill::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  background: rgba(255, 204, 0, 0.7);
+}
+
+@keyframes resource-pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Special animation for money value */
+.money-value {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+  background: rgba(139, 0, 0, 0.3);
+}
+
+.money-bar .resource-fill {
+  background: linear-gradient(90deg, var(--mission-color), #ffcc00);
 }
 
 /* Systems Monitor */
@@ -813,6 +941,16 @@
   gap: 10px;
 }
 
+/* Button glow effect for all interactive buttons */
+button, .mission-point, .base-platform {
+  transition: all 0.3s ease;
+}
+
+button:hover, .mission-point:hover, .base-platform:hover {
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Special treatment for login button */
 #login-button {
   background: transparent;
   color: var(--highlight-color);
@@ -820,13 +958,21 @@
   padding: 12px;
   font-size: 1.1em;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.3s ease;
   font-family: 'Hack-Bold', monospace !important;
+  position: relative;
+  overflow: hidden;
 }
 
 #login-button:hover {
   background: var(--accent-color);
-  box-shadow: 0 0 15px rgba(83, 167, 116, 0.3);
+  box-shadow: 0 0 20px rgba(83, 167, 116, 0.7);
+  transform: translateY(-2px);
+}
+
+#login-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 10px rgba(83, 167, 116, 0.4);
 }
 
 #continue-as-grunt {

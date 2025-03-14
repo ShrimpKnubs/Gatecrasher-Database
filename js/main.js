@@ -231,7 +231,7 @@ loginForm.addEventListener('submit', async (e) => {
   }
 });
 
-// Continue as grunt
+// Continue as grunt - FIX AUDIO
 continueAsGruntButton.addEventListener('click', () => {
   userRole = 'grunt';
   showUserDashboard(userRole);
@@ -243,45 +243,63 @@ continueAsGruntButton.addEventListener('click', () => {
   // Initialize grunt-only features
   initializeGruntFeatures();
   
-  // Force load the audio elements and play them
-  try {
-    // Activation sound
+  // Play custom click sound first
+  if (clickSound) {
+    clickSound.play().catch(err => console.error("Error playing click sound:", err));
+  }
+  
+  // The key is to create new Audio elements instead of reusing the existing ones
+  // This bypasses browser restrictions on audio playback without user interaction
+  const tempActivationSound = new Audio('sounds/activation-sound.mp3');
+  tempActivationSound.volume = 1.0;
+  
+  // Play activation sound immediately
+  tempActivationSound.play().then(() => {
+    console.log("Activation sound played successfully!");
+    
+    // Then play background music after activation sound
+    setTimeout(() => {
+      if (music) {
+        music.volume = volumeSlider ? volumeSlider.value : 0.5;
+        music.loop = true;
+        music.play().then(() => {
+          console.log("Background music started successfully!");
+        }).catch(error => {
+          console.error("Failed to play background music:", error);
+          
+          // Try with a new Audio element as fallback
+          const tempMusic = new Audio('music/background-music.mp3');
+          tempMusic.volume = volumeSlider ? volumeSlider.value : 0.5;
+          tempMusic.loop = true;
+          tempMusic.play().catch(err => console.error("Fallback music also failed:", err));
+        });
+      }
+    }, 1000); // Wait 1 second after activation sound finishes
+    
+  }).catch(error => {
+    console.error("Failed to play activation sound:", error);
+    
+    // If that fails, try the original approach as fallback
     if (activationSound) {
-      // First load the audio
       activationSound.load();
-      // Then play after a small delay (helps with some browsers)
+      activationSound.currentTime = 0;
+      activationSound.volume = 1.0;
       setTimeout(() => {
-        activationSound.currentTime = 0;
-        activationSound.volume = 1.0;
-        const playPromise = activationSound.play();
-        if (playPromise) {
-          playPromise.catch(error => {
-            console.error("Error playing activation sound:", error);
-          });
-        }
+        activationSound.play().catch(err => console.error("Fallback activation sound failed:", err));
       }, 100);
     }
     
-    // Background music
-    if (music) {
-      // Load music
-      music.load();
-      // Then play after a small delay
-      setTimeout(() => {
+    // Still try to play the music
+    setTimeout(() => {
+      if (music) {
+        music.load();
         music.currentTime = 0;
         music.volume = volumeSlider ? volumeSlider.value : 0.5;
         music.loop = true;
-        const playPromise = music.play();
-        if (playPromise) {
-          playPromise.catch(error => {
-            console.error("Error playing background music:", error);
-          });
-        }
-      }, 300);
-    }
-  } catch (error) {
-    console.error("Audio playback error:", error);
-  }
+        music.play().catch(err => console.error("Music still failed:", err));
+      }
+    }, 500);
+  });
   
   // Initialize UI
   initializeUIAfterLogin();
@@ -293,27 +311,40 @@ function initializeUIAfterLogin() {
   systemActive = true;
   
   try {
-    // Ensure audio elements are loaded
-    if (activationSound && activationSound.readyState < 2) {
-      activationSound.load();
-    }
-    if (music && music.readyState < 2) {
-      music.load();
-    }
-    
-    // Play activation sound
+    // Ensure audio elements are fully loaded before playing
     if (activationSound) {
-      activationSound.play().catch(error => {
-        console.error("Error playing activation sound:", error);
-      });
+      // Force reload the sound
+      activationSound.load();
+      
+      // Play with delay to ensure loading completes
+      setTimeout(() => {
+        activationSound.currentTime = 0;
+        activationSound.volume = 1.0;
+        const playPromise = activationSound.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.error("Error playing activation sound:", err);
+          });
+        }
+      }, 100);
     }
     
-    // Set music volume and play
+    // Music with delay after activation sound
     if (music) {
-      music.volume = volumeSlider ? volumeSlider.value : 0.5;
-      music.play().catch(error => {
-        console.error("Error playing music:", error);
-      });
+      music.load();
+      
+      setTimeout(() => {
+        music.currentTime = 0;
+        music.volume = volumeSlider ? volumeSlider.value : 0.5;
+        const musicPromise = music.play();
+        
+        if (musicPromise !== undefined) {
+          musicPromise.catch(err => {
+            console.error("Error playing music:", err);
+          });
+        }
+      }, 500);
     }
   } catch (error) {
     console.error("Audio playback error:", error);
@@ -321,6 +352,12 @@ function initializeUIAfterLogin() {
   
   // Apply LCD screen overlay
   lcdOverlay.style.display = 'block';
+  
+  // Show resource panel
+  const resourcesPanel = document.getElementById('resources-panel');
+  if (resourcesPanel) {
+    resourcesPanel.style.display = 'block';
+  }
   
   // Fade in side panels
   setTimeout(() => {
@@ -333,9 +370,9 @@ function initializeUIAfterLogin() {
   // Initialize updating features
   updateDateTime();
   // Ensure clock is updated every second - FIXED CLOCK ISSUE
-  clockInterval = setInterval(updateDateTime, 1000);
+  window.clockInterval = setInterval(updateDateTime, 1000);
   
-  // Load missions from local JSON files
+  // Load missions from local JSON files - MAKE SURE THIS HAPPENS FIRST
   loadLocalMissions().then(missions => {
     console.log("Loaded local missions:", missions);
     if (missions && missions.length > 0) {
@@ -363,6 +400,9 @@ function initializeUIAfterLogin() {
     console.error("Error loading Firestore missions:", error);
   });
   
+  // Update resources display
+  updateResourceDisplay();
+  
   // Setup upgrade check interval
   setInterval(checkUpgrades, 60000); // Check every minute
   
@@ -373,17 +413,48 @@ function initializeUIAfterLogin() {
   initializeUISounds();
 }
 
-// Function to load missions from local JSON files
+// Function to load missions from local JSON files - FIXED to match old code
 async function loadLocalMissions() {
   try {
     // Read missions.json file
     const missionsResponse = await window.fs.readFile('data/missions.json', { encoding: 'utf8' });
     const missions = JSON.parse(missionsResponse);
     
+    console.log('Successfully loaded missions from data/missions.json:', missions);
+    
+    if (!missions || missions.length === 0) {
+      console.error('No missions found in missions.json file');
+      // Fallback to sample missions if file not found or empty
+      return [
+        {
+          id: 'mission1',
+          name: 'OPERATION BLACKOUT',
+          location: 'ALTIS - COORDINATES: 38.9072N, 77.0369E',
+          difficulty: 'HIGH',
+          payment: '$15,000',
+          duration: '2.5 HRS',
+          teamSize: 'SQUAD (4-8)',
+          coordinates: { lat: 38.9072, lon: -77.0369 }
+        },
+        {
+          id: 'mission2',
+          name: 'OPERATION RED STORM',
+          location: 'TANOA - COORDINATES: 51.5074N, 0.1278E',
+          difficulty: 'MEDIUM',
+          payment: '$12,000',
+          duration: '2 HRS',
+          teamSize: 'FIRETEAM (4)',
+          coordinates: { lat: 51.5074, lon: -0.1278 }
+        }
+      ];
+    }
+    
     // Read intel.json file for additional mission info
     try {
       const intelResponse = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
       const intel = JSON.parse(intelResponse);
+      
+      console.log('Successfully loaded intel from data/intel.json:', intel);
       
       // Merge mission data with intel data
       missions.forEach(mission => {
@@ -398,7 +469,29 @@ async function loadLocalMissions() {
     return missions;
   } catch (error) {
     console.error('Error loading missions.json:', error);
-    return [];
+    // Fallback to sample missions if file not found
+    return [
+      {
+        id: 'mission1',
+        name: 'OPERATION BLACKOUT',
+        location: 'ALTIS - COORDINATES: 38.9072N, 77.0369E',
+        difficulty: 'HIGH',
+        payment: '$15,000',
+        duration: '2.5 HRS',
+        teamSize: 'SQUAD (4-8)',
+        coordinates: { lat: 38.9072, lon: -77.0369 }
+      },
+      {
+        id: 'mission2',
+        name: 'OPERATION RED STORM',
+        location: 'TANOA - COORDINATES: 51.5074N, 0.1278E',
+        difficulty: 'MEDIUM',
+        payment: '$12,000',
+        duration: '2 HRS',
+        teamSize: 'FIRETEAM (4)',
+        coordinates: { lat: 51.5074, lon: -0.1278 }
+      }
+    ];
   }
 }
 
@@ -1237,7 +1330,7 @@ function addHQMarker() {
   return point;
 }
 
-// Add a mission marker to the globe from local data
+// Add a mission marker to the globe from local data - Match old code exactly
 function addMissionMarker(mission) {
   const lat = mission.coordinates.lat;
   const lon = mission.coordinates.lon;
@@ -1253,7 +1346,7 @@ function addMissionMarker(mission) {
   point.position.y = 10 * Math.cos(phi);
   point.position.z = 10 * Math.sin(phi) * Math.sin(theta);
   
-  // Add mission identifier
+  // Add mission identifier and make clickable
   point.userData = { 
     missionId: mission.id,
     type: 'mission-point'
@@ -1282,6 +1375,7 @@ function addMissionMarker(mission) {
   // Store in mission markers array
   missionMarkers.push(point);
   
+  // Add this to show it worked
   console.log(`Added mission marker for ${mission.id} at coordinates: ${lat}, ${lon}`);
   
   return point;
