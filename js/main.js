@@ -49,6 +49,7 @@ const rightPanel = document.getElementById('right-panel');
 const hqButton = document.getElementById('hq-button');
 const hqPanel = document.getElementById('hq-panel');
 const closeHqButton = document.getElementById('close-hq');
+const resourcesPanel = document.getElementById('resources-panel');
 
 // Add background image to logo screen and login overlay too
 logoScreen.style.backgroundImage = "url('textures/background.png')";
@@ -231,7 +232,7 @@ loginForm.addEventListener('submit', async (e) => {
   }
 });
 
-// Continue as grunt - FIX AUDIO
+// Continue as grunt - Improved Audio that plays simultaneously
 continueAsGruntButton.addEventListener('click', () => {
   userRole = 'grunt';
   showUserDashboard(userRole);
@@ -243,63 +244,47 @@ continueAsGruntButton.addEventListener('click', () => {
   // Initialize grunt-only features
   initializeGruntFeatures();
   
-  // Play custom click sound first
-  if (clickSound) {
-    clickSound.play().catch(err => console.error("Error playing click sound:", err));
-  }
-  
-  // The key is to create new Audio elements instead of reusing the existing ones
-  // This bypasses browser restrictions on audio playback without user interaction
-  const tempActivationSound = new Audio('sounds/activation-sound.mp3');
-  tempActivationSound.volume = 1.0;
-  
-  // Play activation sound immediately
-  tempActivationSound.play().then(() => {
-    console.log("Activation sound played successfully!");
+  // PLAY BOTH SOUNDS SIMULTANEOUSLY - improved approach
+  const playAudioSimultaneously = () => {
+    // Create a new Audio element for activation sound
+    const tempActivation = new Audio('sounds/activation-sound.mp3');
+    tempActivation.volume = 1.0;
     
-    // Then play background music after activation sound
-    setTimeout(() => {
-      if (music) {
-        music.volume = volumeSlider ? volumeSlider.value : 0.5;
-        music.loop = true;
-        music.play().then(() => {
-          console.log("Background music started successfully!");
-        }).catch(error => {
-          console.error("Failed to play background music:", error);
-          
-          // Try with a new Audio element as fallback
-          const tempMusic = new Audio('music/background-music.mp3');
-          tempMusic.volume = volumeSlider ? volumeSlider.value : 0.5;
-          tempMusic.loop = true;
-          tempMusic.play().catch(err => console.error("Fallback music also failed:", err));
-        });
+    // Play activation sound
+    const activationPromise = tempActivation.play();
+    
+    // Play music at the same time
+    if (music) {
+      music.volume = volumeSlider ? volumeSlider.value : 0.5;
+      music.loop = true;
+      const musicPromise = music.play();
+      
+      if (musicPromise !== undefined) {
+        musicPromise
+          .then(() => console.log("Background music started successfully"))
+          .catch(err => {
+            console.error("Failed to play background music:", err);
+            // Fallback music player
+            setTimeout(() => {
+              const tempMusic = new Audio('music/background-music.mp3');
+              tempMusic.volume = volumeSlider ? volumeSlider.value : 0.5;
+              tempMusic.loop = true;
+              tempMusic.play().catch(e => console.error("Fallback music also failed:", e));
+            }, 100);
+          });
       }
-    }, 1000); // Wait 1 second after activation sound finishes
-    
-  }).catch(error => {
-    console.error("Failed to play activation sound:", error);
-    
-    // If that fails, try the original approach as fallback
-    if (activationSound) {
-      activationSound.load();
-      activationSound.currentTime = 0;
-      activationSound.volume = 1.0;
-      setTimeout(() => {
-        activationSound.play().catch(err => console.error("Fallback activation sound failed:", err));
-      }, 100);
     }
     
-    // Still try to play the music
-    setTimeout(() => {
-      if (music) {
-        music.load();
-        music.currentTime = 0;
-        music.volume = volumeSlider ? volumeSlider.value : 0.5;
-        music.loop = true;
-        music.play().catch(err => console.error("Music still failed:", err));
-      }
-    }, 500);
-  });
+    // Log any issues with activation sound but don't block music
+    if (activationPromise !== undefined) {
+      activationPromise
+        .then(() => console.log("Activation sound playing successfully"))
+        .catch(error => console.error("Failed to play activation sound:", error));
+    }
+  };
+  
+  // Try to play the sounds
+  playAudioSimultaneously();
   
   // Initialize UI
   initializeUIAfterLogin();
@@ -310,51 +295,10 @@ function initializeUIAfterLogin() {
   // Set system as active
   systemActive = true;
   
-  try {
-    // Ensure audio elements are fully loaded before playing
-    if (activationSound) {
-      // Force reload the sound
-      activationSound.load();
-      
-      // Play with delay to ensure loading completes
-      setTimeout(() => {
-        activationSound.currentTime = 0;
-        activationSound.volume = 1.0;
-        const playPromise = activationSound.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.catch(err => {
-            console.error("Error playing activation sound:", err);
-          });
-        }
-      }, 100);
-    }
-    
-    // Music with delay after activation sound
-    if (music) {
-      music.load();
-      
-      setTimeout(() => {
-        music.currentTime = 0;
-        music.volume = volumeSlider ? volumeSlider.value : 0.5;
-        const musicPromise = music.play();
-        
-        if (musicPromise !== undefined) {
-          musicPromise.catch(err => {
-            console.error("Error playing music:", err);
-          });
-        }
-      }, 500);
-    }
-  } catch (error) {
-    console.error("Audio playback error:", error);
-  }
-  
   // Apply LCD screen overlay
   lcdOverlay.style.display = 'block';
   
   // Show resource panel
-  const resourcesPanel = document.getElementById('resources-panel');
   if (resourcesPanel) {
     resourcesPanel.style.display = 'block';
   }
@@ -369,12 +313,12 @@ function initializeUIAfterLogin() {
   
   // Initialize updating features
   updateDateTime();
-  // Ensure clock is updated every second - FIXED CLOCK ISSUE
+  // Ensure clock is updated every second
   window.clockInterval = setInterval(updateDateTime, 1000);
   
-  // Load missions from local JSON files - MAKE SURE THIS HAPPENS FIRST
-  loadLocalMissions().then(missions => {
-    console.log("Loaded local missions:", missions);
+  // IMPROVED MISSION LOADING - Load from both sources
+  loadMissions().then(missions => {
+    console.log("Loaded missions:", missions);
     if (missions && missions.length > 0) {
       missions.forEach(mission => {
         if (mission.coordinates) {
@@ -383,116 +327,122 @@ function initializeUIAfterLogin() {
       });
     }
   }).catch(error => {
-    console.error("Error loading local missions:", error);
-  });
-  
-  // Load missions from Firestore
-  loadMissions().then(missions => {
-    console.log("Loaded Firestore missions:", missions);
-    if (missions && missions.length > 0) {
-      missions.forEach(mission => {
-        if (mission.coordinates) {
-          addMissionPoint(mission);
-        }
-      });
-    }
-  }).catch(error => {
-    console.error("Error loading Firestore missions:", error);
+    console.error("Error loading missions:", error);
   });
   
   // Update resources display
   updateResourceDisplay();
   
-  // Setup upgrade check interval
-  setInterval(checkUpgrades, 60000); // Check every minute
-  
-  // Setup healing interval
-  initializeHealTimer();
-  
   // Initialize UI sounds
   initializeUISounds();
 }
 
-// Function to load missions from local JSON files - FIXED to match old code
-async function loadLocalMissions() {
+// IMPROVED MISSION LOADING - Prioritize direct fetch over window.fs.readFile
+async function loadMissions() {
   try {
-    // Read missions.json file
-    const missionsResponse = await window.fs.readFile('data/missions.json', { encoding: 'utf8' });
-    const missions = JSON.parse(missionsResponse);
-    
-    console.log('Successfully loaded missions from data/missions.json:', missions);
-    
-    if (!missions || missions.length === 0) {
-      console.error('No missions found in missions.json file');
-      // Fallback to sample missions if file not found or empty
-      return [
-        {
-          id: 'mission1',
-          name: 'OPERATION BLACKOUT',
-          location: 'ALTIS - COORDINATES: 38.9072N, 77.0369E',
-          difficulty: 'HIGH',
-          payment: '$15,000',
-          duration: '2.5 HRS',
-          teamSize: 'SQUAD (4-8)',
-          coordinates: { lat: 38.9072, lon: -77.0369 }
-        },
-        {
-          id: 'mission2',
-          name: 'OPERATION RED STORM',
-          location: 'TANOA - COORDINATES: 51.5074N, 0.1278E',
-          difficulty: 'MEDIUM',
-          payment: '$12,000',
-          duration: '2 HRS',
-          teamSize: 'FIRETEAM (4)',
-          coordinates: { lat: 51.5074, lon: -0.1278 }
-        }
-      ];
-    }
-    
-    // Read intel.json file for additional mission info
-    try {
-      const intelResponse = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
-      const intel = JSON.parse(intelResponse);
+    // First try the direct fetch approach (like in old code)
+    const response = await fetch('data/missions.json');
+    if (response.ok) {
+      const missions = await response.json();
+      console.log('Successfully loaded missions via fetch:', missions);
       
-      console.log('Successfully loaded intel from data/intel.json:', intel);
-      
-      // Merge mission data with intel data
-      missions.forEach(mission => {
-        if (intel[mission.id]) {
-          mission.intel = intel[mission.id];
+      // Try to load intel data
+      try {
+        const intelResponse = await fetch('data/intel.json');
+        if (intelResponse.ok) {
+          const intel = await intelResponse.json();
+          
+          // Merge mission data with intel data
+          missions.forEach(mission => {
+            if (intel[mission.id]) {
+              mission.intel = intel[mission.id];
+            }
+          });
         }
-      });
-    } catch (intelError) {
-      console.error('Error loading intel.json:', intelError);
-    }
-    
-    return missions;
-  } catch (error) {
-    console.error('Error loading missions.json:', error);
-    // Fallback to sample missions if file not found
-    return [
-      {
-        id: 'mission1',
-        name: 'OPERATION BLACKOUT',
-        location: 'ALTIS - COORDINATES: 38.9072N, 77.0369E',
-        difficulty: 'HIGH',
-        payment: '$15,000',
-        duration: '2.5 HRS',
-        teamSize: 'SQUAD (4-8)',
-        coordinates: { lat: 38.9072, lon: -77.0369 }
-      },
-      {
-        id: 'mission2',
-        name: 'OPERATION RED STORM',
-        location: 'TANOA - COORDINATES: 51.5074N, 0.1278E',
-        difficulty: 'MEDIUM',
-        payment: '$12,000',
-        duration: '2 HRS',
-        teamSize: 'FIRETEAM (4)',
-        coordinates: { lat: 51.5074, lon: -0.1278 }
+      } catch (intelError) {
+        console.error('Error loading intel data:', intelError);
       }
-    ];
+      
+      return missions;
+    }
+  } catch (fetchError) {
+    console.error('Fetch error:', fetchError);
+    // If fetch fails, continue to try window.fs.readFile
   }
+  
+  // Fallback to window.fs.readFile if available
+  try {
+    if (typeof window.fs !== 'undefined' && window.fs.readFile) {
+      const missionsContent = await window.fs.readFile('data/missions.json', { encoding: 'utf8' });
+      const missions = JSON.parse(missionsContent);
+      console.log('Successfully loaded missions via window.fs.readFile:', missions);
+      
+      // Try to load intel data
+      try {
+        const intelContent = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
+        const intel = JSON.parse(intelContent);
+        
+        // Merge mission data with intel data
+        missions.forEach(mission => {
+          if (intel[mission.id]) {
+            mission.intel = intel[mission.id];
+          }
+        });
+      } catch (intelError) {
+        console.error('Error loading intel data:', intelError);
+      }
+      
+      return missions;
+    }
+  } catch (fsError) {
+    console.error('File system reading error:', fsError);
+  }
+  
+  // Fallback to hardcoded sample missions
+  console.warn('Using fallback sample missions');
+  return [
+    {
+      id: 'mission1',
+      name: 'FAILED DIPLOMACY',
+      location: 'Vietnam',
+      difficulty: 'MEDIUM',
+      payment: '$27,525.75',
+      duration: '2.5 HRS',
+      teamSize: 'SQUAD (3-6)',
+      coordinates: {
+        lat: 10.536421,
+        lon: 106.285339
+      }
+    }
+  ];
+}
+
+// Load intel data - Simplified approach
+async function loadIntel(missionId) {
+  try {
+    // First try direct fetch
+    const response = await fetch('data/intel.json');
+    if (response.ok) {
+      const intelData = await response.json();
+      return intelData[missionId];
+    }
+  } catch (fetchError) {
+    console.error('Fetch error for intel:', fetchError);
+  }
+  
+  // Try file system if available
+  try {
+    if (typeof window.fs !== 'undefined' && window.fs.readFile) {
+      const intelContent = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
+      const intelData = JSON.parse(intelContent);
+      return intelData[missionId];
+    }
+  } catch (fsError) {
+    console.error('File system reading error for intel:', fsError);
+  }
+  
+  // Fallback
+  return null;
 }
 
 // Show appropriate dashboard based on user role
@@ -627,21 +577,110 @@ function toggleHqPanel(show) {
 // Initialize features for different roles
 function initializeAdminFeatures() {
   // Admin-specific features
-  loadAllMissions(true); // true = admin mode
-  initializeMissionCreationTools();
+  loadMissions(); // Load all missions
+  
+  // Setup admin panel resource controls
+  setupAdminResourceControls();
+}
+
+// Setup admin resource controls
+function setupAdminResourceControls() {
+  // Get admin controls container
+  const adminContent = document.querySelector('.admin-content');
+  if (!adminContent) return;
+  
+  // Add resource management section
+  const resourceSection = document.createElement('div');
+  resourceSection.className = 'admin-section';
+  resourceSection.innerHTML = `
+    <div class="admin-section-title">RESOURCE MANAGEMENT</div>
+    <button id="reset-resources-button">RESET DEFAULT RESOURCES</button>
+    <button id="add-resources-button">ADD TEST RESOURCES</button>
+  `;
+  
+  // Add to admin panel
+  adminContent.appendChild(resourceSection);
+  
+  // Add event listeners
+  document.getElementById('reset-resources-button').addEventListener('click', resetUserResources);
+  document.getElementById('add-resources-button').addEventListener('click', addTestResources);
+}
+
+// Reset user resources to default
+async function resetUserResources() {
+  if (!currentUser || userRole !== 'admin') {
+    showNotification('UNAUTHORIZED: ADMIN ACCESS REQUIRED');
+    return;
+  }
+  
+  try {
+    // Default resource values
+    const defaultResources = {
+      money: 100000,
+      resources: {
+        fuel: 500,
+        ammo: 500,
+        medicine: 500,
+        food: 500,
+        materials: 500
+      }
+    };
+    
+    // Update the current user's resources
+    await db.collection('users').doc(currentUser.uid).update(defaultResources);
+    
+    // Show notification
+    showNotification('RESOURCES RESET TO DEFAULT');
+    
+    // Update display
+    updateResourceDisplay();
+  } catch (error) {
+    console.error('Error resetting resources:', error);
+    showNotification('ERROR RESETTING RESOURCES');
+  }
+}
+
+// Add test resources
+async function addTestResources() {
+  if (!currentUser || userRole !== 'admin') {
+    showNotification('UNAUTHORIZED: ADMIN ACCESS REQUIRED');
+    return;
+  }
+  
+  try {
+    // Resources to add
+    const addResources = {
+      money: firebase.firestore.FieldValue.increment(50000),
+      'resources.fuel': firebase.firestore.FieldValue.increment(200),
+      'resources.ammo': firebase.firestore.FieldValue.increment(200),
+      'resources.medicine': firebase.firestore.FieldValue.increment(200),
+      'resources.food': firebase.firestore.FieldValue.increment(200),
+      'resources.materials': firebase.firestore.FieldValue.increment(200)
+    };
+    
+    // Update the current user's resources
+    await db.collection('users').doc(currentUser.uid).update(addResources);
+    
+    // Show notification
+    showNotification('TEST RESOURCES ADDED');
+    
+    // Update display
+    updateResourceDisplay();
+  } catch (error) {
+    console.error('Error adding test resources:', error);
+    showNotification('ERROR ADDING TEST RESOURCES');
+  }
 }
 
 function initializeSquadLeadFeatures() {
   // Squad leader features
-  loadAvailableMissions();
-  initializeDeploymentSystem();
-  initializeBaseManagement();
+  loadMissions();
   initializeResourceManagement();
 }
 
 function initializeGruntFeatures() {
   // Grunt features - view only
-  loadAvailableMissions();
+  loadMissions();
   initializeViewOnlyMode();
 }
 
@@ -662,28 +701,16 @@ function initializeResourceManagement() {
 
 // Update resource display
 async function updateResourceDisplay() {
-  if (!currentUser) {
-    // For guests, show default resources
-    updateBaseResourceDisplay({
-      money: 100000,
-      resources: {
-        fuel: 500,
-        ammo: 500,
-        medicine: 500,
-        food: 500,
-        materials: 500
-      }
-    });
-    return;
-  }
-  
   try {
-    const userDoc = await db.collection('users').doc(currentUser.uid).get();
-    const userData = userDoc.data();
+    let userData;
     
-    if (!userData) {
-      // If no user data found, show default resources
-      updateBaseResourceDisplay({
+    if (currentUser) {
+      // For authenticated users, get data from Firebase
+      const userDoc = await db.collection('users').doc(currentUser.uid).get();
+      userData = userDoc.data();
+    } else {
+      // For guests, use default values
+      userData = {
         money: 100000,
         resources: {
           fuel: 500,
@@ -692,38 +719,37 @@ async function updateResourceDisplay() {
           food: 500,
           materials: 500
         }
-      });
-      return;
+      };
     }
     
-    // Update both resource displays - in squad panel and base tab
-    updateBaseResourceDisplay(userData);
+    // Update the resource monitor in top left
+    updateResourceMonitor(userData);
     
-    // Update squad panel resource display
-    const resourceDisplay = document.getElementById('resource-display');
-    if (!resourceDisplay) return;
-    
-    resourceDisplay.innerHTML = '';
-    
-    // Add money display
-    const moneyDisplay = document.createElement('div');
-    moneyDisplay.className = 'resource-item';
-    moneyDisplay.innerHTML = `
-      <div class="resource-name">MONEY:</div>
-      <div class="resource-value">$${userData.money.toLocaleString()}</div>
-    `;
-    resourceDisplay.appendChild(moneyDisplay);
-    
-    // Add other resources
-    if (userData.resources) {
-      for (const [resource, amount] of Object.entries(userData.resources)) {
-        const resourceItem = document.createElement('div');
-        resourceItem.className = 'resource-item';
-        resourceItem.innerHTML = `
-          <div class="resource-name">${resource.toUpperCase()}:</div>
-          <div class="resource-value">${amount}</div>
-        `;
-        resourceDisplay.appendChild(resourceItem);
+    // Also update the base resources display if it exists
+    const baseResourcesDisplay = document.getElementById('base-resources');
+    if (baseResourcesDisplay) {
+      baseResourcesDisplay.innerHTML = '';
+      
+      // Add money display
+      const moneyDisplay = document.createElement('div');
+      moneyDisplay.className = 'resource-item';
+      moneyDisplay.innerHTML = `
+        <div class="resource-name">MONEY:</div>
+        <div class="resource-value">$${userData.money.toLocaleString()}</div>
+      `;
+      baseResourcesDisplay.appendChild(moneyDisplay);
+      
+      // Add other resources
+      if (userData.resources) {
+        for (const [resource, amount] of Object.entries(userData.resources)) {
+          const resourceItem = document.createElement('div');
+          resourceItem.className = 'resource-item';
+          resourceItem.innerHTML = `
+            <div class="resource-name">${resource.toUpperCase()}:</div>
+            <div class="resource-value">${amount}</div>
+          `;
+          baseResourcesDisplay.appendChild(resourceItem);
+        }
       }
     }
   } catch (error) {
@@ -731,32 +757,48 @@ async function updateResourceDisplay() {
   }
 }
 
-// Update base resource display in the BASE tab
-function updateBaseResourceDisplay(userData) {
-  const baseResourcesDisplay = document.getElementById('base-resources');
-  if (!baseResourcesDisplay) return;
+// Update the animated resource monitor in top left
+function updateResourceMonitor(userData) {
+  const resourceMonitorContent = document.getElementById('resource-monitor-content');
+  if (!resourceMonitorContent) return;
   
-  baseResourcesDisplay.innerHTML = '';
+  // Clear current content
+  resourceMonitorContent.innerHTML = '';
   
-  // Add money display
-  const moneyDisplay = document.createElement('div');
-  moneyDisplay.className = 'resource-item';
-  moneyDisplay.innerHTML = `
-    <div class="resource-name">MONEY:</div>
-    <div class="resource-value">$${userData.money.toLocaleString()}</div>
+  // Add money with special styling
+  const moneyItem = document.createElement('div');
+  moneyItem.className = 'resource-monitor-item';
+  moneyItem.innerHTML = `
+    <div class="resource-monitor-label">MONEY</div>
+    <div class="resource-monitor-value money-value">$${userData.money.toLocaleString()}</div>
   `;
-  baseResourcesDisplay.appendChild(moneyDisplay);
+  resourceMonitorContent.appendChild(moneyItem);
+  
+  // Add money progress bar
+  const moneyBar = document.createElement('div');
+  moneyBar.className = 'resource-bar money-bar';
+  // Calculate money percentage (max visual at 1 million)
+  const moneyPercentage = Math.min(100, (userData.money / 1000000) * 100);
+  moneyBar.innerHTML = `<div class="resource-fill" style="width: ${moneyPercentage}%"></div>`;
+  resourceMonitorContent.appendChild(moneyBar);
   
   // Add other resources
   if (userData.resources) {
     for (const [resource, amount] of Object.entries(userData.resources)) {
       const resourceItem = document.createElement('div');
-      resourceItem.className = 'resource-item';
+      resourceItem.className = 'resource-monitor-item';
       resourceItem.innerHTML = `
-        <div class="resource-name">${resource.toUpperCase()}:</div>
-        <div class="resource-value">${amount}</div>
+        <div class="resource-monitor-label">${resource.toUpperCase()}</div>
+        <div class="resource-monitor-value">${amount}</div>
       `;
-      baseResourcesDisplay.appendChild(resourceItem);
+      resourceMonitorContent.appendChild(resourceItem);
+      
+      // Add resource progress bar (max visual at 1000)
+      const resourceBar = document.createElement('div');
+      resourceBar.className = 'resource-bar';
+      const resourcePercentage = Math.min(100, (amount / 1000) * 100);
+      resourceBar.innerHTML = `<div class="resource-fill" style="width: ${resourcePercentage}%"></div>`;
+      resourceMonitorContent.appendChild(resourceBar);
     }
   }
 }
@@ -910,69 +952,53 @@ function initializeIntelPanel() {
   });
 }
 
-// Load mission intel
+// Load mission intel - Improved with multiple sources
 async function openIntelPanel(missionId) {
   try {
-    // First try to get intel from Firestore
-    const intelDoc = await db.collection('intel').doc(missionId).get();
+    // Load intel data
+    const missionIntel = await loadIntel(missionId);
     
-    if (intelDoc.exists) {
-      const missionIntel = intelDoc.data();
-      displayIntelData(missionIntel);
+    if (!missionIntel) {
+      console.log('No intel available for this mission');
       return;
     }
     
-    // If not found in Firestore, try from local intel.json
-    const intelResponse = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
-    const intelData = JSON.parse(intelResponse);
-    
-    if (intelData[missionId]) {
-      displayIntelData(intelData[missionId]);
-      return;
+    // Play intel sound
+    if (intelSound && intelSound.readyState >= 2) {
+      intelSound.currentTime = 0;
+      intelSound.play().catch(console.error);
     }
     
-    // If still not found, log it (no notification)
-    console.log('No intel available for this mission');
+    // Update intel panel content
+    document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
+    
+    // Create intel content container
+    let intelContent = '';
+    
+    // Only add content paragraph if there's actual content
+    if (missionIntel.content && missionIntel.content.trim() !== '') {
+      intelContent += `<p>${missionIntel.content}</p>`;
+    }
+    
+    // Add images if available
+    if (missionIntel.images && missionIntel.images.length > 0) {
+      missionIntel.images.forEach(imgSrc => {
+        intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+      });
+    }
+    
+    // If there's no content and no images, show a placeholder message
+    if (intelContent === '') {
+      intelContent = '<p>No intel data available.</p>';
+    }
+    
+    document.getElementById('intel-content').innerHTML = intelContent;
+    
+    // Show intel panel
+    intelPanel.classList.add('active');
   } catch (error) {
     console.error('Error loading intel:', error);
   }
-}
-
-// Display intel data
-function displayIntelData(missionIntel) {
-  // Play intel sound
-  if (intelSound && intelSound.readyState >= 2) {
-    intelSound.currentTime = 0;
-    intelSound.play().catch(console.error);
-  }
-  
-  // Update intel panel content
-  document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
-  
-  // Create intel content container
-  let intelContent = '';
-  
-  // Only add content paragraph if there's actual content
-  if (missionIntel.content && missionIntel.content.trim() !== '') {
-    intelContent += `<p>${missionIntel.content}</p>`;
-  }
-  
-  // Add images if available
-  if (missionIntel.images && missionIntel.images.length > 0) {
-    missionIntel.images.forEach(imgSrc => {
-      intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
-    });
-  }
-  
-  // If there's no content and no images, show a placeholder message
-  if (intelContent === '') {
-    intelContent = '<p>No intel data available.</p>';
-  }
-  
-  document.getElementById('intel-content').innerHTML = intelContent;
-  
-  // Show intel panel
-  intelPanel.classList.add('active');
 }
 
 // Globe rotation control
@@ -1003,10 +1029,9 @@ const HQ_LOCATION = {
   name: "MOTHER BASE - SOUTH AFRICA"
 };
 
-// Globe Visualization System (use your existing code with modifications for Firebase)
+// Globe Visualization System
 async function initializeGlobe() {
-  // Add HQ marker and deployment paths
-  
+  // Create Three.js scene
   scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({
@@ -1031,7 +1056,7 @@ async function initializeGlobe() {
   // Force enable systemActive for globe interaction
   systemActive = true;
   
-  // Mouse control for globe - restored from original with debug
+  // Mouse control for globe
   document.addEventListener('mousedown', (e) => {
     console.log("Mouse down event captured, systemActive:", systemActive);
     
@@ -1133,13 +1158,6 @@ async function initializeGlobe() {
       const missionId = intersects[0].object.userData.missionId;
       displayMissionDetails(missionId);
     }
-    
-    // Check for intersections with deployment points
-    const deploymentIntersects = raycaster.intersectObjects(deploymentMarkers);
-    if (deploymentIntersects.length > 0 && deploymentIntersects[0].object.userData.deploymentId) {
-      const deploymentId = deploymentIntersects[0].object.userData.deploymentId;
-      showDeploymentDetails(deploymentId);
-    }
   });
   
   // Animation Loop
@@ -1175,7 +1193,7 @@ async function initializeGlobe() {
       scene.rotation.y += 0.001; // Doubled from 0.0005
     }
     
-    // Animate mission points
+    // Animate mission points - fixed rings to remain static
     if (missionMarkers.length > 0) {
       missionMarkers.forEach(point => {
         if (point.userData.ring) {
@@ -1184,23 +1202,8 @@ async function initializeGlobe() {
           ring.scale.y = 1 + 0.2 * Math.sin(Date.now() * 0.003);
           ring.material.opacity = 0.7 * (0.5 + 0.5 * Math.sin(Date.now() * 0.003));
           
-          // Make ring face the camera
-          ring.lookAt(camera.position);
-        }
-      });
-    }
-    
-    // Animate deployment points
-    if (deploymentMarkers.length > 0) {
-      deploymentMarkers.forEach(point => {
-        if (point.userData.ring) {
-          const ring = point.userData.ring;
-          ring.scale.x = 1 + 0.2 * Math.sin(Date.now() * 0.003);
-          ring.scale.y = 1 + 0.2 * Math.sin(Date.now() * 0.003);
-          ring.material.opacity = 0.7 * (0.5 + 0.5 * Math.sin(Date.now() * 0.003));
-          
-          // Make ring face the camera
-          ring.lookAt(camera.position);
+          // Don't make the ring face the camera - stay static and oriented to globe surface
+          // ring.lookAt(camera.position); - removed this line
         }
       });
     }
@@ -1217,10 +1220,19 @@ async function initializeGlobe() {
   });
 }
 
-// Utility Functions - NOTIFICATION SYSTEM REMOVED
+// Utility Functions - IMPROVED NOTIFICATION SYSTEM
 function showNotification(text) {
-  // This function is now disabled - just log to console
-  console.log("Notification (disabled):", text);
+  const notificationElement = document.getElementById('notification');
+  if (!notificationElement) return;
+  
+  // Set text and show notification
+  notificationElement.textContent = text;
+  notificationElement.style.display = 'block';
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notificationElement.style.display = 'none';
+  }, 3000);
 }
 
 // CLOCK FIX - Update the time every second
@@ -1330,7 +1342,7 @@ function addHQMarker() {
   return point;
 }
 
-// Add a mission marker to the globe from local data - Match old code exactly
+// Add a mission marker to the globe - IMPROVED
 function addMissionMarker(mission) {
   const lat = mission.coordinates.lat;
   const lon = mission.coordinates.lon;
@@ -1375,234 +1387,98 @@ function addMissionMarker(mission) {
   // Store in mission markers array
   missionMarkers.push(point);
   
-  // Add this to show it worked
+  // Log for debugging
   console.log(`Added mission marker for ${mission.id} at coordinates: ${lat}, ${lon}`);
   
   return point;
 }
 
-// Create deployment path between HQ and destination
-function createDeploymentPath(deployment) {
-  // Start point (HQ)
-  const startLat = HQ_LOCATION.lat;
-  const startLon = HQ_LOCATION.lon;
-  const startPhi = (90 - startLat) * Math.PI/180;
-  const startTheta = (startLon + 180) * Math.PI/180;
-  
-  const startX = -10 * Math.sin(startPhi) * Math.cos(startTheta);
-  const startY = 10 * Math.cos(startPhi);
-  const startZ = 10 * Math.sin(startPhi) * Math.sin(startTheta);
-  
-  // End point (deployment location)
-  const endLat = deployment.coordinates.lat;
-  const endLon = deployment.coordinates.lon;
-  const endPhi = (90 - endLat) * Math.PI/180;
-  const endTheta = (endLon + 180) * Math.PI/180;
-  
-  const endX = -10 * Math.sin(endPhi) * Math.cos(endTheta);
-  const endY = 10 * Math.cos(endPhi);
-  const endZ = 10 * Math.sin(endPhi) * Math.sin(endTheta);
-  
-  // Create line geometry
-  const points = [];
-  points.push(new THREE.Vector3(startX, startY, startZ));
-  points.push(new THREE.Vector3(endX, endY, endZ));
-  
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({ 
-    color: 0xFFD700, // Gold
-    transparent: true,
-    opacity: 0.6
-  });
-  
-  const line = new THREE.Line(geometry, material);
-  scene.add(line);
-  
-  // Create soldier icon moving along the path
-  const soldierGeometry = new THREE.SphereGeometry(0.15, 8, 8);
-  const soldierMaterial = new THREE.MeshBasicMaterial({ color: 0x32CD32 }); // Green
-  const soldier = new THREE.Mesh(soldierGeometry, soldierMaterial);
-  
-  // Start at HQ
-  soldier.position.set(startX, startY, startZ);
-  scene.add(soldier);
-  
-  // Store deployment data
-  soldier.userData = {
-    deploymentId: deployment.id,
-    startPosition: new THREE.Vector3(startX, startY, startZ),
-    endPosition: new THREE.Vector3(endX, endY, endZ),
-    startTime: deployment.startTime.toDate(),
-    endTime: deployment.endTime.toDate(),
-    isReturning: false,
-    returnStartTime: null,
-    returnEndTime: null,
-    line: line
-  };
-  
-  return soldier;
-}
-
-// Update deployment soldier positions
-function updateDeploymentSoldiers() {
-  if (!scene) return;
-  
-  scene.children.forEach(object => {
-    if (object.userData && object.userData.deploymentId) {
-      const now = new Date();
-      
-      if (!object.userData.isReturning) {
-        // Going to deployment
-        const startTime = object.userData.startTime;
-        const endTime = object.userData.endTime;
-        const totalTime = endTime - startTime;
-        const elapsedTime = now - startTime;
-        const progress = Math.min(1, Math.max(0, elapsedTime / totalTime));
-        
-        // Update position
-        object.position.lerpVectors(
-          object.userData.startPosition,
-          object.userData.endPosition,
-          progress
-        );
-        
-        // Check if reached destination
-        if (progress >= 1) {
-          object.userData.isReturning = true;
-          object.userData.returnStartTime = now;
-          object.userData.returnEndTime = new Date(now.getTime() + (totalTime / 3)); // Return is 1/3 the time
-        }
-      } else {
-        // Returning to HQ
-        const startTime = object.userData.returnStartTime;
-        const endTime = object.userData.returnEndTime;
-        const totalTime = endTime - startTime;
-        const elapsedTime = now - startTime;
-        const progress = Math.min(1, Math.max(0, elapsedTime / totalTime));
-        
-        // Update position (reverse direction)
-        object.position.lerpVectors(
-          object.userData.endPosition,
-          object.userData.startPosition,
-          progress
-        );
-        
-        // Check if reached HQ
-        if (progress >= 1) {
-          // Remove soldier and line when completed
-          if (object.userData.line) {
-            scene.remove(object.userData.line);
-          }
-          scene.remove(object);
-        }
-      }
-    }
-  });
-}
-
-// Display mission details
+// Display mission details - IMPROVED
 async function displayMissionDetails(missionId) {
   console.log("Displaying mission details for ID:", missionId);
   
   try {
-    // Try to find mission in Firebase first
-    const missionDoc = await db.collection('missions').doc(missionId).get();
+    // Load all missions first
+    const missions = await loadMissions();
     
-    if (missionDoc.exists) {
-      const mission = {
-        id: missionDoc.id,
-        ...missionDoc.data()
-      };
-      displayMissionData(mission);
-      return;
-    }
-    
-    // If not found in Firebase, try local data
-    const missionsResponse = await window.fs.readFile('data/missions.json', { encoding: 'utf8' });
-    const missions = JSON.parse(missionsResponse);
-    
+    // Find the specific mission
     const mission = missions.find(m => m.id === missionId);
     
-    if (mission) {
-      // Also try to get intel data for this mission
-      try {
-        const intelResponse = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
-        const intelData = JSON.parse(intelResponse);
-        
-        if (intelData[missionId]) {
-          mission.intel = intelData[missionId];
-        }
-      } catch (intelError) {
-        console.error('Error loading intel data:', intelError);
-      }
-      
-      displayMissionData(mission);
+    if (!mission) {
+      console.error("Mission not found with ID:", missionId);
       return;
     }
     
-    // If still not found, show log message
-    console.log('Mission not found:', missionId);
+    // Set active mission
+    activeMission = mission;
+    
+    // Play mission sound
+    if (missionSound && missionSound.readyState >= 2) {
+      missionSound.currentTime = 0;
+      missionSound.play().catch(console.error);
+    }
+    
+    // Update mission panel content
+    document.getElementById('mission-title').textContent = mission.name;
+    document.getElementById('mission-location').textContent = mission.location;
+    document.getElementById('mission-difficulty').textContent = mission.difficulty;
+    document.getElementById('mission-payment').textContent = mission.payment;
+    document.getElementById('mission-duration').textContent = mission.duration;
+    document.getElementById('mission-team-size').textContent = mission.teamSize;
+    
+    // Display mission image if available
+    const missionPanel = document.getElementById('mission-panel');
+    let missionImageElement = missionPanel.querySelector('.mission-image');
+    
+    if (mission.image) {
+      // Create or update mission image element
+      if (!missionImageElement) {
+        missionImageElement = document.createElement('img');
+        missionImageElement.className = 'mission-image';
+        
+        // Insert after mission location
+        const locationElement = document.getElementById('mission-location').parentElement;
+        locationElement.parentNode.insertBefore(missionImageElement, locationElement.nextSibling);
+      }
+      
+      missionImageElement.src = `data/images/${mission.image}`;
+      missionImageElement.style.display = 'block';
+    } else if (missionImageElement) {
+      // Hide mission image if none available
+      missionImageElement.style.display = 'none';
+    }
+    
+    // Show mission panel
+    missionPanel.classList.add('active');
+    
+    // Stop rotation when mission is displayed
+    rotating = false;
+    
+    // Show notification
+    showNotification(`MISSION BRIEFING: ${mission.name}`);
   } catch (error) {
-    console.error('Error retrieving mission details:', error);
+    console.error('Error displaying mission details:', error);
   }
 }
 
-// Display mission data
-function displayMissionData(mission) {
-  // Set active mission
-  activeMission = mission;
+// Load team data from Firebase
+async function loadBaseTeams() {
+  if (!currentUser) return;
   
-  // Play mission sound
-  if (missionSound && missionSound.readyState >= 2) {
-    missionSound.currentTime = 0;
-    missionSound.play().catch(console.error);
-  }
-  
-  // Update mission panel content
-  document.getElementById('mission-title').textContent = mission.name;
-  document.getElementById('mission-location').textContent = mission.location;
-  document.getElementById('mission-difficulty').textContent = mission.difficulty;
-  document.getElementById('mission-payment').textContent = mission.payment;
-  document.getElementById('mission-duration').textContent = mission.duration;
-  document.getElementById('mission-team-size').textContent = mission.teamSize;
-  
-  // Display mission image if available
-  const missionPanel = document.getElementById('mission-panel');
-  let missionImageElement = missionPanel.querySelector('.mission-image');
-  
-  if (mission.image) {
-    // Create or update mission image element
-    if (!missionImageElement) {
-      missionImageElement = document.createElement('img');
-      missionImageElement.className = 'mission-image';
-      
-      // Insert after mission location
-      const locationElement = document.getElementById('mission-location').parentElement;
-      locationElement.parentNode.insertBefore(missionImageElement, locationElement.nextSibling);
+  try {
+    // Get all teams for the current user
+    const teamsRef = db.collection('teams').where('userId', '==', currentUser.uid);
+    const snapshot = await teamsRef.get();
+    
+    if (snapshot.empty) {
+      console.log("No teams found for user");
+      return;
     }
     
-    missionImageElement.src = `data/images/${mission.image}`;
-    missionImageElement.style.display = 'block';
-  } else if (missionImageElement) {
-    // Hide mission image if none available
-    missionImageElement.style.display = 'none';
+    console.log("Teams loaded successfully");
+  } catch (error) {
+    console.error('Error loading teams:', error);
   }
-  
-  // Show accept button only for squad leads and available missions
-  const acceptButton = document.getElementById('accept-mission-button');
-  if (acceptButton) {
-    if (userRole === 'squadLead' && (!mission.status || mission.status === 'available')) {
-      acceptButton.style.display = 'block';
-    } else {
-      acceptButton.style.display = 'none';
-    }
-  }
-  
-  // Show mission panel
-  missionPanel.classList.add('active');
-  
-  // Stop rotation when mission is displayed
-  rotating = false;
 }
 
 // Initialize All Systems
@@ -1611,9 +1487,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeIntelPanel();
   initializeGlobe();
   initializeDecorativeElements();
-  
-  // Update deployment soldiers every second
-  setInterval(updateDeploymentSoldiers, 1000);
   
   // Fix volume icon if not showing
   const volumeIcon = document.getElementById('volume-icon');
@@ -1646,6 +1519,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial clock update
   updateDateTime();
   
-  // Set interval for updating the clock - FIXES CLOCK ISSUE
+  // Set interval for updating the clock
   window.clockInterval = setInterval(updateDateTime, 1000);
+  
+  // Add button hover glow effect to all buttons
+  addButtonGlowEffect();
 });
+
+// Add glow effect to all buttons
+function addButtonGlowEffect() {
+  const style = document.createElement('style');
+  style.textContent = `
+    button, .mission-point, .base-platform {
+      transition: all 0.3s ease !important;
+    }
+    
+    button:hover, .mission-point:hover, .base-platform:hover {
+      box-shadow: 0 0 15px rgba(83, 167, 116, 0.5) !important;
+    }
+    
+    /* Special treatment for main buttons */
+    #login-button:hover, #activate-button:hover, .upgrade-button:hover, .intel-button:hover {
+      box-shadow: 0 0 20px rgba(83, 167, 116, 0.7) !important;
+      transform: translateY(-2px) !important;
+    }
+    
+    #login-button:active, #activate-button:active, .upgrade-button:active, .intel-button:active {
+      transform: translateY(1px) !important;
+      box-shadow: 0 0 10px rgba(83, 167, 116, 0.4) !important;
+    }
+  `;
+  document.head.appendChild(style);
+}

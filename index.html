@@ -8,6 +8,183 @@
   <link rel="stylesheet" href="css/login.css">
   <link rel="stylesheet" href="css/admin-panel.css">
   
+  <!-- Additional styles for enhanced features -->
+  <style>
+    /* Enhanced Sci-Fi Resource Monitor in Top Left */
+    .resources-panel {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 280px;
+      background: rgba(0, 31, 24, 0.85);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--mission-color);
+      box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
+      z-index: 5;
+      overflow: hidden;
+    }
+
+    .resources-panel .panel-header {
+      background: rgba(139, 0, 0, 0.6);
+      color: #ffcc00;
+      font-size: 0.9em;
+      padding: 6px 10px;
+      text-shadow: 0 0 5px rgba(255, 204, 0, 0.7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .resources-panel .panel-header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 204, 0, 0.15) 50%, transparent 100%);
+      animation: scanner 3s infinite linear;
+    }
+
+    @keyframes scanner {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(100%); }
+    }
+
+    .resources-panel .panel-content {
+      padding: 10px;
+    }
+
+    .resource-monitor-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .resource-monitor-label {
+      color: #ffcc00;
+      font-size: 0.85em;
+      width: 100px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .resource-monitor-label::before {
+      content: "■";
+      margin-right: 5px;
+      font-size: 0.8em;
+      color: var(--mission-color);
+    }
+
+    .resource-monitor-value {
+      font-family: 'Hack-Bold', monospace !important;
+      color: #ffcc00;
+      text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 8px;
+      border: 1px solid var(--mission-color);
+      position: relative;
+      overflow: hidden;
+      min-width: 100px;
+      text-align: right;
+    }
+
+    .resource-monitor-value::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 204, 0, 0.15), transparent);
+      animation: value-pulse 2s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes value-pulse {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .resource-bar {
+      height: 3px;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      position: relative;
+      margin-top: 2px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .resource-fill {
+      height: 100%;
+      background: var(--mission-color);
+      position: relative;
+      animation: resource-pulse 3s infinite;
+    }
+
+    .resource-fill::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 5px;
+      height: 100%;
+      background: rgba(255, 204, 0, 0.7);
+    }
+
+    @keyframes resource-pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
+    /* Special animation for money value */
+    .money-value {
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+      background: rgba(139, 0, 0, 0.3);
+    }
+
+    .money-bar .resource-fill {
+      background: linear-gradient(90deg, var(--mission-color), #ffcc00);
+    }
+    
+    /* Improved close buttons with larger hit area */
+    #close-mission, #close-intel, #close-hq, .modal-close {
+      background: var(--background-dark) !important;
+      border: 1px solid var(--border-color) !important;
+      color: var(--highlight-color) !important;
+      font-size: 1.2em !important;
+      cursor: pointer !important;
+      font-family: 'Hack-Bold', monospace !important;
+      width: 30px !important;
+      height: 30px !important;
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      border-radius: 4px !important;
+      padding: 0 !important;
+      transition: all 0.2s ease !important;
+    }
+
+    #close-mission:hover, #close-intel:hover, #close-hq:hover, .modal-close:hover {
+      background: var(--accent-color) !important;
+      box-shadow: 0 0 15px rgba(83, 167, 116, 0.5) !important;
+    }
+    
+    /* Button hover effects */
+    button, .mission-point, .base-platform {
+      transition: all 0.3s ease !important;
+    }
+
+    button:hover, .mission-point:hover, .base-platform:hover {
+      box-shadow: 0 0 15px rgba(83, 167, 116, 0.5) !important;
+    }
+  </style>
+  
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
@@ -518,8 +695,8 @@
     <button id="mission-intel-button" class="intel-button">VIEW INTEL</button>
   </div>
   
-  <!-- Intel Panel -->
-  <div id="intel-panel">
+  <!-- Intel Panel - positioned on the left -->
+  <div id="intel-panel" style="left: -40vw; right: auto;">
     <div id="intel-header">
       <div id="intel-title">MISSION INTEL</div>
       <button id="close-intel">X</button>
@@ -557,6 +734,12 @@
         <div class="admin-section-title">DEPLOYMENT MANAGEMENT</div>
         <button id="generate-deployments-button">GENERATE DEPLOYMENTS</button>
         <button id="view-deployments-button">VIEW DEPLOYMENTS</button>
+      </div>
+      
+      <div class="admin-section">
+        <div class="admin-section-title">RESOURCE MANAGEMENT</div>
+        <button id="reset-resources-button">RESET DEFAULT RESOURCES</button>
+        <button id="add-resources-button">ADD TEST RESOURCES</button>
       </div>
     </div>
   </div>

@@ -10,6 +10,18 @@ const resourceTypes = {
   materials: 'Construction Materials'
 };
 
+// Default resource values
+const defaultResources = {
+  money: 100000,
+  resources: {
+    fuel: 500,
+    ammo: 500,
+    medicine: 500,
+    food: 500,
+    materials: 500
+  }
+};
+
 // Initialize resource management
 function initializeResourceManagement() {
   // Get user resources initially
@@ -25,54 +37,144 @@ function initializeResourceManagement() {
   setInterval(updateResourceDisplay, 60000);
 }
 
-// Update resource display with current values
+// Update resource display with current values - Firebase Integration
 async function updateResourceDisplay() {
-  if (!currentUser) return;
-  
   try {
-    // Get the user's current resources
-    const userDoc = await db.collection('users').doc(currentUser.uid).get();
-    const userData = userDoc.data();
+    let userData;
     
-    if (!userData) {
-      console.error('No user data found');
-      return;
+    if (currentUser) {
+      // For authenticated users, get data from Firebase
+      const userDoc = await db.collection('users').doc(currentUser.uid).get();
+      
+      if (userDoc.exists) {
+        userData = userDoc.data();
+      } else {
+        // If user document doesn't exist, create it with defaults
+        userData = defaultResources;
+        await db.collection('users').doc(currentUser.uid).set({
+          ...userData,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    } else {
+      // For guests, use default values
+      userData = defaultResources;
     }
     
-    // Get the resource display element
+    // Update the enhanced sci-fi resource monitor
+    updateResourceMonitor(userData);
+    
+    // Update squad panel resource display
     const resourceDisplay = document.getElementById('resource-display');
-    if (!resourceDisplay) return;
-    
-    // Clear existing content
-    resourceDisplay.innerHTML = '';
-    
-    // Add money display
-    const moneyItem = document.createElement('div');
-    moneyItem.className = 'resource-item';
-    moneyItem.innerHTML = `
-      <div class="resource-name">MONEY:</div>
-      <div class="resource-value">$${userData.money.toLocaleString()}</div>
-    `;
-    resourceDisplay.appendChild(moneyItem);
-    
-    // Add resources
-    if (userData.resources) {
-      for (const [resource, amount] of Object.entries(userData.resources)) {
-        const resourceItem = document.createElement('div');
-        resourceItem.className = 'resource-item';
-        resourceItem.innerHTML = `
-          <div class="resource-name">${resource.toUpperCase()}:</div>
-          <div class="resource-value">${amount}</div>
-        `;
-        resourceDisplay.appendChild(resourceItem);
+    if (resourceDisplay) {
+      resourceDisplay.innerHTML = '';
+      
+      // Add money display
+      const moneyItem = document.createElement('div');
+      moneyItem.className = 'resource-item';
+      moneyItem.innerHTML = `
+        <div class="resource-name">MONEY:</div>
+        <div class="resource-value">$${userData.money.toLocaleString()}</div>
+      `;
+      resourceDisplay.appendChild(moneyItem);
+      
+      // Add other resources
+      if (userData.resources) {
+        for (const [resource, amount] of Object.entries(userData.resources)) {
+          const resourceItem = document.createElement('div');
+          resourceItem.className = 'resource-item';
+          resourceItem.innerHTML = `
+            <div class="resource-name">${resource.toUpperCase()}:</div>
+            <div class="resource-value">${amount}</div>
+          `;
+          resourceDisplay.appendChild(resourceItem);
+        }
       }
     }
+    
+    // Also update the base resources display if it exists
+    updateBaseResourceDisplay(userData);
   } catch (error) {
     console.error('Error updating resource display:', error);
   }
 }
 
-// Add resources to user
+// Update the enhanced sci-fi resource monitor
+function updateResourceMonitor(userData) {
+  const resourceMonitorContent = document.getElementById('resource-monitor-content');
+  if (!resourceMonitorContent) return;
+  
+  // Clear existing content
+  resourceMonitorContent.innerHTML = '';
+  
+  // Add money with animated styling
+  const moneyItem = document.createElement('div');
+  moneyItem.className = 'resource-monitor-item';
+  moneyItem.innerHTML = `
+    <div class="resource-monitor-label">MONEY</div>
+    <div class="resource-monitor-value money-value">$${userData.money.toLocaleString()}</div>
+  `;
+  resourceMonitorContent.appendChild(moneyItem);
+  
+  // Add money progress bar with special styling
+  const moneyBar = document.createElement('div');
+  moneyBar.className = 'resource-bar money-bar';
+  const moneyPercentage = Math.min(100, (userData.money / 1000000) * 100); // Max at 1 million
+  moneyBar.innerHTML = `<div class="resource-fill" style="width: ${moneyPercentage}%"></div>`;
+  resourceMonitorContent.appendChild(moneyBar);
+  
+  // Add other resources
+  if (userData.resources) {
+    for (const [resource, amount] of Object.entries(userData.resources)) {
+      const resourceItem = document.createElement('div');
+      resourceItem.className = 'resource-monitor-item';
+      resourceItem.innerHTML = `
+        <div class="resource-monitor-label">${resource.toUpperCase()}</div>
+        <div class="resource-monitor-value">${amount}</div>
+      `;
+      resourceMonitorContent.appendChild(resourceItem);
+      
+      // Add resource progress bar
+      const resourceBar = document.createElement('div');
+      resourceBar.className = 'resource-bar';
+      const percentage = Math.min(100, (amount / 1000) * 100); // Max at 1000
+      resourceBar.innerHTML = `<div class="resource-fill" style="width: ${percentage}%"></div>`;
+      resourceMonitorContent.appendChild(resourceBar);
+    }
+  }
+}
+
+// Update base resource display in the BASE tab
+function updateBaseResourceDisplay(userData) {
+  const baseResourcesDisplay = document.getElementById('base-resources');
+  if (!baseResourcesDisplay) return;
+  
+  baseResourcesDisplay.innerHTML = '';
+  
+  // Add money display
+  const moneyDisplay = document.createElement('div');
+  moneyDisplay.className = 'resource-item';
+  moneyDisplay.innerHTML = `
+    <div class="resource-name">MONEY:</div>
+    <div class="resource-value">$${userData.money.toLocaleString()}</div>
+  `;
+  baseResourcesDisplay.appendChild(moneyDisplay);
+  
+  // Add other resources
+  if (userData.resources) {
+    for (const [resource, amount] of Object.entries(userData.resources)) {
+      const resourceItem = document.createElement('div');
+      resourceItem.className = 'resource-item';
+      resourceItem.innerHTML = `
+        <div class="resource-name">${resource.toUpperCase()}:</div>
+        <div class="resource-value">${amount}</div>
+      `;
+      baseResourcesDisplay.appendChild(resourceItem);
+    }
+  }
+}
+
+// Add resources to user - Firebase Integration
 async function addResources(userId, resources) {
   if (!userId) return { success: false, error: 'No user ID provided' };
   
@@ -81,7 +183,11 @@ async function addResources(userId, resources) {
     const userDoc = await userRef.get();
     
     if (!userDoc.exists) {
-      return { success: false, error: 'User not found' };
+      // Create user document if it doesn't exist
+      await userRef.set({
+        ...defaultResources,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
     }
     
     // Create updates object
@@ -112,7 +218,7 @@ async function addResources(userId, resources) {
   }
 }
 
-// Subtract resources from user
+// Subtract resources from user - Firebase Integration
 async function subtractResources(userId, resources) {
   if (!userId) return { success: false, error: 'No user ID provided' };
   
@@ -168,7 +274,7 @@ async function subtractResources(userId, resources) {
   }
 }
 
-// Check if user has enough resources
+// Check if user has enough resources - Firebase Integration
 async function checkResources(userId, resources) {
   if (!userId) return false;
   
@@ -202,6 +308,67 @@ async function checkResources(userId, resources) {
   }
 }
 
+// Reset user resources to default - Admin Function
+async function resetUserResources(userId = null) {
+  if (!currentUser || userRole !== 'admin') {
+    showNotification('UNAUTHORIZED: ADMIN ACCESS REQUIRED');
+    return { success: false, error: 'Unauthorized' };
+  }
+  
+  try {
+    // If no userId provided, use current user
+    const targetId = userId || currentUser.uid;
+    
+    // Update user document with default resources
+    await db.collection('users').doc(targetId).update(defaultResources);
+    
+    // Update display
+    updateResourceDisplay();
+    
+    showNotification('RESOURCES RESET TO DEFAULT VALUES');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error resetting resources:', error);
+    showNotification('ERROR RESETTING RESOURCES');
+    return { success: false, error: error.message };
+  }
+}
+
+// Add test resources - Admin Function
+async function addTestResources(userId = null) {
+  if (!currentUser || userRole !== 'admin') {
+    showNotification('UNAUTHORIZED: ADMIN ACCESS REQUIRED');
+    return { success: false, error: 'Unauthorized' };
+  }
+  
+  try {
+    // If no userId provided, use current user
+    const targetId = userId || currentUser.uid;
+    
+    // Resources to add
+    const testResources = {
+      money: 50000,
+      fuel: 200,
+      ammo: 200,
+      medicine: 200,
+      food: 200,
+      materials: 200
+    };
+    
+    // Add resources
+    await addResources(targetId, testResources);
+    
+    showNotification('TEST RESOURCES ADDED');
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error adding test resources:', error);
+    showNotification('ERROR ADDING TEST RESOURCES');
+    return { success: false, error: error.message };
+  }
+}
+
 // Equipment and Weapons Shop
 async function openShop() {
   if (userRole !== 'squadLead') {
@@ -214,13 +381,12 @@ async function openShop() {
     const rndTeamRef = db.collection('teams').doc(`${currentUser.uid}_rnd`);
     const rndTeamDoc = await rndTeamRef.get();
     
-    if (!rndTeamDoc.exists) {
-      showNotification('R&D TEAM NOT INITIALIZED');
-      return;
-    }
+    let unlockedTiers = ['tier1']; // Default to tier 1 only
     
-    const rndTeam = rndTeamDoc.data();
-    const unlockedTiers = rndTeam.unlockedWeapons || ['tier1'];
+    if (rndTeamDoc.exists) {
+      const rndTeam = rndTeamDoc.data();
+      unlockedTiers = rndTeam.unlockedWeapons || ['tier1'];
+    }
     
     // Define shop items based on unlocked weapon tiers
     const shopItems = getShopItemsByTier(unlockedTiers);
@@ -249,7 +415,7 @@ async function openShop() {
     // Add R&D team level info
     body.innerHTML = `
       <div class="shop-info">
-        <div class="shop-tier">R&D LEVEL: ${rndTeam.level}</div>
+        <div class="shop-tier">R&D LEVEL: ${rndTeamDoc.exists ? rndTeamDoc.data().level : 1}</div>
         <div class="shop-tier">UNLOCKED TIERS: ${unlockedTiers.map(tier => tier.replace('tier', '')).join(', ')}</div>
       </div>
     `;
@@ -738,6 +904,29 @@ async function addToInventory(item) {
     console.error('Error adding item to inventory:', error);
     throw error;
   }
+}
+
+// Setup Admin Resource Controls
+function setupAdminResourceControls() {
+  // Get admin controls container
+  const adminContent = document.querySelector('.admin-content');
+  if (!adminContent) return;
+  
+  // Add resource management section
+  const resourceSection = document.createElement('div');
+  resourceSection.className = 'admin-section';
+  resourceSection.innerHTML = `
+    <div class="admin-section-title">RESOURCE MANAGEMENT</div>
+    <button id="reset-resources-button">RESET DEFAULT RESOURCES</button>
+    <button id="add-resources-button">ADD TEST RESOURCES</button>
+  `;
+  
+  // Add to admin panel
+  adminContent.appendChild(resourceSection);
+  
+  // Add event listeners
+  document.getElementById('reset-resources-button').addEventListener('click', resetUserResources);
+  document.getElementById('add-resources-button').addEventListener('click', addTestResources);
 }
 
 // CSS for shop
