@@ -477,8 +477,11 @@ async function openIntelPanel(missionId) {
     // First check if the global function is available
     if (typeof window.openIntelPanel === 'function') {
       // Use the global function for consistency
+      console.log("Using global openIntelPanel function for mission:", missionId);
       return window.openIntelPanel(missionId);
     }
+    
+    console.log("Global openIntelPanel function not available, using fallback");
     
     // Fallback if global function isn't available
     // Load intel data for the mission
@@ -495,10 +498,22 @@ async function openIntelPanel(missionId) {
       intelSound.play().catch(console.error);
     }
     
-    // Update intel panel content
-    document.getElementById('intel-title').textContent = intelData.title || 'MISSION INTEL';
+    // Get the MISSION intel panel - the one that slides in from the left
+    const missionIntelPanel = document.getElementById('intel-panel');
+    if (!missionIntelPanel) {
+      console.error("Mission intel panel element not found");
+      return;
+    }
     
-    // Create intel content container
+    // Update intel panel title
+    const titleElement = missionIntelPanel.querySelector('#intel-title');
+    if (titleElement) {
+      titleElement.textContent = intelData.title || 'MISSION INTEL';
+    } else {
+      console.error("Title element not found in mission intel panel");
+    }
+    
+    // Create intel content
     let intelContent = '';
     
     // Only add content paragraph if there's actual content
@@ -518,22 +533,27 @@ async function openIntelPanel(missionId) {
       intelContent = '<p>No intel data available.</p>';
     }
     
-    document.getElementById('intel-content').innerHTML = intelContent;
+    // Find the content container in the MISSION intel panel
+    const contentContainer = missionIntelPanel.querySelector('#intel-content');
+    if (contentContainer) {
+      contentContainer.innerHTML = intelContent;
+    } else {
+      console.error("Content container not found in mission intel panel");
+    }
     
-    // Position intel panel on the left side and ensure high z-index
-    const intelPanel = document.getElementById('intel-panel');
-    intelPanel.style.left = '-40vw'; // Start offscreen to the left
-    intelPanel.style.right = 'auto';
-    intelPanel.style.zIndex = '7'; // Higher than resources panel
+    // Position intel panel on the left side with correct z-index
+    missionIntelPanel.style.left = '-40vw'; // Start offscreen to the left
+    missionIntelPanel.style.right = 'auto';
+    missionIntelPanel.style.zIndex = '4'; // Below LCD overlay (z-index 6)
     
     // Show intel panel by adding active class
-    intelPanel.classList.add('active');
+    missionIntelPanel.classList.add('active');
     
     // Force a reflow to ensure transition works
-    intelPanel.offsetHeight;
+    missionIntelPanel.offsetHeight;
     
     // Animate panel in
-    intelPanel.style.left = '0';
+    missionIntelPanel.style.left = '0';
     
     // Show notification
     showNotification('ACCESSING MISSION INTEL');

@@ -394,7 +394,7 @@
   </div>
 
   <!-- Top Left Resources Panel - Enhanced sci-fi style -->
-  <div id="resources-panel" class="resources-panel" style="display: none;">
+  <div id="resources-panel" class="resources-panel" style="display: none; z-index: 3;">
     <div class="panel-header">TACTICAL_RESOURCE::MONITOR</div>
     <div class="panel-content" id="resource-monitor-content">
       <!-- Resources will be dynamically populated with animated elements -->
@@ -708,7 +708,6 @@
   <div id="mission-panel">
     <div id="mission-header">
       <div id="mission-title">MISSION BRIEFING</div>
-      <button id="close-mission">X</button>
     </div>
     <div class="mission-section">
       <div class="mission-label">LOCATION</div>
@@ -735,14 +734,13 @@
     <button id="mission-intel-button" class="intel-button">VIEW INTEL</button>
   </div>
   
-  <!-- Intel Panel - Always positioned on the left with higher z-index -->
-  <div id="intel-panel" style="left: -40vw; right: auto; z-index: 7;">
+  <!-- Intel Panel - Always positioned on the left, below LCD overlay -->
+  <div id="intel-panel" style="left: -40vw; right: auto; z-index: 4;">
     <div id="intel-header">
       <div id="intel-title">MISSION INTEL</div>
-      <button id="close-intel">X</button>
     </div>
     <div class="intel-section">
-      <div id="intel-content" class="intel-content">
+      <div id="intel-content" class="intel-content" style="color: var(--text-primary); line-height: 1.5;">
         <!-- Intel content will be loaded dynamically -->
       </div>
     </div>

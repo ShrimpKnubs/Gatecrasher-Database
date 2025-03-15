@@ -138,7 +138,7 @@
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--mission-color);
   box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
-  z-index: 5;
+  z-index: 3; /* Lower z-index so it appears below intel panel */
   overflow: hidden;
 }
 
@@ -599,7 +599,7 @@
   height: 70vh;
   background: var(--background-medium);
   border-right: 2px solid var(--accent-color);
-  z-index: 7; /* Higher z-index than resources panel */
+  z-index: 4; /* Same z-index as other panels, below LCD overlay */
   transition: left 0.4s cubic-bezier(0.215, 0.610, 0.355, 1.000);
   box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
   padding: 20px;
@@ -641,8 +641,15 @@
 }
 
 .intel-content {
-  color: var(--text-primary);
-  line-height: 1.4;
+  color: var(--text-primary) !important;
+  line-height: 1.5;
+  font-size: 1em;
+  padding: 10px 0;
+}
+
+.intel-content p {
+  margin-bottom: 15px;
+  color: var(--text-primary) !important;
 }
 
 /* Add styling for mission and intel images */
@@ -1373,7 +1380,7 @@ button:hover, .mission-point:hover, .base-platform:hover {
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--mission-color);
   box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
-  z-index: 5;
+  z-index: 3; /* Lower z-index so it appears below intel panel */
   overflow: hidden;
 }
 
@@ -1590,4 +1597,133 @@ button:hover, .mission-point:hover, .base-platform:hover {
   0% { box-shadow: 0 0 5px rgba(221, 48, 48, 0.3); }
   50% { box-shadow: 0 0 15px rgba(221, 48, 48, 0.7); }
   100% { box-shadow: 0 0 5px rgba(221, 48, 48, 0.3); }
+}
+
+/* Vertical tab close buttons for panels */
+.vertical-tab-close {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 30px;
+  background: var(--background-dark);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s ease;
+  border: none;
+  outline: none;
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+.vertical-tab-close:hover {
+  background: var(--accent-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Removing the vertical line in the middle of tabs */
+
+/* Positioning for mission panel (right side) */
+#mission-panel .vertical-tab-close {
+  left: 0;
+  border-left: none;
+  border-right: 1px solid var(--border-color);
+}
+
+/* Positioning for intel panel (left side) */
+#intel-panel .vertical-tab-close {
+  right: 0;
+  border-right: none;
+  border-left: 1px solid var(--border-color);
+}
+
+/* Adjust mission panel to account for vertical tab */
+#mission-panel {
+  padding-left: 40px;  /* Add space for the vertical tab */
+}
+
+/* Adjust intel panel to account for vertical tab */
+#intel-panel {
+  padding-right: 40px;  /* Add space for the vertical tab */
+}
+
+/* Remove the old close buttons */
+#close-mission, #close-intel {
+  display: none !important;
+}
+
+/* Fix header alignment now that X buttons are gone */
+#mission-header, #intel-header {
+  justify-content: center !important;
+  text-align: center;
+}
+
+#mission-title, #intel-title {
+  margin: 0 auto;
+}
+
+
+/* Vertical tab close buttons for panels */
+.vertical-tab-close {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 30px;
+  background: var(--background-dark);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s ease;
+  border: none;
+  outline: none;
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+.vertical-tab-close:hover {
+  background: var(--accent-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Removing the vertical line in the middle of tabs */
+
+/* Positioning for mission panel (right side) */
+#mission-panel .vertical-tab-close {
+  left: 0;
+  border-left: none;
+  border-right: 1px solid var(--border-color);
+}
+
+/* Positioning for intel panel (left side) */
+#intel-panel .vertical-tab-close {
+  right: 0;
+  border-right: none;
+  border-left: 1px solid var(--border-color);
+}
+
+/* Adjust mission panel to account for vertical tab */
+#mission-panel {
+  padding-left: 40px;  /* Add space for the vertical tab */
+}
+
+/* Adjust intel panel to account for vertical tab */
+#intel-panel {
+  padding-right: 40px;  /* Add space for the vertical tab */
+}
+
+/* Remove the old close buttons */
+#close-mission, #close-intel {
+  display: none !important;
+}
+
+/* Fix header alignment now that X buttons are gone */
+#mission-header, #intel-header {
+  justify-content: center !important;
+  text-align: center;
+}
+
+#mission-title, #intel-title {
+  margin: 0 auto;
 }

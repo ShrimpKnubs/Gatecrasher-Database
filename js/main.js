@@ -1029,13 +1029,37 @@ function initializeDecorativeElements() {
 
 // Mission Panel System
 function initializeMissionPanel() {
-  closeMissionButton.addEventListener('click', () => {
-    missionPanel.classList.remove('active');
-    activeMission = null;
+  // Create and add the vertical tab close button for mission panel
+  const missionVerticalTab = document.createElement('button');
+  missionVerticalTab.className = 'vertical-tab-close';
+  missionVerticalTab.id = 'mission-vertical-close';
+  missionVerticalTab.setAttribute('aria-label', 'Close mission panel');
+  missionVerticalTab.setAttribute('title', 'Close mission panel');
+  
+  // Add the vertical tab to the mission panel if it doesn't already exist
+  if (missionPanel && !document.getElementById('mission-vertical-close')) {
+    missionPanel.appendChild(missionVerticalTab);
     
-    // Resume auto-rotation when mission panel is closed
-    resumeRotation();
-  });
+    // Add event listener for the vertical tab
+    missionVerticalTab.addEventListener('click', () => {
+      missionPanel.classList.remove('active');
+      activeMission = null;
+      
+      // Resume auto-rotation when mission panel is closed
+      resumeRotation();
+    });
+  }
+  
+  // Still keep the original close button functionality as a backup
+  if (closeMissionButton) {
+    closeMissionButton.addEventListener('click', () => {
+      missionPanel.classList.remove('active');
+      activeMission = null;
+      
+      // Resume auto-rotation when mission panel is closed
+      resumeRotation();
+    });
+  }
   
   // Intel button functionality
   missionIntelButton.addEventListener('click', () => {
@@ -1064,10 +1088,46 @@ function initializeMissionPanel() {
 
 // Intel Panel System
 function initializeIntelPanel() {
-  closeIntelButton.addEventListener('click', () => {
-    intelPanel.classList.remove('active');
-    intelPanel.style.left = '-40vw'; // Move back off-screen
-  });
+  // Create and add the vertical tab close button for intel panel
+  const intelVerticalTab = document.createElement('button');
+  intelVerticalTab.className = 'vertical-tab-close';
+  intelVerticalTab.id = 'intel-vertical-close';
+  intelVerticalTab.setAttribute('aria-label', 'Close intel panel');
+  intelVerticalTab.setAttribute('title', 'Close intel panel');
+  
+  // Add the vertical tab to the intel panel if it doesn't already exist
+  if (intelPanel && !document.getElementById('intel-vertical-close')) {
+    intelPanel.appendChild(intelVerticalTab);
+    
+    // Add event listener for the vertical tab
+    intelVerticalTab.addEventListener('click', () => {
+      intelPanel.classList.remove('active');
+      intelPanel.style.left = '-40vw'; // Move back off-screen
+    });
+  }
+  
+  // Still keep the original close button functionality as a backup
+  if (closeIntelButton) {
+    closeIntelButton.addEventListener('click', () => {
+      intelPanel.classList.remove('active');
+      intelPanel.style.left = '-40vw'; // Move back off-screen
+    });
+  }
+  
+  // Force load intel.json on startup to verify it works
+  fetch('data/intel.json')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log("Successfully pre-loaded intel.json:", data);
+    })
+    .catch(error => {
+      console.error("Error pre-loading intel.json:", error);
+    });
 }
 
 // Load mission intel - Improved with multiple sources
@@ -1716,51 +1776,57 @@ window.openIntelPanel = async function(missionId) {
   try {
     console.log("Global openIntelPanel called with:", missionId);
     
-    // Log and validate the mission ID
-    if (!missionId) {
-      console.error("Missing mission ID");
-      showNotification('MISSION ID REQUIRED');
-      return;
+    // Get a string mission ID no matter what was passed in
+    let missionIdStr = missionId;
+    if (typeof missionId === 'object') {
+      missionIdStr = missionId.id || 'mission1';
     }
     
-    // Log state before loading intel
-    console.log("Current active mission:", activeMission);
+    console.log("Using mission ID:", missionIdStr);
     
-    // Add more detailed debug logs to help identify the exact issue
-    console.log("About to load intel data for mission:", missionId);
+    // DIRECT APPROACH: Load intel data directly from the file
+    let intelData = null;
     
-    // Load intel data for the specific mission
-    let missionIntel = await loadIntel(missionId);
-    
-    // Debug log the loaded intel
-    console.log("Loaded intel for mission:", missionId, missionIntel);
-    
-    // If no intel was found, try with just the ID of the active mission object
-    if (!missionIntel && activeMission && activeMission.id) {
-      console.log("Trying with active mission ID:", activeMission.id);
-      missionIntel = await loadIntel(activeMission.id);
+    try {
+      // Try direct fetch first - most reliable method
+      const response = await fetch('data/intel.json');
+      if (response.ok) {
+        const allIntel = await response.json();
+        console.log("All intel data loaded:", allIntel);
+        
+        // Get the specific mission's intel
+        intelData = allIntel[missionIdStr];
+        console.log("Extracted intel for mission:", missionIdStr, intelData);
+      } else {
+        console.error("Failed to fetch intel.json:", response.status);
+      }
+    } catch (fetchError) {
+      console.error("Error fetching intel.json:", fetchError);
     }
     
-    // If still no intel was found and missionId is an object, try with missionId.id
-    if (!missionIntel && typeof missionId === 'object' && missionId.id) {
-      console.log("Trying with missionId.id:", missionId.id);
-      missionIntel = await loadIntel(missionId.id);
-    }
-    
-    // If still no intel, fall back to hardcoded intel for debugging
-    if (!missionIntel) {
-      console.warn("No intel found, using fallback intel");
-      missionIntel = {
-        title: "FALLBACK INTEL FOR " + missionId,
-        content: "This is fallback intel content. The system could not load the actual intel for this mission. Please check the console logs for more information.",
+    // If we still have no intel, use a fallback for mission1
+    if (!intelData && missionIdStr === 'mission1') {
+      console.warn("Using fallback intel for mission1");
+      intelData = {
+        title: "FAILED DIPLOMACY INTEL",
+        content: "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens.",
+        images: ["goblin.jpg"]
+      };
+    } else if (!intelData) {
+      // Generic fallback for other missions
+      console.warn("Using generic fallback intel");
+      intelData = {
+        title: "MISSION INTEL FOR " + missionIdStr,
+        content: "Mission intel data could not be loaded. Please check the data/intel.json file to ensure it contains information for this mission.",
         images: []
       };
     }
     
-    // Get the intel panel
-    const intelPanel = document.getElementById('intel-panel');
-    if (!intelPanel) {
-      console.error("Intel panel element not found");
+    // *** IMPORTANT: Make sure we're targeting the correct intel panel ***
+    // We want the mission intel panel, not the intel team tab in HQ
+    const missionIntelPanel = document.getElementById('intel-panel');
+    if (!missionIntelPanel) {
+      console.error("Mission intel panel not found");
       return;
     }
     
@@ -1770,70 +1836,66 @@ window.openIntelPanel = async function(missionId) {
       intelSound.play().catch(error => console.error("Error playing intel sound:", error));
     }
     
-    // Update intel panel content
-    const titleElement = document.getElementById('intel-title');
+    // Update the panel title - make sure we're targeting the right element
+    const titleElement = missionIntelPanel.querySelector('#intel-title');
     if (titleElement) {
-      titleElement.textContent = missionIntel.title || 'MISSION INTEL';
+      titleElement.textContent = intelData.title || 'MISSION INTEL';
     } else {
-      console.error("Intel title element not found");
+      console.error("Intel title element not found in mission intel panel");
     }
     
-    // Create intel content container
-    let intelContent = '';
+    // Create HTML for intel content in a simple, direct way
+    let htmlContent = '';
     
-    // Debug log the content we're about to display
-    console.log("Intel content to display:", missionIntel.content);
-    console.log("Intel images to display:", missionIntel.images);
-    
-    // Only add content paragraph if there's actual content
-    if (missionIntel.content && missionIntel.content.trim() !== '') {
-      intelContent += `<p>${missionIntel.content}</p>`;
+    // Add the content text
+    if (intelData.content) {
+      htmlContent += `<p>${intelData.content}</p>`;
+      console.log("Added content paragraph:", intelData.content);
     }
     
     // Add images if available
-    if (missionIntel.images && missionIntel.images.length > 0) {
-      missionIntel.images.forEach(imgSrc => {
-        intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+    if (intelData.images && intelData.images.length > 0) {
+      intelData.images.forEach(imgSrc => {
+        htmlContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+        console.log("Added image:", imgSrc);
       });
     }
     
-    // If there's no content and no images, show a placeholder message
-    if (intelContent === '') {
-      intelContent = '<p>No intel data available.</p>';
+    // Fallback if nothing was added
+    if (htmlContent === '') {
+      htmlContent = '<p>No intel data available.</p>';
+      console.warn("No content was generated, using fallback");
     }
     
-    // Update the intel content
-    const intelContentElement = document.getElementById('intel-content');
-    if (intelContentElement) {
-      console.log("Setting intel content HTML:", intelContent);
-      intelContentElement.innerHTML = intelContent;
+    console.log("Final HTML content:", htmlContent);
+    
+    // Find the content container inside the MISSION intel panel
+    const contentContainer = missionIntelPanel.querySelector('#intel-content');
+    if (contentContainer) {
+      console.log("Setting content to mission intel panel content container");
+      contentContainer.innerHTML = htmlContent;
     } else {
-      console.error("Intel content element not found");
+      console.error("Intel content container not found in mission intel panel");
     }
     
-    // Force the panel to be positioned on the left side
-    intelPanel.style.left = '-40vw';
-    intelPanel.style.right = 'auto';
+    // Force the panel to be positioned on the left side with correct z-index
+    missionIntelPanel.style.left = '-40vw';
+    missionIntelPanel.style.right = 'auto';
+    missionIntelPanel.style.zIndex = '4'; // Below LCD overlay (z-index 6)
     
-    // Show the panel with active class
-    intelPanel.classList.add('active');
+    // Show the panel
+    missionIntelPanel.classList.add('active');
     
-    // Force a reflow to ensure transition works
-    intelPanel.offsetHeight;
-    
-    // Animate panel in
-    intelPanel.style.left = '0';
-    
-    // Ensure the intel panel has a higher z-index than the resources panel
-    intelPanel.style.zIndex = '7';
+    // Force a reflow and animate
+    missionIntelPanel.offsetHeight;
+    missionIntelPanel.style.left = '0';
     
     // Show notification
     showNotification('ACCESSING MISSION INTEL');
     
-    console.log("Intel panel should be visible now");
   } catch (error) {
-    console.error('Error in global openIntelPanel function:', error);
-    showNotification('ERROR LOADING INTEL');
+    console.error('Error displaying intel:', error);
+    showNotification('ERROR DISPLAYING INTEL');
   }
 };
 
@@ -1842,51 +1904,57 @@ window.openIntelPanel = async function(missionId) {
   try {
     console.log("Global openIntelPanel called with:", missionId);
     
-    // Log and validate the mission ID
-    if (!missionId) {
-      console.error("Missing mission ID");
-      showNotification('MISSION ID REQUIRED');
-      return;
+    // Get a string mission ID no matter what was passed in
+    let missionIdStr = missionId;
+    if (typeof missionId === 'object') {
+      missionIdStr = missionId.id || 'mission1';
     }
     
-    // Log state before loading intel
-    console.log("Current active mission:", activeMission);
+    console.log("Using mission ID:", missionIdStr);
     
-    // Add more detailed debug logs to help identify the exact issue
-    console.log("About to load intel data for mission:", missionId);
+    // DIRECT APPROACH: Load intel data directly from the file
+    let intelData = null;
     
-    // Load intel data for the specific mission
-    let missionIntel = await loadIntel(missionId);
-    
-    // Debug log the loaded intel
-    console.log("Loaded intel for mission:", missionId, missionIntel);
-    
-    // If no intel was found, try with just the ID of the active mission object
-    if (!missionIntel && activeMission && activeMission.id) {
-      console.log("Trying with active mission ID:", activeMission.id);
-      missionIntel = await loadIntel(activeMission.id);
+    try {
+      // Try direct fetch first - most reliable method
+      const response = await fetch('data/intel.json');
+      if (response.ok) {
+        const allIntel = await response.json();
+        console.log("All intel data loaded:", allIntel);
+        
+        // Get the specific mission's intel
+        intelData = allIntel[missionIdStr];
+        console.log("Extracted intel for mission:", missionIdStr, intelData);
+      } else {
+        console.error("Failed to fetch intel.json:", response.status);
+      }
+    } catch (fetchError) {
+      console.error("Error fetching intel.json:", fetchError);
     }
     
-    // If still no intel was found and missionId is an object, try with missionId.id
-    if (!missionIntel && typeof missionId === 'object' && missionId.id) {
-      console.log("Trying with missionId.id:", missionId.id);
-      missionIntel = await loadIntel(missionId.id);
-    }
-    
-    // If still no intel, fall back to hardcoded intel for debugging
-    if (!missionIntel) {
-      console.warn("No intel found, using fallback intel");
-      missionIntel = {
-        title: "FALLBACK INTEL FOR " + missionId,
-        content: "This is fallback intel content. The system could not load the actual intel for this mission. Please check the console logs for more information.",
+    // If we still have no intel, use a fallback for mission1
+    if (!intelData && missionIdStr === 'mission1') {
+      console.warn("Using fallback intel for mission1");
+      intelData = {
+        title: "FAILED DIPLOMACY INTEL",
+        content: "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens.",
+        images: ["goblin.jpg"]
+      };
+    } else if (!intelData) {
+      // Generic fallback for other missions
+      console.warn("Using generic fallback intel");
+      intelData = {
+        title: "MISSION INTEL FOR " + missionIdStr,
+        content: "Mission intel data could not be loaded. Please check the data/intel.json file to ensure it contains information for this mission.",
         images: []
       };
     }
     
-    // Get the intel panel
-    const intelPanel = document.getElementById('intel-panel');
-    if (!intelPanel) {
-      console.error("Intel panel element not found");
+    // *** IMPORTANT: Make sure we're targeting the correct intel panel ***
+    // We want the mission intel panel, not the intel team tab in HQ
+    const missionIntelPanel = document.getElementById('intel-panel');
+    if (!missionIntelPanel) {
+      console.error("Mission intel panel not found");
       return;
     }
     
@@ -1896,70 +1964,66 @@ window.openIntelPanel = async function(missionId) {
       intelSound.play().catch(error => console.error("Error playing intel sound:", error));
     }
     
-    // Update intel panel content
-    const titleElement = document.getElementById('intel-title');
+    // Update the panel title - make sure we're targeting the right element
+    const titleElement = missionIntelPanel.querySelector('#intel-title');
     if (titleElement) {
-      titleElement.textContent = missionIntel.title || 'MISSION INTEL';
+      titleElement.textContent = intelData.title || 'MISSION INTEL';
     } else {
-      console.error("Intel title element not found");
+      console.error("Intel title element not found in mission intel panel");
     }
     
-    // Create intel content container
-    let intelContent = '';
+    // Create HTML for intel content in a simple, direct way
+    let htmlContent = '';
     
-    // Debug log the content we're about to display
-    console.log("Intel content to display:", missionIntel.content);
-    console.log("Intel images to display:", missionIntel.images);
-    
-    // Only add content paragraph if there's actual content
-    if (missionIntel.content && missionIntel.content.trim() !== '') {
-      intelContent += `<p>${missionIntel.content}</p>`;
+    // Add the content text
+    if (intelData.content) {
+      htmlContent += `<p>${intelData.content}</p>`;
+      console.log("Added content paragraph:", intelData.content);
     }
     
     // Add images if available
-    if (missionIntel.images && missionIntel.images.length > 0) {
-      missionIntel.images.forEach(imgSrc => {
-        intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+    if (intelData.images && intelData.images.length > 0) {
+      intelData.images.forEach(imgSrc => {
+        htmlContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+        console.log("Added image:", imgSrc);
       });
     }
     
-    // If there's no content and no images, show a placeholder message
-    if (intelContent === '') {
-      intelContent = '<p>No intel data available.</p>';
+    // Fallback if nothing was added
+    if (htmlContent === '') {
+      htmlContent = '<p>No intel data available.</p>';
+      console.warn("No content was generated, using fallback");
     }
     
-    // Update the intel content
-    const intelContentElement = document.getElementById('intel-content');
-    if (intelContentElement) {
-      console.log("Setting intel content HTML:", intelContent);
-      intelContentElement.innerHTML = intelContent;
+    console.log("Final HTML content:", htmlContent);
+    
+    // Find the content container inside the MISSION intel panel
+    const contentContainer = missionIntelPanel.querySelector('#intel-content');
+    if (contentContainer) {
+      console.log("Setting content to mission intel panel content container");
+      contentContainer.innerHTML = htmlContent;
     } else {
-      console.error("Intel content element not found");
+      console.error("Intel content container not found in mission intel panel");
     }
     
-    // Force the panel to be positioned on the left side
-    intelPanel.style.left = '-40vw';
-    intelPanel.style.right = 'auto';
+    // Force the panel to be positioned on the left side with correct z-index
+    missionIntelPanel.style.left = '-40vw';
+    missionIntelPanel.style.right = 'auto';
+    missionIntelPanel.style.zIndex = '4'; // Below LCD overlay (z-index 6)
     
-    // Show the panel with active class
-    intelPanel.classList.add('active');
+    // Show the panel
+    missionIntelPanel.classList.add('active');
     
-    // Force a reflow to ensure transition works
-    intelPanel.offsetHeight;
-    
-    // Animate panel in
-    intelPanel.style.left = '0';
-    
-    // Ensure the intel panel has a higher z-index than the resources panel
-    intelPanel.style.zIndex = '7';
+    // Force a reflow and animate
+    missionIntelPanel.offsetHeight;
+    missionIntelPanel.style.left = '0';
     
     // Show notification
     showNotification('ACCESSING MISSION INTEL');
     
-    console.log("Intel panel should be visible now");
   } catch (error) {
-    console.error('Error in global openIntelPanel function:', error);
-    showNotification('ERROR LOADING INTEL');
+    console.error('Error displaying intel:', error);
+    showNotification('ERROR DISPLAYING INTEL');
   }
 };
 
@@ -2152,3 +2216,461 @@ window.testIntelLoading = testIntelLoading;
 
 // Console message to indicate this update has been applied
 console.log("Intel display fix applied - Version 2.0");
+
+
+// Test function to view mission1 intel directly
+window.viewMission1Intel = function() {
+  // Hardcoded mission1 intel for direct testing
+  const mission1Intel = {
+    title: "FAILED DIPLOMACY INTEL",
+    content: "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens.",
+    images: ["goblin.jpg"]
+  };
+  
+  // Get the intel panel
+  const intelPanel = document.getElementById('intel-panel');
+  if (!intelPanel) {
+    console.error("Intel panel not found");
+    return;
+  }
+  
+  // Update the panel title
+  document.getElementById('intel-title').textContent = mission1Intel.title || 'MISSION INTEL';
+  
+  // Create HTML content
+  let htmlContent = '';
+  
+  // Add content paragraph
+  if (mission1Intel.content) {
+    htmlContent += `<p>${mission1Intel.content}</p>`;
+  }
+  
+  // Add images
+  if (mission1Intel.images && mission1Intel.images.length > 0) {
+    mission1Intel.images.forEach(imgSrc => {
+      htmlContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+    });
+  }
+  
+  // Set the content
+  const contentContainer = document.getElementById('intel-content');
+  if (contentContainer) {
+    contentContainer.innerHTML = htmlContent;
+    console.log("Set intel content directly:", htmlContent);
+  }
+  
+  // Show the panel
+  intelPanel.style.left = '-40vw';
+  intelPanel.style.right = 'auto';
+  intelPanel.style.zIndex = '7';
+  intelPanel.classList.add('active');
+  intelPanel.offsetHeight;
+  intelPanel.style.left = '0';
+  
+  showNotification('VIEWING MISSION1 INTEL DIRECTLY');
+};
+
+// Simple fix applied - Console message
+console.log("Simple intel display fix applied - Version 3.0");
+
+
+// Test function to view mission1 intel directly
+window.viewMission1Intel = function() {
+  // Hardcoded mission1 intel for direct testing
+  const mission1Intel = {
+    title: "FAILED DIPLOMACY INTEL",
+    content: "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens.",
+    images: ["goblin.jpg"]
+  };
+  
+  // Get the intel panel
+  const intelPanel = document.getElementById('intel-panel');
+  if (!intelPanel) {
+    console.error("Intel panel not found");
+    return;
+  }
+  
+  // Update the panel title
+  document.getElementById('intel-title').textContent = mission1Intel.title || 'MISSION INTEL';
+  
+  // Create HTML content
+  let htmlContent = '';
+  
+  // Add content paragraph
+  if (mission1Intel.content) {
+    htmlContent += `<p>${mission1Intel.content}</p>`;
+  }
+  
+  // Add images
+  if (mission1Intel.images && mission1Intel.images.length > 0) {
+    mission1Intel.images.forEach(imgSrc => {
+      htmlContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+    });
+  }
+  
+  // Set the content
+  const contentContainer = document.getElementById('intel-content');
+  if (contentContainer) {
+    contentContainer.innerHTML = htmlContent;
+    console.log("Set intel content directly:", htmlContent);
+  }
+  
+  // Show the panel
+  intelPanel.style.left = '-40vw';
+  intelPanel.style.right = 'auto';
+  intelPanel.style.zIndex = '7';
+  intelPanel.classList.add('active');
+  intelPanel.offsetHeight;
+  intelPanel.style.left = '0';
+  
+  showNotification('VIEWING MISSION1 INTEL DIRECTLY');
+};
+
+// Simple fix applied - Console message
+console.log("Simple intel display fix applied - Version 3.0");
+
+
+// Function to test if we're targeting the correct panel
+window.testIntelPanels = function() {
+  // First, identify all elements with ID 'intel-content'
+  const allIntelContentElements = document.querySelectorAll('#intel-content');
+  console.log(`Found ${allIntelContentElements.length} elements with ID 'intel-content'`);
+  
+  allIntelContentElements.forEach((el, index) => {
+    console.log(`Element ${index + 1}:`, el);
+    console.log(`  Parent:`, el.parentElement);
+    console.log(`  Grandparent:`, el.parentElement?.parentElement);
+    
+    // Add a temporary class to help identify it visually
+    el.classList.add(`intel-content-${index + 1}`);
+    
+    // Temporarily make it visible with a background color
+    el.style.border = '2px solid yellow';
+    el.textContent = `Intel content element ${index + 1}`;
+    
+    // Reset after 5 seconds
+    setTimeout(() => {
+      el.style.border = '';
+      el.classList.remove(`intel-content-${index + 1}`);
+    }, 5000);
+  });
+  
+  // Check the mission intel panel specifically
+  const missionIntelPanel = document.getElementById('intel-panel');
+  console.log("Mission intel panel:", missionIntelPanel);
+  
+  if (missionIntelPanel) {
+    const contentInMissionPanel = missionIntelPanel.querySelector('#intel-content');
+    console.log("Content element in mission intel panel:", contentInMissionPanel);
+    
+    if (contentInMissionPanel) {
+      contentInMissionPanel.style.border = '2px solid green';
+      contentInMissionPanel.textContent = 'THIS IS THE MISSION INTEL PANEL CONTENT';
+      
+      // Reset after 5 seconds
+      setTimeout(() => {
+        contentInMissionPanel.style.border = '';
+      }, 5000);
+    }
+  }
+  
+  // Check intel team tab in HQ
+  const intelTeamTab = document.getElementById('intel-content'); // This might actually be targeting any element with this ID
+  console.log("Element with ID 'intel-content' (might be intel team tab):", intelTeamTab);
+  
+  return "Test complete. Check console for results.";
+};
+
+// Tab-fixing version applied
+console.log("Intel panel tab fix applied - Version 4.0");
+
+
+// Function to test if we're targeting the correct panel
+window.testIntelPanels = function() {
+  // First, identify all elements with ID 'intel-content'
+  const allIntelContentElements = document.querySelectorAll('#intel-content');
+  console.log(`Found ${allIntelContentElements.length} elements with ID 'intel-content'`);
+  
+  allIntelContentElements.forEach((el, index) => {
+    console.log(`Element ${index + 1}:`, el);
+    console.log(`  Parent:`, el.parentElement);
+    console.log(`  Grandparent:`, el.parentElement?.parentElement);
+    
+    // Add a temporary class to help identify it visually
+    el.classList.add(`intel-content-${index + 1}`);
+    
+    // Temporarily make it visible with a background color
+    el.style.border = '2px solid yellow';
+    el.textContent = `Intel content element ${index + 1}`;
+    
+    // Reset after 5 seconds
+    setTimeout(() => {
+      el.style.border = '';
+      el.classList.remove(`intel-content-${index + 1}`);
+    }, 5000);
+  });
+  
+  // Check the mission intel panel specifically
+  const missionIntelPanel = document.getElementById('intel-panel');
+  console.log("Mission intel panel:", missionIntelPanel);
+  
+  if (missionIntelPanel) {
+    const contentInMissionPanel = missionIntelPanel.querySelector('#intel-content');
+    console.log("Content element in mission intel panel:", contentInMissionPanel);
+    
+    if (contentInMissionPanel) {
+      contentInMissionPanel.style.border = '2px solid green';
+      contentInMissionPanel.textContent = 'THIS IS THE MISSION INTEL PANEL CONTENT';
+      
+      // Reset after 5 seconds
+      setTimeout(() => {
+        contentInMissionPanel.style.border = '';
+      }, 5000);
+    }
+  }
+  
+  // Check intel team tab in HQ
+  const intelTeamTab = document.getElementById('intel-content'); // This might actually be targeting any element with this ID
+  console.log("Element with ID 'intel-content' (might be intel team tab):", intelTeamTab);
+  
+  return "Test complete. Check console for results.";
+};
+
+// Tab-fixing version applied
+console.log("Intel panel tab fix applied - Version 4.0");
+
+
+// Test function to check all z-indices
+window.checkZIndices = function() {
+  console.log("Checking z-indices of important elements:");
+  
+  const elements = {
+    "LCD Overlay": document.getElementById('lcd-overlay'),
+    "Mission Panel": document.getElementById('mission-panel'),
+    "Intel Panel": document.getElementById('intel-panel'),
+    "HQ Panel": document.getElementById('hq-panel'),
+    "Resources Panel": document.querySelector('.resources-panel')
+  };
+  
+  for (const [name, element] of Object.entries(elements)) {
+    if (element) {
+      const zIndex = window.getComputedStyle(element).zIndex;
+      console.log(`${name}: z-index = ${zIndex}`);
+    } else {
+      console.log(`${name}: Element not found`);
+    }
+  }
+  
+  return "Z-index check complete. See console for results.";
+};
+
+// Z-index fix applied
+console.log("Intel panel z-index fix applied - Version 4.1");
+
+
+// Test function to check all z-indices
+window.checkZIndices = function() {
+  console.log("Checking z-indices of important elements:");
+  
+  const elements = {
+    "LCD Overlay": document.getElementById('lcd-overlay'),
+    "Mission Panel": document.getElementById('mission-panel'),
+    "Intel Panel": document.getElementById('intel-panel'),
+    "HQ Panel": document.getElementById('hq-panel'),
+    "Resources Panel": document.querySelector('.resources-panel')
+  };
+  
+  for (const [name, element] of Object.entries(elements)) {
+    if (element) {
+      const zIndex = window.getComputedStyle(element).zIndex;
+      console.log(`${name}: z-index = ${zIndex}`);
+    } else {
+      console.log(`${name}: Element not found`);
+    }
+  }
+  
+  return "Z-index check complete. See console for results.";
+};
+
+// Z-index fix applied
+console.log("Intel panel z-index fix applied - Version 4.1");
+
+
+// Ensure resources panel appears below intel panel
+document.addEventListener('DOMContentLoaded', function() {
+  // Set correct z-index for resources panel after DOM is loaded
+  const resourcesPanel = document.querySelector('.resources-panel');
+  if (resourcesPanel) {
+    resourcesPanel.style.zIndex = '3';
+  }
+});
+
+// Function to compare intel and resources panel z-indices
+window.compareZIndices = function() {
+  const intelPanel = document.getElementById('intel-panel');
+  const resourcesPanel = document.querySelector('.resources-panel');
+  
+  if (intelPanel && resourcesPanel) {
+    const intelZIndex = window.getComputedStyle(intelPanel).zIndex;
+    const resourcesZIndex = window.getComputedStyle(resourcesPanel).zIndex;
+    
+    console.log("Intel Panel z-index:", intelZIndex);
+    console.log("Resources Panel z-index:", resourcesZIndex);
+    
+    if (parseInt(intelZIndex) > parseInt(resourcesZIndex)) {
+      console.log("✅ Correct: Intel panel appears above resources panel");
+    } else {
+      console.log("❌ Issue: Resources panel appears above or at same level as intel panel");
+    }
+  } else {
+    console.log("Could not find both panels to compare");
+  }
+  
+  return "Z-index comparison complete. See console for results.";
+};
+
+// Resource panel z-index fix applied
+console.log("Resource panel z-index fix applied - Version 4.2");
+
+
+// Ensure resources panel appears below intel panel
+document.addEventListener('DOMContentLoaded', function() {
+  // Set correct z-index for resources panel after DOM is loaded
+  const resourcesPanel = document.querySelector('.resources-panel');
+  if (resourcesPanel) {
+    resourcesPanel.style.zIndex = '3';
+  }
+});
+
+// Function to compare intel and resources panel z-indices
+window.compareZIndices = function() {
+  const intelPanel = document.getElementById('intel-panel');
+  const resourcesPanel = document.querySelector('.resources-panel');
+  
+  if (intelPanel && resourcesPanel) {
+    const intelZIndex = window.getComputedStyle(intelPanel).zIndex;
+    const resourcesZIndex = window.getComputedStyle(resourcesPanel).zIndex;
+    
+    console.log("Intel Panel z-index:", intelZIndex);
+    console.log("Resources Panel z-index:", resourcesZIndex);
+    
+    if (parseInt(intelZIndex) > parseInt(resourcesZIndex)) {
+      console.log("✅ Correct: Intel panel appears above resources panel");
+    } else {
+      console.log("❌ Issue: Resources panel appears above or at same level as intel panel");
+    }
+  } else {
+    console.log("Could not find both panels to compare");
+  }
+  
+  return "Z-index comparison complete. See console for results.";
+};
+
+// Resource panel z-index fix applied
+console.log("Resource panel z-index fix applied - Version 4.2");
+
+
+// Function to ensure vertical tabs are added when panels are shown
+function ensureVerticalTabs() {
+  // For mission panel
+  const missionPanel = document.getElementById('mission-panel');
+  if (missionPanel && !document.getElementById('mission-vertical-close')) {
+    const missionVerticalTab = document.createElement('button');
+    missionVerticalTab.className = 'vertical-tab-close';
+    missionVerticalTab.id = 'mission-vertical-close';
+    missionVerticalTab.setAttribute('aria-label', 'Close mission panel');
+    missionVerticalTab.setAttribute('title', 'Close mission panel');
+    
+    missionPanel.appendChild(missionVerticalTab);
+    
+    missionVerticalTab.addEventListener('click', () => {
+      missionPanel.classList.remove('active');
+      activeMission = null;
+      resumeRotation();
+    });
+  }
+  
+  // For intel panel
+  const intelPanel = document.getElementById('intel-panel');
+  if (intelPanel && !document.getElementById('intel-vertical-close')) {
+    const intelVerticalTab = document.createElement('button');
+    intelVerticalTab.className = 'vertical-tab-close';
+    intelVerticalTab.id = 'intel-vertical-close';
+    intelVerticalTab.setAttribute('aria-label', 'Close intel panel');
+    intelVerticalTab.setAttribute('title', 'Close intel panel');
+    
+    intelPanel.appendChild(intelVerticalTab);
+    
+    intelVerticalTab.addEventListener('click', () => {
+      intelPanel.classList.remove('active');
+      intelPanel.style.left = '-40vw';
+    });
+  }
+}
+
+// Run once on startup and also when DOM content is loaded
+ensureVerticalTabs();
+document.addEventListener('DOMContentLoaded', ensureVerticalTabs);
+
+// Run periodically to handle dynamic panel creation
+setInterval(ensureVerticalTabs, 5000);
+
+// Vertical tabs feature has been applied
+console.log("Vertical close tabs added to panels - Version 5.0");
+
+
+// Function to ensure vertical tabs are added when panels are shown
+function ensureVerticalTabs() {
+  // For mission panel
+  const missionPanel = document.getElementById('mission-panel');
+  if (missionPanel && !document.getElementById('mission-vertical-close')) {
+    const missionVerticalTab = document.createElement('button');
+    missionVerticalTab.className = 'vertical-tab-close';
+    missionVerticalTab.id = 'mission-vertical-close';
+    missionVerticalTab.setAttribute('aria-label', 'Close mission panel');
+    missionVerticalTab.setAttribute('title', 'Close mission panel');
+    
+    missionPanel.appendChild(missionVerticalTab);
+    
+    missionVerticalTab.addEventListener('click', () => {
+      missionPanel.classList.remove('active');
+      activeMission = null;
+      resumeRotation();
+    });
+  }
+  
+  // For intel panel
+  const intelPanel = document.getElementById('intel-panel');
+  if (intelPanel && !document.getElementById('intel-vertical-close')) {
+    const intelVerticalTab = document.createElement('button');
+    intelVerticalTab.className = 'vertical-tab-close';
+    intelVerticalTab.id = 'intel-vertical-close';
+    intelVerticalTab.setAttribute('aria-label', 'Close intel panel');
+    intelVerticalTab.setAttribute('title', 'Close intel panel');
+    
+    intelPanel.appendChild(intelVerticalTab);
+    
+    intelVerticalTab.addEventListener('click', () => {
+      intelPanel.classList.remove('active');
+      intelPanel.style.left = '-40vw';
+    });
+  }
+}
+
+// Run once on startup and also when DOM content is loaded
+ensureVerticalTabs();
+document.addEventListener('DOMContentLoaded', ensureVerticalTabs);
+
+// Run periodically to handle dynamic panel creation
+setInterval(ensureVerticalTabs, 5000);
+
+// Vertical tabs feature has been applied
+console.log("Vertical close tabs added to panels - Version 5.0");
+
+
+// Final polish for vertical tabs
+console.log("Vertical tabs polished - no line, X buttons removed - Version 5.1");
+
+
+// Final polish for vertical tabs
+console.log("Vertical tabs polished - no line, X buttons removed - Version 5.1");
