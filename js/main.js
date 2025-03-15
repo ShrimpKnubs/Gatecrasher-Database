@@ -799,18 +799,18 @@ function initializeResourceManagement() {
   setInterval(updateResourceDisplay, 60000); // Update every minute
 }
 
-// Update resource display
+// Override original update resource display function to use global resources
 async function updateResourceDisplay() {
   try {
-    let userData;
+    // Get global resources instead of user-specific resources
+    const globalDoc = await db.collection('globalResources').doc('shared').get();
     
-    if (currentUser) {
-      // For authenticated users, get data from Firebase
-      const userDoc = await db.collection('users').doc(currentUser.uid).get();
-      userData = userDoc.data();
+    let resourceData;
+    if (globalDoc.exists) {
+      resourceData = globalDoc.data();
     } else {
-      // For guests, use default values
-      userData = {
+      // Fall back to default values and initialize global resources
+      resourceData = {
         money: 100000,
         resources: {
           fuel: 500,
@@ -820,35 +820,39 @@ async function updateResourceDisplay() {
           materials: 500
         }
       };
+      
+      // Initialize the global resources
+      initializeGlobalResources();
     }
     
-    // Update the resource monitor in top left
-    updateResourceMonitor(userData);
+    // Update all UI displays with the data
+    updateResourceMonitor(resourceData);
+    updateBaseResourceDisplay(resourceData);
     
-    // Also update the base resources display if it exists
-    const baseResourcesDisplay = document.getElementById('base-resources');
-    if (baseResourcesDisplay) {
-      baseResourcesDisplay.innerHTML = '';
+    // Also update squad panel display
+    const resourceDisplay = document.getElementById('resource-display');
+    if (resourceDisplay) {
+      resourceDisplay.innerHTML = '';
       
       // Add money display
-      const moneyDisplay = document.createElement('div');
-      moneyDisplay.className = 'resource-item';
-      moneyDisplay.innerHTML = `
+      const moneyItem = document.createElement('div');
+      moneyItem.className = 'resource-item';
+      moneyItem.innerHTML = `
         <div class="resource-name">MONEY:</div>
-        <div class="resource-value">$${userData.money.toLocaleString()}</div>
+        <div class="resource-value">${resourceData.money.toLocaleString()}</div>
       `;
-      baseResourcesDisplay.appendChild(moneyDisplay);
+      resourceDisplay.appendChild(moneyItem);
       
       // Add other resources
-      if (userData.resources) {
-        for (const [resource, amount] of Object.entries(userData.resources)) {
+      if (resourceData.resources) {
+        for (const [resource, amount] of Object.entries(resourceData.resources)) {
           const resourceItem = document.createElement('div');
           resourceItem.className = 'resource-item';
           resourceItem.innerHTML = `
             <div class="resource-name">${resource.toUpperCase()}:</div>
             <div class="resource-value">${amount}</div>
           `;
-          baseResourcesDisplay.appendChild(resourceItem);
+          resourceDisplay.appendChild(resourceItem);
         }
       }
     }

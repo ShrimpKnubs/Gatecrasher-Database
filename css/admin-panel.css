@@ -583,3 +583,113 @@
   flex-direction: column;
   gap: 20px;
 }
+
+/* Enhanced Admin Resource Management Section */
+.admin-section-title.resources {
+  color: #FF5733 !important; /* Bold orange color for importance */
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(255, 87, 51, 0.5);
+  border-bottom: 2px solid #FF5733 !important;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.admin-resource-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.resource-button {
+  background: var(--background-dark) !important;
+  color: #FFC107 !important; /* Yellow text for visibility */
+  border: 1px solid #FF5733 !important; /* Orange border */
+  padding: 10px 15px !important;
+  font-family: 'Hack-Bold', monospace !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+  font-size: 0.95em !important;
+}
+
+.resource-button:hover {
+  background: rgba(255, 87, 51, 0.3) !important; /* Semi-transparent orange on hover */
+  box-shadow: 0 0 15px rgba(255, 87, 51, 0.5) !important; /* Orange glow */
+  transform: translateY(-2px) !important;
+}
+
+.resource-button.reset {
+  background: rgba(255, 0, 0, 0.2) !important; /* Semi-transparent red background */
+}
+
+.resource-button.add {
+  background: rgba(255, 153, 0, 0.2) !important; /* Semi-transparent orange background */
+}
+
+/* Fix layout issues in admin panel */
+.admin-panel {
+  min-height: 200px; /* Ensures minimum height */
+  max-height: 80vh; /* Maximum height as percentage of viewport */
+}
+
+.admin-content {
+  max-height: calc(80vh - 80px); /* Adjust based on header height */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Enhanced Admin Resource Management Section */
+.admin-section-title.resources {
+  color: #FF5733 !important; /* Bold orange color for importance */
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(255, 87, 51, 0.5);
+  border-bottom: 2px solid #FF5733 !important;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.admin-resource-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.resource-button {
+  background: var(--background-dark) !important;
+  color: #FFC107 !important; /* Yellow text for visibility */
+  border: 1px solid #FF5733 !important; /* Orange border */
+  padding: 10px 15px !important;
+  font-family: 'Hack-Bold', monospace !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+  font-size: 0.95em !important;
+}
+
+.resource-button:hover {
+  background: rgba(255, 87, 51, 0.3) !important; /* Semi-transparent orange on hover */
+  box-shadow: 0 0 15px rgba(255, 87, 51, 0.5) !important; /* Orange glow */
+  transform: translateY(-2px) !important;
+}
+
+.resource-button.reset {
+  background: rgba(255, 0, 0, 0.2) !important; /* Semi-transparent red background */
+}
+
+.resource-button.add {
+  background: rgba(255, 153, 0, 0.2) !important; /* Semi-transparent orange background */
+}
+
+/* Fix layout issues in admin panel */
+.admin-panel {
+  min-height: 200px; /* Ensures minimum height */
+  max-height: 80vh; /* Maximum height as percentage of viewport */
+}
+
+.admin-content {
+  max-height: calc(80vh - 80px); /* Adjust based on header height */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
