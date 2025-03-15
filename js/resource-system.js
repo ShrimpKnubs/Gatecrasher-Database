@@ -175,19 +175,18 @@ function updateBaseResourceDisplay(userData) {
 }
 
 // Add resources to user - Firebase Integration
+// MODIFIED to update global resources instead of individual user resources
 async function addResources(userId, resources) {
   if (!userId) return { success: false, error: 'No user ID provided' };
   
   try {
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
+    // Get the global resources reference
+    const globalResourcesRef = db.collection('globalResources').doc('shared');
+    const globalDoc = await globalResourcesRef.get();
     
-    if (!userDoc.exists) {
-      // Create user document if it doesn't exist
-      await userRef.set({
-        ...defaultResources,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+    if (!globalDoc.exists) {
+      // Initialize global resources if they don't exist
+      await initializeGlobalResources();
     }
     
     // Create updates object
@@ -205,42 +204,48 @@ async function addResources(userId, resources) {
       }
     }
     
-    // Apply updates
-    await userRef.update(updates);
+    // Add timestamp
+    updates.lastUpdated = firebase.firestore.FieldValue.serverTimestamp();
     
-    // Update display
-    updateResourceDisplay();
+    // Apply updates to global resources
+    await globalResourcesRef.update(updates);
+    
+    console.log("Added resources to global pool:", resources);
     
     return { success: true };
   } catch (error) {
-    console.error('Error adding resources:', error);
+    console.error('Error adding global resources:', error);
     return { success: false, error: error.message };
   }
 }
 
-// Subtract resources from user - Firebase Integration
+// Subtract resources - MODIFIED to use global resources
 async function subtractResources(userId, resources) {
-  if (!userId) return { success: false, error: 'No user ID provided' };
-  
   try {
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
+    // Get the global resources
+    const globalResourcesRef = db.collection('globalResources').doc('shared');
+    const globalDoc = await globalResourcesRef.get();
     
-    if (!userDoc.exists) {
-      return { success: false, error: 'User not found' };
+    if (!globalDoc.exists) {
+      await initializeGlobalResources();
+      return { success: false, error: 'Global resources not initialized' };
     }
     
-    const userData = userDoc.data();
+    const globalData = globalDoc.data();
     
-    // Check if user has enough resources
-    if (resources.money && userData.money < resources.money) {
+    // Check if there are enough resources
+    if (resources.money && globalData.money < resources.money) {
+      showNotification('INSUFFICIENT FUNDS');
       return { success: false, error: 'Not enough money' };
     }
     
     // Check other resources
     for (const [resource, amount] of Object.entries(resources)) {
       if (resource !== 'money' && amount) {
-        if (!userData.resources || !userData.resources[resource] || userData.resources[resource] < amount) {
+        if (!globalData.resources || 
+            !globalData.resources[resource] || 
+            globalData.resources[resource] < amount) {
+          showNotification(`INSUFFICIENT ${resource.toUpperCase()}`);
           return { success: false, error: `Not enough ${resource}` };
         }
       }
@@ -261,15 +266,17 @@ async function subtractResources(userId, resources) {
       }
     }
     
-    // Apply updates
-    await userRef.update(updates);
+    // Add timestamp
+    updates.lastUpdated = firebase.firestore.FieldValue.serverTimestamp();
     
-    // Update display
-    updateResourceDisplay();
+    // Apply updates to global resources
+    await globalResourcesRef.update(updates);
+    
+    console.log("Subtracted resources from global pool:", resources);
     
     return { success: true };
   } catch (error) {
-    console.error('Error subtracting resources:', error);
+    console.error('Error subtracting global resources:', error);
     return { success: false, error: error.message };
   }
 }
@@ -308,7 +315,7 @@ async function checkResources(userId, resources) {
   }
 }
 
-// Reset user resources to default - Admin Function
+// Reset resources to default - Admin Function - MODIFIED to use global resources
 async function resetUserResources(userId = null) {
   if (!currentUser || userRole !== 'admin') {
     showNotification('UNAUTHORIZED: ADMIN ACCESS REQUIRED');
@@ -316,26 +323,27 @@ async function resetUserResources(userId = null) {
   }
   
   try {
-    // If no userId provided, use current user
-    const targetId = userId || currentUser.uid;
+    // Reset the global resources document
+    const globalResourcesRef = db.collection('globalResources').doc('shared');
     
-    // Update user document with default resources
-    await db.collection('users').doc(targetId).update(defaultResources);
-    
-    // Update display
-    updateResourceDisplay();
+    await globalResourcesRef.set({
+      money: defaultResources.money,
+      resources: defaultResources.resources,
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+      notifyUpdates: true
+    });
     
     showNotification('RESOURCES RESET TO DEFAULT VALUES');
     
     return { success: true };
   } catch (error) {
-    console.error('Error resetting resources:', error);
+    console.error('Error resetting global resources:', error);
     showNotification('ERROR RESETTING RESOURCES');
     return { success: false, error: error.message };
   }
 }
 
-// Add test resources - Admin Function
+// Add test resources - Admin Function - MODIFIED to use global resources
 async function addTestResources(userId = null) {
   if (!currentUser || userRole !== 'admin') {
     showNotification('UNAUTHORIZED: ADMIN ACCESS REQUIRED');
@@ -343,23 +351,38 @@ async function addTestResources(userId = null) {
   }
   
   try {
-    // If no userId provided, use current user
-    const targetId = userId || currentUser.uid;
-    
     // Resources to add
     const testResources = {
       money: 50000,
-      fuel: 200,
-      ammo: 200,
-      medicine: 200,
-      food: 200,
-      materials: 200
+      resources: {
+        fuel: 200,
+        ammo: 200,
+        medicine: 200,
+        food: 200,
+        materials: 200
+      }
     };
     
-    // Add resources
-    await addResources(targetId, testResources);
+    // Get global resources reference
+    const globalResourcesRef = db.collection('globalResources').doc('shared');
+    
+    // Create updates
+    const updates = {
+      money: firebase.firestore.FieldValue.increment(testResources.money),
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+      notifyUpdates: true
+    };
+    
+    // Add resource updates
+    for (const [resource, amount] of Object.entries(testResources.resources)) {
+      updates[`resources.${resource}`] = firebase.firestore.FieldValue.increment(amount);
+    }
+    
+    // Apply updates
+    await globalResourcesRef.update(updates);
     
     showNotification('TEST RESOURCES ADDED');
+    console.log("Added test resources to global pool");
     
     return { success: true };
   } catch (error) {
@@ -1080,3 +1103,471 @@ function addShopStyles() {
 
 // Add shop styles when DOM is loaded
 document.addEventListener('DOMContentLoaded', addShopStyles);
+
+
+// Update base resource display in a separate function
+function updateBaseResourceDisplay(userData) {
+  const baseResourcesDisplay = document.getElementById('base-resources');
+  if (!baseResourcesDisplay) return;
+  
+  baseResourcesDisplay.innerHTML = '';
+  
+  // Add money display
+  const moneyDisplay = document.createElement('div');
+  moneyDisplay.className = 'resource-item';
+  moneyDisplay.innerHTML = `
+    <div class="resource-name">MONEY:</div>
+    <div class="resource-value">$${userData.money.toLocaleString()}</div>
+  `;
+  baseResourcesDisplay.appendChild(moneyDisplay);
+  
+  // Add other resources
+  if (userData.resources) {
+    for (const [resource, amount] of Object.entries(userData.resources)) {
+      const resourceItem = document.createElement('div');
+      resourceItem.className = 'resource-item';
+      resourceItem.innerHTML = `
+        <div class="resource-name">${resource.toUpperCase()}:</div>
+        <div class="resource-value">${amount}</div>
+      `;
+      baseResourcesDisplay.appendChild(resourceItem);
+    }
+  }
+}
+
+
+// Update base resource display in a separate function
+function updateBaseResourceDisplay(userData) {
+  const baseResourcesDisplay = document.getElementById('base-resources');
+  if (!baseResourcesDisplay) return;
+  
+  baseResourcesDisplay.innerHTML = '';
+  
+  // Add money display
+  const moneyDisplay = document.createElement('div');
+  moneyDisplay.className = 'resource-item';
+  moneyDisplay.innerHTML = `
+    <div class="resource-name">MONEY:</div>
+    <div class="resource-value">$${userData.money.toLocaleString()}</div>
+  `;
+  baseResourcesDisplay.appendChild(moneyDisplay);
+  
+  // Add other resources
+  if (userData.resources) {
+    for (const [resource, amount] of Object.entries(userData.resources)) {
+      const resourceItem = document.createElement('div');
+      resourceItem.className = 'resource-item';
+      resourceItem.innerHTML = `
+        <div class="resource-name">${resource.toUpperCase()}:</div>
+        <div class="resource-value">${amount}</div>
+      `;
+      baseResourcesDisplay.appendChild(resourceItem);
+    }
+  }
+}
+
+// Setup real-time resource updates listener - COMPLETELY REWRITTEN
+function setupResourcesListener() {
+  console.log("Setting up universal resource listener");
+  
+  // Create a global collection to store the shared resources for all users
+  // This is a better approach than trying to sync individual user accounts
+  const globalResourcesRef = db.collection('globalResources').doc('shared');
+  
+  // Listen for changes to the global resources
+  globalResourcesRef.onSnapshot((doc) => {
+    try {
+      if (doc.exists) {
+        const sharedData = doc.data();
+        console.log("Received global resource update:", sharedData);
+        
+        // Update all UI displays with the shared data
+        updateResourceMonitor(sharedData);
+        updateBaseResourceDisplay(sharedData);
+        
+        // Update squad panel resource display if it exists
+        const resourceDisplay = document.getElementById('resource-display');
+        if (resourceDisplay) {
+          resourceDisplay.innerHTML = '';
+          
+          // Add money display
+          const moneyItem = document.createElement('div');
+          moneyItem.className = 'resource-item';
+          moneyItem.innerHTML = `
+            <div class="resource-name">MONEY:</div>
+            <div class="resource-value">$${sharedData.money.toLocaleString()}</div>
+          `;
+          resourceDisplay.appendChild(moneyItem);
+          
+          // Add other resources
+          if (sharedData.resources) {
+            for (const [resource, amount] of Object.entries(sharedData.resources)) {
+              const resourceItem = document.createElement('div');
+              resourceItem.className = 'resource-item';
+              resourceItem.innerHTML = `
+                <div class="resource-name">${resource.toUpperCase()}:</div>
+                <div class="resource-value">${amount}</div>
+              `;
+              resourceDisplay.appendChild(resourceItem);
+            }
+          }
+        }
+        
+        // Notify user if enabled (disabled by default to avoid spam)
+        if (sharedData.notifyUpdates) {
+          showNotification('RESOURCES UPDATED');
+        }
+      } else {
+        console.log("No shared resources found, initializing default values");
+        // Initialize with default values if document doesn't exist
+        initializeGlobalResources();
+      }
+    } catch (error) {
+      console.error("Error processing resource update:", error);
+    }
+  }, (error) => {
+    console.error("Error setting up global resource listener:", error);
+  });
+  
+  // If admin adds resources through the admin panel, update global resources
+  if (userRole === 'admin') {
+    console.log("Setting up admin resource update handlers");
+    
+    // Override the addResources and resetUserResources functions to update global resources
+    window.addResourcesToGlobal = async function(resources) {
+      try {
+        const globalDoc = await globalResourcesRef.get();
+        
+        if (globalDoc.exists) {
+          const globalData = globalDoc.data();
+          const updates = {};
+          
+          // Update money if provided
+          if (resources.money) {
+            updates.money = globalData.money + resources.money;
+          }
+          
+          // Update other resources
+          if (resources.resources) {
+            const updatedResources = {...globalData.resources};
+            
+            for (const [resource, amount] of Object.entries(resources.resources)) {
+              if (updatedResources[resource] !== undefined) {
+                updatedResources[resource] += amount;
+              } else {
+                updatedResources[resource] = amount;
+              }
+            }
+            
+            updates.resources = updatedResources;
+          }
+          
+          // Apply updates
+          await globalResourcesRef.update(updates);
+          console.log("Global resources updated:", updates);
+          
+          return true;
+        } else {
+          console.log("No global resources document found");
+          return false;
+        }
+      } catch (error) {
+        console.error("Error updating global resources:", error);
+        return false;
+      }
+    };
+  }
+}
+
+// Initialize global resources if they don't exist
+async function initializeGlobalResources() {
+  try {
+    const globalResourcesRef = db.collection('globalResources').doc('shared');
+    const doc = await globalResourcesRef.get();
+    
+    if (!doc.exists) {
+      // Create the global resources document with default values
+      await globalResourcesRef.set({
+        money: 100000,
+        resources: {
+          fuel: 500,
+          ammo: 500,
+          medicine: 500,
+          food: 500,
+          materials: 500
+        },
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+        notifyUpdates: false
+      });
+      
+      console.log("Global resources initialized with default values");
+    }
+  } catch (error) {
+    console.error("Error initializing global resources:", error);
+  }
+}
+
+// Override original update resource display function to use global resources
+async function updateResourceDisplay() {
+  try {
+    // Get global resources instead of user-specific resources
+    const globalDoc = await db.collection('globalResources').doc('shared').get();
+    
+    let resourceData;
+    if (globalDoc.exists) {
+      resourceData = globalDoc.data();
+    } else {
+      // Fall back to default values and initialize global resources
+      resourceData = {
+        money: 100000,
+        resources: {
+          fuel: 500,
+          ammo: 500,
+          medicine: 500,
+          food: 500,
+          materials: 500
+        }
+      };
+      
+      // Initialize the global resources
+      initializeGlobalResources();
+    }
+    
+    // Update all UI displays with the data
+    updateResourceMonitor(resourceData);
+    updateBaseResourceDisplay(resourceData);
+    
+    // Also update squad panel display
+    const resourceDisplay = document.getElementById('resource-display');
+    if (resourceDisplay) {
+      resourceDisplay.innerHTML = '';
+      
+      // Add money display
+      const moneyItem = document.createElement('div');
+      moneyItem.className = 'resource-item';
+      moneyItem.innerHTML = `
+        <div class="resource-name">MONEY:</div>
+        <div class="resource-value">$${resourceData.money.toLocaleString()}</div>
+      `;
+      resourceDisplay.appendChild(moneyItem);
+      
+      // Add other resources
+      if (resourceData.resources) {
+        for (const [resource, amount] of Object.entries(resourceData.resources)) {
+          const resourceItem = document.createElement('div');
+          resourceItem.className = 'resource-item';
+          resourceItem.innerHTML = `
+            <div class="resource-name">${resource.toUpperCase()}:</div>
+            <div class="resource-value">${amount}</div>
+          `;
+          resourceDisplay.appendChild(resourceItem);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error updating resource display:', error);
+  }
+}
+
+// Setup real-time resource updates listener - COMPLETELY REWRITTEN
+function setupResourcesListener() {
+  console.log("Setting up universal resource listener");
+  
+  // Create a global collection to store the shared resources for all users
+  // This is a better approach than trying to sync individual user accounts
+  const globalResourcesRef = db.collection('globalResources').doc('shared');
+  
+  // Listen for changes to the global resources
+  globalResourcesRef.onSnapshot((doc) => {
+    try {
+      if (doc.exists) {
+        const sharedData = doc.data();
+        console.log("Received global resource update:", sharedData);
+        
+        // Update all UI displays with the shared data
+        updateResourceMonitor(sharedData);
+        updateBaseResourceDisplay(sharedData);
+        
+        // Update squad panel resource display if it exists
+        const resourceDisplay = document.getElementById('resource-display');
+        if (resourceDisplay) {
+          resourceDisplay.innerHTML = '';
+          
+          // Add money display
+          const moneyItem = document.createElement('div');
+          moneyItem.className = 'resource-item';
+          moneyItem.innerHTML = `
+            <div class="resource-name">MONEY:</div>
+            <div class="resource-value">$${sharedData.money.toLocaleString()}</div>
+          `;
+          resourceDisplay.appendChild(moneyItem);
+          
+          // Add other resources
+          if (sharedData.resources) {
+            for (const [resource, amount] of Object.entries(sharedData.resources)) {
+              const resourceItem = document.createElement('div');
+              resourceItem.className = 'resource-item';
+              resourceItem.innerHTML = `
+                <div class="resource-name">${resource.toUpperCase()}:</div>
+                <div class="resource-value">${amount}</div>
+              `;
+              resourceDisplay.appendChild(resourceItem);
+            }
+          }
+        }
+        
+        // Notify user if enabled (disabled by default to avoid spam)
+        if (sharedData.notifyUpdates) {
+          showNotification('RESOURCES UPDATED');
+        }
+      } else {
+        console.log("No shared resources found, initializing default values");
+        // Initialize with default values if document doesn't exist
+        initializeGlobalResources();
+      }
+    } catch (error) {
+      console.error("Error processing resource update:", error);
+    }
+  }, (error) => {
+    console.error("Error setting up global resource listener:", error);
+  });
+  
+  // If admin adds resources through the admin panel, update global resources
+  if (userRole === 'admin') {
+    console.log("Setting up admin resource update handlers");
+    
+    // Override the addResources and resetUserResources functions to update global resources
+    window.addResourcesToGlobal = async function(resources) {
+      try {
+        const globalDoc = await globalResourcesRef.get();
+        
+        if (globalDoc.exists) {
+          const globalData = globalDoc.data();
+          const updates = {};
+          
+          // Update money if provided
+          if (resources.money) {
+            updates.money = globalData.money + resources.money;
+          }
+          
+          // Update other resources
+          if (resources.resources) {
+            const updatedResources = {...globalData.resources};
+            
+            for (const [resource, amount] of Object.entries(resources.resources)) {
+              if (updatedResources[resource] !== undefined) {
+                updatedResources[resource] += amount;
+              } else {
+                updatedResources[resource] = amount;
+              }
+            }
+            
+            updates.resources = updatedResources;
+          }
+          
+          // Apply updates
+          await globalResourcesRef.update(updates);
+          console.log("Global resources updated:", updates);
+          
+          return true;
+        } else {
+          console.log("No global resources document found");
+          return false;
+        }
+      } catch (error) {
+        console.error("Error updating global resources:", error);
+        return false;
+      }
+    };
+  }
+}
+
+// Initialize global resources if they don't exist
+async function initializeGlobalResources() {
+  try {
+    const globalResourcesRef = db.collection('globalResources').doc('shared');
+    const doc = await globalResourcesRef.get();
+    
+    if (!doc.exists) {
+      // Create the global resources document with default values
+      await globalResourcesRef.set({
+        money: 100000,
+        resources: {
+          fuel: 500,
+          ammo: 500,
+          medicine: 500,
+          food: 500,
+          materials: 500
+        },
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+        notifyUpdates: false
+      });
+      
+      console.log("Global resources initialized with default values");
+    }
+  } catch (error) {
+    console.error("Error initializing global resources:", error);
+  }
+}
+
+// Override original update resource display function to use global resources
+async function updateResourceDisplay() {
+  try {
+    // Get global resources instead of user-specific resources
+    const globalDoc = await db.collection('globalResources').doc('shared').get();
+    
+    let resourceData;
+    if (globalDoc.exists) {
+      resourceData = globalDoc.data();
+    } else {
+      // Fall back to default values and initialize global resources
+      resourceData = {
+        money: 100000,
+        resources: {
+          fuel: 500,
+          ammo: 500,
+          medicine: 500,
+          food: 500,
+          materials: 500
+        }
+      };
+      
+      // Initialize the global resources
+      initializeGlobalResources();
+    }
+    
+    // Update all UI displays with the data
+    updateResourceMonitor(resourceData);
+    updateBaseResourceDisplay(resourceData);
+    
+    // Also update squad panel display
+    const resourceDisplay = document.getElementById('resource-display');
+    if (resourceDisplay) {
+      resourceDisplay.innerHTML = '';
+      
+      // Add money display
+      const moneyItem = document.createElement('div');
+      moneyItem.className = 'resource-item';
+      moneyItem.innerHTML = `
+        <div class="resource-name">MONEY:</div>
+        <div class="resource-value">$${resourceData.money.toLocaleString()}</div>
+      `;
+      resourceDisplay.appendChild(moneyItem);
+      
+      // Add other resources
+      if (resourceData.resources) {
+        for (const [resource, amount] of Object.entries(resourceData.resources)) {
+          const resourceItem = document.createElement('div');
+          resourceItem.className = 'resource-item';
+          resourceItem.innerHTML = `
+            <div class="resource-name">${resource.toUpperCase()}:</div>
+            <div class="resource-value">${amount}</div>
+          `;
+          resourceDisplay.appendChild(resourceItem);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error updating resource display:', error);
+  }
+}

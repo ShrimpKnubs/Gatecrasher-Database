@@ -599,7 +599,7 @@
   height: 70vh;
   background: var(--background-medium);
   border-right: 2px solid var(--accent-color);
-  z-index: 4;
+  z-index: 7; /* Higher z-index than resources panel */
   transition: left 0.4s cubic-bezier(0.215, 0.610, 0.355, 1.000);
   box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
   padding: 20px;

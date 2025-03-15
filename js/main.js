@@ -424,13 +424,49 @@ async function loadMissions() {
   ];
 }
 
-// Load intel data - Simplified approach
+// Load intel data - Improved approach with multiple retries
 async function loadIntel(missionId) {
+  // If no mission ID specified, try to load all intel data
+  if (!missionId) {
+    try {
+      // First try direct fetch
+      const response = await fetch('data/intel.json');
+      if (response.ok) {
+        console.log("Successfully loaded all intel data via fetch");
+        return await response.json();
+      }
+    } catch (fetchError) {
+      console.error('Fetch error for all intel:', fetchError);
+    }
+    
+    // Try file system if available
+    try {
+      if (typeof window.fs !== 'undefined' && window.fs.readFile) {
+        const intelContent = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
+        console.log("Successfully loaded all intel data via fs.readFile");
+        return JSON.parse(intelContent);
+      }
+    } catch (fsError) {
+      console.error('File system reading error for all intel:', fsError);
+    }
+    
+    // Final fallback - hardcoded sample intel
+    console.warn("All intel loading methods failed, using fallback");
+    return {
+      "mission1": {
+        "title": "FAILED DIPLOMACY INTEL",
+        "content": "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens."
+      }
+    };
+  }
+
+  // Otherwise, load intel for specific mission
   try {
-    // First try direct fetch
+    // First try direct fetch for the specific mission
     const response = await fetch('data/intel.json');
     if (response.ok) {
       const intelData = await response.json();
+      console.log(`Loaded intel for mission ${missionId} via fetch`);
       return intelData[missionId];
     }
   } catch (fetchError) {
@@ -442,13 +478,15 @@ async function loadIntel(missionId) {
     if (typeof window.fs !== 'undefined' && window.fs.readFile) {
       const intelContent = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
       const intelData = JSON.parse(intelContent);
+      console.log(`Loaded intel for mission ${missionId} via fs.readFile`);
       return intelData[missionId];
     }
   } catch (fsError) {
     console.error('File system reading error for intel:', fsError);
   }
   
-  // Fallback
+  // Fallback for specific mission
+  console.warn(`No intel found for mission ${missionId}`);
   return null;
 }
 
@@ -566,8 +604,10 @@ function toggleHqPanel(show) {
       missionPanel.classList.remove('active');
     }
     
+    // Make sure intel panel is properly closed
     if (intelPanel.classList.contains('active')) {
       intelPanel.classList.remove('active');
+      intelPanel.style.left = '-40vw';
     }
     
     // Load team data
@@ -947,7 +987,24 @@ function initializeMissionPanel() {
   // Intel button functionality
   missionIntelButton.addEventListener('click', () => {
     if (activeMission) {
-      openIntelPanel(activeMission.id);
+      console.log("Opening intel for mission:", activeMission);
+      // Call the openIntelPanel function in the global scope
+      window.openIntelPanel(activeMission.id || activeMission);
+      
+      // Force the intel panel to be visible
+      const intelPanel = document.getElementById('intel-panel');
+      if (intelPanel) {
+        intelPanel.style.left = '-40vw'; // Start off-screen
+        intelPanel.classList.add('active');
+        
+        // Force a reflow to ensure transition works
+        intelPanel.offsetHeight; 
+        
+        // Show the panel
+        intelPanel.style.left = '0';
+      }
+    } else {
+      showNotification('SELECT A MISSION FIRST');
     }
   });
 }
@@ -956,6 +1013,7 @@ function initializeMissionPanel() {
 function initializeIntelPanel() {
   closeIntelButton.addEventListener('click', () => {
     intelPanel.classList.remove('active');
+    intelPanel.style.left = '-40vw'; // Move back off-screen
   });
 }
 
@@ -1461,10 +1519,7 @@ async function displayMissionDetails(missionId) {
     // Stop rotation when mission is displayed
     rotating = false;
     
-    // Center the globe on the mission location
-    if (mission.coordinates) {
-      centerGlobeOnCoordinates(mission.coordinates.lat, mission.coordinates.lon);
-    }
+    // Globe centering removed as requested
     
     // Show notification
     showNotification(`MISSION BRIEFING: ${mission.name}`);
@@ -1536,6 +1591,29 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Add button hover glow effect to all buttons
   addButtonGlowEffect();
+  
+  // Apply background image to vanta-background
+  const vantaBackground = document.getElementById('vanta-background');
+  if (vantaBackground) {
+    vantaBackground.style.backgroundImage = "url('textures/background.png')";
+    vantaBackground.style.backgroundSize = "cover";
+    vantaBackground.style.backgroundRepeat = "no-repeat";
+  }
+  
+  // Make sure all UI elements are under the LCD overlay
+  const lcdOverlay = document.getElementById('lcd-overlay');
+  if (lcdOverlay) {
+    lcdOverlay.style.zIndex = '6';
+    document.querySelectorAll('.side-panel, #mission-panel, #intel-panel, #hq-panel, #resources-panel, #admin-controls, #squad-controls').forEach(element => {
+      if (element) {
+        // Make sure these elements are below LCD overlay but above globe
+        const currentZIndex = parseInt(window.getComputedStyle(element).zIndex) || 0;
+        if (currentZIndex >= 6) {
+          element.style.zIndex = '5';
+        }
+      }
+    });
+  }
 });
 
 // Add glow effect to all buttons
@@ -1565,111 +1643,293 @@ function addButtonGlowEffect() {
 }
 
 
-// Function to center the globe on specific coordinates
+// Function to center the globe on specific coordinates - disabled as per request
 function centerGlobeOnCoordinates(lat, lon) {
-  if (!scene) return;
-  
-  // Convert lat/lon to spherical coordinates
-  const phi = (90 - lat) * Math.PI/180;
-  const theta = (lon + 180) * Math.PI/180;
-  
-  // Calculate target rotation
-  const targetX = -Math.sin(phi) * Math.cos(theta);
-  const targetY = Math.cos(phi);
-  const targetZ = Math.sin(phi) * Math.sin(theta);
-  
-  // Create quaternion for smooth rotation
-  const targetQuaternion = new THREE.Quaternion();
-  const targetRotation = new THREE.Euler(
-    Math.atan2(targetX, targetY), // X rotation
-    Math.atan2(targetZ, Math.sqrt(targetX * targetX + targetY * targetY)), // Y rotation
-    0 // Z rotation
-  );
-  
-  targetQuaternion.setFromEuler(targetRotation);
-  
-  // Smoothly animate rotation
-  const duration = 1.5; // Duration in seconds
-  const startTime = Date.now();
-  const startQuaternion = scene.quaternion.clone();
-  
-  function animateRotation() {
-    const elapsed = (Date.now() - startTime) / 1000;
-    const t = Math.min(1, elapsed / duration);
-    
-    // Interpolate with easing
-    const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    
-    // Apply rotation
-    THREE.Quaternion.slerp(startQuaternion, targetQuaternion, scene.quaternion, easedT);
-    
-    // Continue animation until complete
-    if (t < 1) {
-      requestAnimationFrame(animateRotation);
-    } else {
-      // Ensure we end at exactly the target rotation
-      scene.quaternion.copy(targetQuaternion);
-    }
-  }
-  
-  // Start animation
-  animateRotation();
-  
-  // Keep rotation paused
-  rotating = false;
+  // Feature disabled as requested
+  console.log("Globe centering feature disabled");
+  return;
 }
 
 
-// Function to center the globe on specific coordinates
+// Function to center the globe on specific coordinates - disabled as per request
 function centerGlobeOnCoordinates(lat, lon) {
-  if (!scene) return;
-  
-  // Convert lat/lon to spherical coordinates
-  const phi = (90 - lat) * Math.PI/180;
-  const theta = (lon + 180) * Math.PI/180;
-  
-  // Calculate target rotation
-  const targetX = -Math.sin(phi) * Math.cos(theta);
-  const targetY = Math.cos(phi);
-  const targetZ = Math.sin(phi) * Math.sin(theta);
-  
-  // Create quaternion for smooth rotation
-  const targetQuaternion = new THREE.Quaternion();
-  const targetRotation = new THREE.Euler(
-    Math.atan2(targetX, targetY), // X rotation
-    Math.atan2(targetZ, Math.sqrt(targetX * targetX + targetY * targetY)), // Y rotation
-    0 // Z rotation
-  );
-  
-  targetQuaternion.setFromEuler(targetRotation);
-  
-  // Smoothly animate rotation
-  const duration = 1.5; // Duration in seconds
-  const startTime = Date.now();
-  const startQuaternion = scene.quaternion.clone();
-  
-  function animateRotation() {
-    const elapsed = (Date.now() - startTime) / 1000;
-    const t = Math.min(1, elapsed / duration);
+  // Feature disabled as requested
+  console.log("Globe centering feature disabled");
+  return;
+}
+
+// Make openIntelPanel function available globally to ensure it can be called from anywhere
+window.openIntelPanel = async function(missionId) {
+  try {
+    console.log("Global openIntelPanel called with:", missionId);
     
-    // Interpolate with easing
-    const easedT = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    // Load intel data for the specific mission
+    const missionIntel = await loadIntel(missionId);
     
-    // Apply rotation
-    THREE.Quaternion.slerp(startQuaternion, targetQuaternion, scene.quaternion, easedT);
-    
-    // Continue animation until complete
-    if (t < 1) {
-      requestAnimationFrame(animateRotation);
-    } else {
-      // Ensure we end at exactly the target rotation
-      scene.quaternion.copy(targetQuaternion);
+    if (!missionIntel) {
+      console.error("No intel found for mission:", missionId);
+      showNotification('NO INTEL AVAILABLE');
+      return;
     }
+    
+    // Get the intel panel
+    const intelPanel = document.getElementById('intel-panel');
+    if (!intelPanel) {
+      console.error("Intel panel element not found");
+      return;
+    }
+    
+    // Play intel sound
+    if (intelSound && intelSound.readyState >= 2) {
+      intelSound.currentTime = 0;
+      intelSound.play().catch(error => console.error("Error playing intel sound:", error));
+    }
+    
+    // Update intel panel content
+    document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
+    
+    // Create intel content container
+    let intelContent = '';
+    
+    // Only add content paragraph if there's actual content
+    if (missionIntel.content && missionIntel.content.trim() !== '') {
+      intelContent += `<p>${missionIntel.content}</p>`;
+    }
+    
+    // Add images if available
+    if (missionIntel.images && missionIntel.images.length > 0) {
+      missionIntel.images.forEach(imgSrc => {
+        intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+      });
+    }
+    
+    // If there's no content and no images, show a placeholder message
+    if (intelContent === '') {
+      intelContent = '<p>No intel data available.</p>';
+    }
+    
+    // Update the intel content
+    const intelContentElement = document.getElementById('intel-content');
+    if (intelContentElement) {
+      intelContentElement.innerHTML = intelContent;
+    } else {
+      console.error("Intel content element not found");
+    }
+    
+    // Force the panel to be positioned on the left side
+    intelPanel.style.left = '-40vw';
+    intelPanel.style.right = 'auto';
+    
+    // Show the panel with active class
+    intelPanel.classList.add('active');
+    
+    // Force a reflow to ensure transition works
+    intelPanel.offsetHeight;
+    
+    // Animate panel in
+    intelPanel.style.left = '0';
+    
+    // Ensure the intel panel has a higher z-index than the resources panel
+    intelPanel.style.zIndex = '7';
+    
+    // Show notification
+    showNotification('ACCESSING MISSION INTEL');
+    
+    console.log("Intel panel should be visible now");
+  } catch (error) {
+    console.error('Error in global openIntelPanel function:', error);
+    showNotification('ERROR LOADING INTEL');
   }
+};
+
+// Make openIntelPanel function available globally to ensure it can be called from anywhere
+window.openIntelPanel = async function(missionId) {
+  try {
+    console.log("Global openIntelPanel called with:", missionId);
+    
+    // Load intel data for the specific mission
+    const missionIntel = await loadIntel(missionId);
+    
+    if (!missionIntel) {
+      console.error("No intel found for mission:", missionId);
+      showNotification('NO INTEL AVAILABLE');
+      return;
+    }
+    
+    // Get the intel panel
+    const intelPanel = document.getElementById('intel-panel');
+    if (!intelPanel) {
+      console.error("Intel panel element not found");
+      return;
+    }
+    
+    // Play intel sound
+    if (intelSound && intelSound.readyState >= 2) {
+      intelSound.currentTime = 0;
+      intelSound.play().catch(error => console.error("Error playing intel sound:", error));
+    }
+    
+    // Update intel panel content
+    document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
+    
+    // Create intel content container
+    let intelContent = '';
+    
+    // Only add content paragraph if there's actual content
+    if (missionIntel.content && missionIntel.content.trim() !== '') {
+      intelContent += `<p>${missionIntel.content}</p>`;
+    }
+    
+    // Add images if available
+    if (missionIntel.images && missionIntel.images.length > 0) {
+      missionIntel.images.forEach(imgSrc => {
+        intelContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
+      });
+    }
+    
+    // If there's no content and no images, show a placeholder message
+    if (intelContent === '') {
+      intelContent = '<p>No intel data available.</p>';
+    }
+    
+    // Update the intel content
+    const intelContentElement = document.getElementById('intel-content');
+    if (intelContentElement) {
+      intelContentElement.innerHTML = intelContent;
+    } else {
+      console.error("Intel content element not found");
+    }
+    
+    // Force the panel to be positioned on the left side
+    intelPanel.style.left = '-40vw';
+    intelPanel.style.right = 'auto';
+    
+    // Show the panel with active class
+    intelPanel.classList.add('active');
+    
+    // Force a reflow to ensure transition works
+    intelPanel.offsetHeight;
+    
+    // Animate panel in
+    intelPanel.style.left = '0';
+    
+    // Ensure the intel panel has a higher z-index than the resources panel
+    intelPanel.style.zIndex = '7';
+    
+    // Show notification
+    showNotification('ACCESSING MISSION INTEL');
+    
+    console.log("Intel panel should be visible now");
+  } catch (error) {
+    console.error('Error in global openIntelPanel function:', error);
+    showNotification('ERROR LOADING INTEL');
+  }
+};
+
+// Check if the intel panel is working correctly
+document.addEventListener('DOMContentLoaded', function() {
+  // Test the intel panel functionality
+  const intelPanel = document.getElementById('intel-panel');
+  const missionIntelButton = document.getElementById('mission-intel-button');
   
-  // Start animation
-  animateRotation();
+  if (intelPanel && missionIntelButton) {
+    console.log("Intel panel and button found");
+    
+    // Monitor the intel button for clicks
+    missionIntelButton.addEventListener('click', function(event) {
+      console.log("Intel button clicked directly");
+    });
+    
+    // Make sure the close button works correctly
+    const closeIntelButton = document.getElementById('close-intel');
+    if (closeIntelButton) {
+      closeIntelButton.addEventListener('click', function() {
+        console.log("Close intel button clicked");
+        intelPanel.classList.remove('active');
+        intelPanel.style.left = '-40vw';
+      });
+    }
+  } else {
+    console.error("Intel panel elements not found!");
+  }
+});
+
+// Check if the intel panel is working correctly
+document.addEventListener('DOMContentLoaded', function() {
+  // Test the intel panel functionality
+  const intelPanel = document.getElementById('intel-panel');
+  const missionIntelButton = document.getElementById('mission-intel-button');
   
-  // Keep rotation paused
-  rotating = false;
+  if (intelPanel && missionIntelButton) {
+    console.log("Intel panel and button found");
+    
+    // Monitor the intel button for clicks
+    missionIntelButton.addEventListener('click', function(event) {
+      console.log("Intel button clicked directly");
+    });
+    
+    // Make sure the close button works correctly
+    const closeIntelButton = document.getElementById('close-intel');
+    if (closeIntelButton) {
+      closeIntelButton.addEventListener('click', function() {
+        console.log("Close intel button clicked");
+        intelPanel.classList.remove('active');
+        intelPanel.style.left = '-40vw';
+      });
+    }
+  } else {
+    console.error("Intel panel elements not found!");
+  }
+});
+
+
+// Fix Intel panel issues - Log to console when update is applied
+console.log("Intel panel fixes applied - Version 1.1");
+
+// Add a helper function to check the functionality of openIntelPanel
+function testIntelPanelSetup() {
+  try {
+    const intelPanel = document.getElementById('intel-panel');
+    console.log("Intel panel element found:", intelPanel !== null);
+    console.log("Intel panel z-index:", window.getComputedStyle(intelPanel).zIndex);
+    console.log("Intel panel defined functions:", {
+      openIntelPanel: typeof window.openIntelPanel === 'function',
+      loadIntel: typeof loadIntel === 'function'
+    });
+    return "Intel panel configuration check completed";
+  } catch (error) {
+    console.error("Error checking intel panel setup:", error);
+    return "Error checking intel panel setup";
+  }
+}
+
+// Auto-run the test if in development mode
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  console.log(testIntelPanelSetup());
+}
+
+
+// Fix Intel panel issues - Log to console when update is applied
+console.log("Intel panel fixes applied - Version 1.1");
+
+// Add a helper function to check the functionality of openIntelPanel
+function testIntelPanelSetup() {
+  try {
+    const intelPanel = document.getElementById('intel-panel');
+    console.log("Intel panel element found:", intelPanel !== null);
+    console.log("Intel panel z-index:", window.getComputedStyle(intelPanel).zIndex);
+    console.log("Intel panel defined functions:", {
+      openIntelPanel: typeof window.openIntelPanel === 'function',
+      loadIntel: typeof loadIntel === 'function'
+    });
+    return "Intel panel configuration check completed";
+  } catch (error) {
+    console.error("Error checking intel panel setup:", error);
+    return "Error checking intel panel setup";
+  }
+}
+
+// Auto-run the test if in development mode
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  console.log(testIntelPanelSetup());
 }

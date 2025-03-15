@@ -474,6 +474,13 @@ async function displayMissionDetails(missionId) {
 // Open intel panel with improved intel loading - always appears from the left side
 async function openIntelPanel(missionId) {
   try {
+    // First check if the global function is available
+    if (typeof window.openIntelPanel === 'function') {
+      // Use the global function for consistency
+      return window.openIntelPanel(missionId);
+    }
+    
+    // Fallback if global function isn't available
     // Load intel data for the mission
     const intelData = await loadIntelForMission(missionId);
     
@@ -513,13 +520,23 @@ async function openIntelPanel(missionId) {
     
     document.getElementById('intel-content').innerHTML = intelContent;
     
-    // ALWAYS position intel panel on the left side - FIXED
+    // Position intel panel on the left side and ensure high z-index
     const intelPanel = document.getElementById('intel-panel');
     intelPanel.style.left = '-40vw'; // Start offscreen to the left
     intelPanel.style.right = 'auto';
+    intelPanel.style.zIndex = '7'; // Higher than resources panel
     
-    // Show intel panel by adding active class which will animate it in
+    // Show intel panel by adding active class
     intelPanel.classList.add('active');
+    
+    // Force a reflow to ensure transition works
+    intelPanel.offsetHeight;
+    
+    // Animate panel in
+    intelPanel.style.left = '0';
+    
+    // Show notification
+    showNotification('ACCESSING MISSION INTEL');
   } catch (error) {
     console.error('Error loading intel:', error);
     showNotification('ERROR LOADING INTEL');

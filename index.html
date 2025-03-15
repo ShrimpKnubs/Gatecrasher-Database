@@ -7,6 +7,46 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/login.css">
   <link rel="stylesheet" href="css/admin-panel.css">
+  <link rel="stylesheet" href="css/close-buttons.css">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <!-- Z-Index Layer 1: Background -->
+  <div id="vanta-background" style="background-image: url('textures/background.png'); background-size: cover; background-repeat: no-repeat;"></div>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Military Strategic Globe</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/login.css">
+  <link rel="stylesheet" href="css/admin-panel.css">
+  <link rel="stylesheet" href="css/close-buttons.css">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <!-- Z-Index Layer 1: Background -->
+  <div id="vanta-background" style="background-image: url('textures/background.png'); background-size: cover; background-repeat: no-repeat;"></div>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Military Strategic Globe</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/login.css">
+  <link rel="stylesheet" href="css/admin-panel.css">
   
   <!-- Additional styles for enhanced features -->
   <style>
@@ -192,7 +232,7 @@
 </head>
 <body>
   <!-- Z-Index Layer 1: Background -->
-  <div id="vanta-background"></div>
+  <div id="vanta-background" style="background-image: url('textures/background.png'); background-size: cover; background-repeat: no-repeat;"></div>
 
   <!-- Z-Index Layer 2: Globe -->
   <canvas id="globe"></canvas>
@@ -695,8 +735,8 @@
     <button id="mission-intel-button" class="intel-button">VIEW INTEL</button>
   </div>
   
-  <!-- Intel Panel - Always positioned on the left -->
-  <div id="intel-panel" style="left: -40vw; right: auto;">
+  <!-- Intel Panel - Always positioned on the left with higher z-index -->
+  <div id="intel-panel" style="left: -40vw; right: auto; z-index: 7;">
     <div id="intel-header">
       <div id="intel-title">MISSION INTEL</div>
       <button id="close-intel">X</button>
