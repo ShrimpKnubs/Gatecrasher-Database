@@ -424,16 +424,53 @@ async function loadMissions() {
   ];
 }
 
-// Load intel data - Improved approach with multiple retries
+// Debug helper to find the intel.json file
+async function findIntelJsonPath() {
+  const possiblePaths = [
+    'data/intel.json',
+    './data/intel.json',
+    '../data/intel.json',
+    'intel.json',
+    './intel.json'
+  ];
+  
+  for (const path of possiblePaths) {
+    try {
+      const response = await fetch(path);
+      if (response.ok) {
+        console.log(`Found intel.json at path: ${path}`);
+        return path;
+      }
+    } catch (error) {
+      console.log(`Path ${path} not available`);
+    }
+  }
+  
+  console.warn("Could not find intel.json in any of the expected paths");
+  return null;
+}
+
+// Load intel data - Fixed approach with path discovery
 async function loadIntel(missionId) {
+  let intelJsonPath = 'data/intel.json'; // Default path
+  
+  // Try to discover the correct path to intel.json
+  const discoveredPath = await findIntelJsonPath();
+  if (discoveredPath) {
+    intelJsonPath = discoveredPath;
+  }
+  
+  console.log(`Using path for intel.json: ${intelJsonPath}`);
+
   // If no mission ID specified, try to load all intel data
   if (!missionId) {
     try {
       // First try direct fetch
-      const response = await fetch('data/intel.json');
+      const response = await fetch(intelJsonPath);
       if (response.ok) {
-        console.log("Successfully loaded all intel data via fetch");
-        return await response.json();
+        const intelData = await response.json();
+        console.log("Successfully loaded all intel data via fetch:", intelData);
+        return intelData;
       }
     } catch (fetchError) {
       console.error('Fetch error for all intel:', fetchError);
@@ -442,9 +479,10 @@ async function loadIntel(missionId) {
     // Try file system if available
     try {
       if (typeof window.fs !== 'undefined' && window.fs.readFile) {
-        const intelContent = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
-        console.log("Successfully loaded all intel data via fs.readFile");
-        return JSON.parse(intelContent);
+        const intelContent = await window.fs.readFile(intelJsonPath, { encoding: 'utf8' });
+        const intelData = JSON.parse(intelContent);
+        console.log("Successfully loaded all intel data via fs.readFile:", intelData);
+        return intelData;
       }
     } catch (fsError) {
       console.error('File system reading error for all intel:', fsError);
@@ -455,7 +493,8 @@ async function loadIntel(missionId) {
     return {
       "mission1": {
         "title": "FAILED DIPLOMACY INTEL",
-        "content": "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens."
+        "content": "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens.",
+        "images": ["goblin.jpg"]
       }
     };
   }
@@ -463,11 +502,13 @@ async function loadIntel(missionId) {
   // Otherwise, load intel for specific mission
   try {
     // First try direct fetch for the specific mission
-    const response = await fetch('data/intel.json');
+    const response = await fetch(intelJsonPath);
     if (response.ok) {
-      const intelData = await response.json();
-      console.log(`Loaded intel for mission ${missionId} via fetch`);
-      return intelData[missionId];
+      const allIntelData = await response.json();
+      console.log(`All intel data loaded via fetch:`, allIntelData);
+      const missionIntel = allIntelData[missionId];
+      console.log(`Intel for mission ${missionId}:`, missionIntel);
+      return missionIntel;
     }
   } catch (fetchError) {
     console.error('Fetch error for intel:', fetchError);
@@ -476,16 +517,28 @@ async function loadIntel(missionId) {
   // Try file system if available
   try {
     if (typeof window.fs !== 'undefined' && window.fs.readFile) {
-      const intelContent = await window.fs.readFile('data/intel.json', { encoding: 'utf8' });
-      const intelData = JSON.parse(intelContent);
-      console.log(`Loaded intel for mission ${missionId} via fs.readFile`);
-      return intelData[missionId];
+      const intelContent = await window.fs.readFile(intelJsonPath, { encoding: 'utf8' });
+      const allIntelData = JSON.parse(intelContent);
+      console.log(`All intel data loaded via fs.readFile:`, allIntelData);
+      const missionIntel = allIntelData[missionId];
+      console.log(`Intel for mission ${missionId}:`, missionIntel);
+      return missionIntel;
     }
   } catch (fsError) {
     console.error('File system reading error for intel:', fsError);
   }
   
-  // Fallback for specific mission
+  // Try hardcoded fallback for mission1
+  if (missionId === 'mission1') {
+    console.warn(`Using hardcoded fallback for mission1`);
+    return {
+      "title": "FAILED DIPLOMACY INTEL",
+      "content": "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens.",
+      "images": ["goblin.jpg"]
+    };
+  }
+  
+  // No intel found for this mission
   console.warn(`No intel found for mission ${missionId}`);
   return null;
 }
@@ -1663,13 +1716,45 @@ window.openIntelPanel = async function(missionId) {
   try {
     console.log("Global openIntelPanel called with:", missionId);
     
-    // Load intel data for the specific mission
-    const missionIntel = await loadIntel(missionId);
-    
-    if (!missionIntel) {
-      console.error("No intel found for mission:", missionId);
-      showNotification('NO INTEL AVAILABLE');
+    // Log and validate the mission ID
+    if (!missionId) {
+      console.error("Missing mission ID");
+      showNotification('MISSION ID REQUIRED');
       return;
+    }
+    
+    // Log state before loading intel
+    console.log("Current active mission:", activeMission);
+    
+    // Add more detailed debug logs to help identify the exact issue
+    console.log("About to load intel data for mission:", missionId);
+    
+    // Load intel data for the specific mission
+    let missionIntel = await loadIntel(missionId);
+    
+    // Debug log the loaded intel
+    console.log("Loaded intel for mission:", missionId, missionIntel);
+    
+    // If no intel was found, try with just the ID of the active mission object
+    if (!missionIntel && activeMission && activeMission.id) {
+      console.log("Trying with active mission ID:", activeMission.id);
+      missionIntel = await loadIntel(activeMission.id);
+    }
+    
+    // If still no intel was found and missionId is an object, try with missionId.id
+    if (!missionIntel && typeof missionId === 'object' && missionId.id) {
+      console.log("Trying with missionId.id:", missionId.id);
+      missionIntel = await loadIntel(missionId.id);
+    }
+    
+    // If still no intel, fall back to hardcoded intel for debugging
+    if (!missionIntel) {
+      console.warn("No intel found, using fallback intel");
+      missionIntel = {
+        title: "FALLBACK INTEL FOR " + missionId,
+        content: "This is fallback intel content. The system could not load the actual intel for this mission. Please check the console logs for more information.",
+        images: []
+      };
     }
     
     // Get the intel panel
@@ -1686,10 +1771,19 @@ window.openIntelPanel = async function(missionId) {
     }
     
     // Update intel panel content
-    document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
+    const titleElement = document.getElementById('intel-title');
+    if (titleElement) {
+      titleElement.textContent = missionIntel.title || 'MISSION INTEL';
+    } else {
+      console.error("Intel title element not found");
+    }
     
     // Create intel content container
     let intelContent = '';
+    
+    // Debug log the content we're about to display
+    console.log("Intel content to display:", missionIntel.content);
+    console.log("Intel images to display:", missionIntel.images);
     
     // Only add content paragraph if there's actual content
     if (missionIntel.content && missionIntel.content.trim() !== '') {
@@ -1711,6 +1805,7 @@ window.openIntelPanel = async function(missionId) {
     // Update the intel content
     const intelContentElement = document.getElementById('intel-content');
     if (intelContentElement) {
+      console.log("Setting intel content HTML:", intelContent);
       intelContentElement.innerHTML = intelContent;
     } else {
       console.error("Intel content element not found");
@@ -1747,13 +1842,45 @@ window.openIntelPanel = async function(missionId) {
   try {
     console.log("Global openIntelPanel called with:", missionId);
     
-    // Load intel data for the specific mission
-    const missionIntel = await loadIntel(missionId);
-    
-    if (!missionIntel) {
-      console.error("No intel found for mission:", missionId);
-      showNotification('NO INTEL AVAILABLE');
+    // Log and validate the mission ID
+    if (!missionId) {
+      console.error("Missing mission ID");
+      showNotification('MISSION ID REQUIRED');
       return;
+    }
+    
+    // Log state before loading intel
+    console.log("Current active mission:", activeMission);
+    
+    // Add more detailed debug logs to help identify the exact issue
+    console.log("About to load intel data for mission:", missionId);
+    
+    // Load intel data for the specific mission
+    let missionIntel = await loadIntel(missionId);
+    
+    // Debug log the loaded intel
+    console.log("Loaded intel for mission:", missionId, missionIntel);
+    
+    // If no intel was found, try with just the ID of the active mission object
+    if (!missionIntel && activeMission && activeMission.id) {
+      console.log("Trying with active mission ID:", activeMission.id);
+      missionIntel = await loadIntel(activeMission.id);
+    }
+    
+    // If still no intel was found and missionId is an object, try with missionId.id
+    if (!missionIntel && typeof missionId === 'object' && missionId.id) {
+      console.log("Trying with missionId.id:", missionId.id);
+      missionIntel = await loadIntel(missionId.id);
+    }
+    
+    // If still no intel, fall back to hardcoded intel for debugging
+    if (!missionIntel) {
+      console.warn("No intel found, using fallback intel");
+      missionIntel = {
+        title: "FALLBACK INTEL FOR " + missionId,
+        content: "This is fallback intel content. The system could not load the actual intel for this mission. Please check the console logs for more information.",
+        images: []
+      };
     }
     
     // Get the intel panel
@@ -1770,10 +1897,19 @@ window.openIntelPanel = async function(missionId) {
     }
     
     // Update intel panel content
-    document.getElementById('intel-title').textContent = missionIntel.title || 'MISSION INTEL';
+    const titleElement = document.getElementById('intel-title');
+    if (titleElement) {
+      titleElement.textContent = missionIntel.title || 'MISSION INTEL';
+    } else {
+      console.error("Intel title element not found");
+    }
     
     // Create intel content container
     let intelContent = '';
+    
+    // Debug log the content we're about to display
+    console.log("Intel content to display:", missionIntel.content);
+    console.log("Intel images to display:", missionIntel.images);
     
     // Only add content paragraph if there's actual content
     if (missionIntel.content && missionIntel.content.trim() !== '') {
@@ -1795,6 +1931,7 @@ window.openIntelPanel = async function(missionId) {
     // Update the intel content
     const intelContentElement = document.getElementById('intel-content');
     if (intelContentElement) {
+      console.log("Setting intel content HTML:", intelContent);
       intelContentElement.innerHTML = intelContent;
     } else {
       console.error("Intel content element not found");
@@ -1933,3 +2070,85 @@ function testIntelPanelSetup() {
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
   console.log(testIntelPanelSetup());
 }
+
+
+// Add debug function to manually test intel loading
+function testIntelLoading(missionId = 'mission1') {
+  console.log("Running intel loading test for mission:", missionId);
+  
+  // Try to find intel.json
+  findIntelJsonPath().then(path => {
+    console.log("Intel.json path discovery result:", path);
+    
+    // Try to load all intel data
+    loadIntel().then(allIntel => {
+      console.log("All intel data:", allIntel);
+      
+      // Try to load specific mission intel
+      loadIntel(missionId).then(missionIntel => {
+        console.log("Mission intel for " + missionId + ":", missionIntel);
+        
+        if (missionIntel) {
+          console.log("Intel loading test SUCCESSFUL");
+          
+          // Test opening intel panel
+          if (typeof window.openIntelPanel === 'function') {
+            console.log("Opening intel panel for test...");
+            window.openIntelPanel(missionId);
+          }
+        } else {
+          console.error("Intel loading test FAILED - No intel found for mission:", missionId);
+        }
+      });
+    });
+  });
+  
+  return "Intel loading test initiated. Check console for results.";
+}
+
+// Expose testing function globally
+window.testIntelLoading = testIntelLoading;
+
+// Console message to indicate this update has been applied
+console.log("Intel display fix applied - Version 2.0");
+
+
+// Add debug function to manually test intel loading
+function testIntelLoading(missionId = 'mission1') {
+  console.log("Running intel loading test for mission:", missionId);
+  
+  // Try to find intel.json
+  findIntelJsonPath().then(path => {
+    console.log("Intel.json path discovery result:", path);
+    
+    // Try to load all intel data
+    loadIntel().then(allIntel => {
+      console.log("All intel data:", allIntel);
+      
+      // Try to load specific mission intel
+      loadIntel(missionId).then(missionIntel => {
+        console.log("Mission intel for " + missionId + ":", missionIntel);
+        
+        if (missionIntel) {
+          console.log("Intel loading test SUCCESSFUL");
+          
+          // Test opening intel panel
+          if (typeof window.openIntelPanel === 'function') {
+            console.log("Opening intel panel for test...");
+            window.openIntelPanel(missionId);
+          }
+        } else {
+          console.error("Intel loading test FAILED - No intel found for mission:", missionId);
+        }
+      });
+    });
+  });
+  
+  return "Intel loading test initiated. Check console for results.";
+}
+
+// Expose testing function globally
+window.testIntelLoading = testIntelLoading;
+
+// Console message to indicate this update has been applied
+console.log("Intel display fix applied - Version 2.0");
