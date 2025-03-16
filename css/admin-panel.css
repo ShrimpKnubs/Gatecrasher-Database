@@ -583,3 +583,1707 @@
   flex-direction: column;
   gap: 20px;
 }
+
+/* Enhanced Admin Panel Styles */
+
+/* Admin section colors */
+.admin-section-title.resources {
+  color: #FF5733 !important; /* Orange */
+  border-bottom: 2px solid #FF5733 !important;
+  text-shadow: 0 0 5px rgba(255, 87, 51, 0.5);
+}
+
+.admin-section-title.deployments {
+  color: #33A1FF !important; /* Blue */
+  border-bottom: 2px solid #33A1FF !important;
+  text-shadow: 0 0 5px rgba(51, 161, 255, 0.5);
+}
+
+.admin-section-title.users {
+  color: #33FF57 !important; /* Green */
+  border-bottom: 2px solid #33FF57 !important;
+  text-shadow: 0 0 5px rgba(51, 255, 87, 0.5);
+}
+
+.admin-section-title.testing {
+  color: #F3FF33 !important; /* Yellow */
+  border-bottom: 2px solid #F3FF33 !important;
+  text-shadow: 0 0 5px rgba(243, 255, 51, 0.5);
+}
+
+.admin-section-title.system {
+  color: #FF33A1 !important; /* Pink */
+  border-bottom: 2px solid #FF33A1 !important;
+  text-shadow: 0 0 5px rgba(255, 51, 161, 0.5);
+}
+
+/* Resource buttons */
+.resource-button {
+  background: rgba(255, 87, 51, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #FF5733 !important;
+  transition: all 0.3s ease !important;
+}
+
+.resource-button:hover {
+  background: rgba(255, 87, 51, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 87, 51, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Deployment buttons */
+.deployment-button {
+  background: rgba(51, 161, 255, 0.2) !important;
+  color: #FFC107 !important; 
+  border: 1px solid #33A1FF !important;
+  transition: all 0.3s ease !important;
+}
+
+.deployment-button:hover {
+  background: rgba(51, 161, 255, 0.3) !important;
+  box-shadow: 0 0 15px rgba(51, 161, 255, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* User buttons */
+.user-button {
+  background: rgba(51, 255, 87, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #33FF57 !important;
+  transition: all 0.3s ease !important;
+}
+
+.user-button:hover {
+  background: rgba(51, 255, 87, 0.3) !important;
+  box-shadow: 0 0 15px rgba(51, 255, 87, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Testing buttons */
+.testing-button {
+  background: rgba(243, 255, 51, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #F3FF33 !important;
+  transition: all 0.3s ease !important;
+}
+
+.testing-button:hover {
+  background: rgba(243, 255, 51, 0.3) !important;
+  box-shadow: 0 0 15px rgba(243, 255, 51, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* System buttons */
+.system-button {
+  background: rgba(255, 51, 161, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #FF33A1 !important;
+  transition: all 0.3s ease !important;
+}
+
+.system-button:hover {
+  background: rgba(255, 51, 161, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 51, 161, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Button variants */
+.deployment-button.generate {
+  background: rgba(76, 175, 80, 0.2) !important; /* Green */
+  border-color: #4CAF50 !important;
+}
+
+.deployment-button.generate:hover {
+  background: rgba(76, 175, 80, 0.3) !important;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.5) !important;
+}
+
+.deployment-button.view {
+  background: rgba(33, 150, 243, 0.2) !important; /* Blue */
+  border-color: #2196F3 !important;
+}
+
+.deployment-button.view:hover {
+  background: rgba(33, 150, 243, 0.3) !important;
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.5) !important;
+}
+
+.deployment-button.clear {
+  background: rgba(244, 67, 54, 0.2) !important; /* Red */
+  border-color: #F44336 !important;
+}
+
+.deployment-button.clear:hover {
+  background: rgba(244, 67, 54, 0.3) !important;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+}
+
+.deployment-button.complete {
+  background: rgba(255, 152, 0, 0.2) !important; /* Orange */
+  border-color: #FF9800 !important;
+}
+
+.deployment-button.complete:hover {
+  background: rgba(255, 152, 0, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 152, 0, 0.5) !important;
+}
+
+/* Enhanced modal styles */
+.modal-content {
+  max-width: 800px;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header {
+  background: var(--background-dark);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* User action buttons */
+.user-action-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 5px;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.user-action-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+}
+
+/* Users table */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th, .users-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+  background: var(--background-dark);
+  color: var(--highlight-color);
+}
+
+/* Sound test buttons */
+.sound-tests {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sound-test-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sound-test-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Volume control for sound test */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.volume-control label {
+  color: var(--highlight-color);
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+}
+
+#volume-value {
+  color: var(--text-primary);
+  width: 50px;
+  text-align: right;
+}
+
+/* Notification test buttons */
+.notification-tests {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.test-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.test-button[data-type="standard"] {
+  border-color: var(--highlight-color);
+}
+
+.test-button[data-type="error"] {
+  border-color: var(--alert-color);
+}
+
+.test-button[data-type="success"] {
+  border-color: #4CAF50; /* Green */
+}
+
+.test-button[data-type="warning"] {
+  border-color: var(--warning-color);
+}
+
+.test-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Debug panel */
+.debug-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  background: rgba(0, 31, 24, 0.85);
+  border: 1px solid var(--border-color);
+  z-index: 9999;
+  font-size: 0.8em;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.debug-title {
+  color: var(--highlight-color);
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.debug-close {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  cursor: pointer;
+}
+
+.debug-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.debug-section {
+  margin-bottom: 10px;
+}
+
+.debug-section-title {
+  background: var(--background-dark);
+  color: var(--highlight-color);
+  padding: 5px;
+  font-size: 0.9em;
+}
+
+.debug-info {
+  padding: 5px;
+  color: var(--text-primary);
+}
+
+.debug-log {
+  padding: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.debug-log-item {
+  margin-bottom: 3px;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+
+.debug-timestamp {
+  color: var(--warning-color);
+  margin-right: 5px;
+}
+
+/* Form row layout */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group.half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.confirmation-message {
+  margin-bottom: 15px;
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  text-align: center;
+}
+
+.confirmation-warning {
+  color: var(--warning-color);
+  text-align: center;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+.delete-confirm {
+  background: #F44336 !important; /* Red */
+  color: white !important;
+}
+
+.delete-confirm:hover {
+  background: #D32F2F !important; /* Darker red */
+}
+
+/* Complete deployment button */
+.complete-deployment-button {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 8px;
+  width: 100%;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.complete-deployment-button:hover {
+  background: var(--background-light);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Deployment times */
+.deployment-times {
+  margin-top: 5px;
+  font-size: 0.9em;
+}
+
+/* Enhanced Admin Panel Styles */
+
+/* Admin section colors */
+.admin-section-title.resources {
+  color: #FF5733 !important; /* Orange */
+  border-bottom: 2px solid #FF5733 !important;
+  text-shadow: 0 0 5px rgba(255, 87, 51, 0.5);
+}
+
+.admin-section-title.deployments {
+  color: #33A1FF !important; /* Blue */
+  border-bottom: 2px solid #33A1FF !important;
+  text-shadow: 0 0 5px rgba(51, 161, 255, 0.5);
+}
+
+.admin-section-title.users {
+  color: #33FF57 !important; /* Green */
+  border-bottom: 2px solid #33FF57 !important;
+  text-shadow: 0 0 5px rgba(51, 255, 87, 0.5);
+}
+
+.admin-section-title.testing {
+  color: #F3FF33 !important; /* Yellow */
+  border-bottom: 2px solid #F3FF33 !important;
+  text-shadow: 0 0 5px rgba(243, 255, 51, 0.5);
+}
+
+.admin-section-title.system {
+  color: #FF33A1 !important; /* Pink */
+  border-bottom: 2px solid #FF33A1 !important;
+  text-shadow: 0 0 5px rgba(255, 51, 161, 0.5);
+}
+
+/* Resource buttons */
+.resource-button {
+  background: rgba(255, 87, 51, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #FF5733 !important;
+  transition: all 0.3s ease !important;
+}
+
+.resource-button:hover {
+  background: rgba(255, 87, 51, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 87, 51, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Deployment buttons */
+.deployment-button {
+  background: rgba(51, 161, 255, 0.2) !important;
+  color: #FFC107 !important; 
+  border: 1px solid #33A1FF !important;
+  transition: all 0.3s ease !important;
+}
+
+.deployment-button:hover {
+  background: rgba(51, 161, 255, 0.3) !important;
+  box-shadow: 0 0 15px rgba(51, 161, 255, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* User buttons */
+.user-button {
+  background: rgba(51, 255, 87, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #33FF57 !important;
+  transition: all 0.3s ease !important;
+}
+
+.user-button:hover {
+  background: rgba(51, 255, 87, 0.3) !important;
+  box-shadow: 0 0 15px rgba(51, 255, 87, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Testing buttons */
+.testing-button {
+  background: rgba(243, 255, 51, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #F3FF33 !important;
+  transition: all 0.3s ease !important;
+}
+
+.testing-button:hover {
+  background: rgba(243, 255, 51, 0.3) !important;
+  box-shadow: 0 0 15px rgba(243, 255, 51, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* System buttons */
+.system-button {
+  background: rgba(255, 51, 161, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #FF33A1 !important;
+  transition: all 0.3s ease !important;
+}
+
+.system-button:hover {
+  background: rgba(255, 51, 161, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 51, 161, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Button variants */
+.deployment-button.generate {
+  background: rgba(76, 175, 80, 0.2) !important; /* Green */
+  border-color: #4CAF50 !important;
+}
+
+.deployment-button.generate:hover {
+  background: rgba(76, 175, 80, 0.3) !important;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.5) !important;
+}
+
+.deployment-button.view {
+  background: rgba(33, 150, 243, 0.2) !important; /* Blue */
+  border-color: #2196F3 !important;
+}
+
+.deployment-button.view:hover {
+  background: rgba(33, 150, 243, 0.3) !important;
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.5) !important;
+}
+
+.deployment-button.clear {
+  background: rgba(244, 67, 54, 0.2) !important; /* Red */
+  border-color: #F44336 !important;
+}
+
+.deployment-button.clear:hover {
+  background: rgba(244, 67, 54, 0.3) !important;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+}
+
+.deployment-button.complete {
+  background: rgba(255, 152, 0, 0.2) !important; /* Orange */
+  border-color: #FF9800 !important;
+}
+
+.deployment-button.complete:hover {
+  background: rgba(255, 152, 0, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 152, 0, 0.5) !important;
+}
+
+/* Enhanced modal styles */
+.modal-content {
+  max-width: 800px;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header {
+  background: var(--background-dark);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* User action buttons */
+.user-action-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 5px;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.user-action-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+}
+
+/* Users table */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th, .users-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+  background: var(--background-dark);
+  color: var(--highlight-color);
+}
+
+/* Sound test buttons */
+.sound-tests {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sound-test-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sound-test-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Volume control for sound test */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.volume-control label {
+  color: var(--highlight-color);
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+}
+
+#volume-value {
+  color: var(--text-primary);
+  width: 50px;
+  text-align: right;
+}
+
+/* Notification test buttons */
+.notification-tests {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.test-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.test-button[data-type="standard"] {
+  border-color: var(--highlight-color);
+}
+
+.test-button[data-type="error"] {
+  border-color: var(--alert-color);
+}
+
+.test-button[data-type="success"] {
+  border-color: #4CAF50; /* Green */
+}
+
+.test-button[data-type="warning"] {
+  border-color: var(--warning-color);
+}
+
+.test-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Debug panel */
+.debug-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  background: rgba(0, 31, 24, 0.85);
+  border: 1px solid var(--border-color);
+  z-index: 9999;
+  font-size: 0.8em;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.debug-title {
+  color: var(--highlight-color);
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.debug-close {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  cursor: pointer;
+}
+
+.debug-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.debug-section {
+  margin-bottom: 10px;
+}
+
+.debug-section-title {
+  background: var(--background-dark);
+  color: var(--highlight-color);
+  padding: 5px;
+  font-size: 0.9em;
+}
+
+.debug-info {
+  padding: 5px;
+  color: var(--text-primary);
+}
+
+.debug-log {
+  padding: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.debug-log-item {
+  margin-bottom: 3px;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+
+.debug-timestamp {
+  color: var(--warning-color);
+  margin-right: 5px;
+}
+
+/* Form row layout */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group.half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.confirmation-message {
+  margin-bottom: 15px;
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  text-align: center;
+}
+
+.confirmation-warning {
+  color: var(--warning-color);
+  text-align: center;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+.delete-confirm {
+  background: #F44336 !important; /* Red */
+  color: white !important;
+}
+
+.delete-confirm:hover {
+  background: #D32F2F !important; /* Darker red */
+}
+
+/* Complete deployment button */
+.complete-deployment-button {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 8px;
+  width: 100%;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.complete-deployment-button:hover {
+  background: var(--background-light);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Deployment times */
+.deployment-times {
+  margin-top: 5px;
+  font-size: 0.9em;
+}
+
+/* Enhanced Admin Panel Styles */
+
+/* Admin section colors */
+.admin-section-title.resources {
+  color: #FF5733 !important; /* Orange */
+  border-bottom: 2px solid #FF5733 !important;
+  text-shadow: 0 0 5px rgba(255, 87, 51, 0.5);
+}
+
+.admin-section-title.deployments {
+  color: #33A1FF !important; /* Blue */
+  border-bottom: 2px solid #33A1FF !important;
+  text-shadow: 0 0 5px rgba(51, 161, 255, 0.5);
+}
+
+.admin-section-title.users {
+  color: #33FF57 !important; /* Green */
+  border-bottom: 2px solid #33FF57 !important;
+  text-shadow: 0 0 5px rgba(51, 255, 87, 0.5);
+}
+
+.admin-section-title.testing {
+  color: #F3FF33 !important; /* Yellow */
+  border-bottom: 2px solid #F3FF33 !important;
+  text-shadow: 0 0 5px rgba(243, 255, 51, 0.5);
+}
+
+.admin-section-title.system {
+  color: #FF33A1 !important; /* Pink */
+  border-bottom: 2px solid #FF33A1 !important;
+  text-shadow: 0 0 5px rgba(255, 51, 161, 0.5);
+}
+
+/* Resource buttons */
+.resource-button {
+  background: rgba(255, 87, 51, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #FF5733 !important;
+  transition: all 0.3s ease !important;
+}
+
+.resource-button:hover {
+  background: rgba(255, 87, 51, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 87, 51, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Deployment buttons */
+.deployment-button {
+  background: rgba(51, 161, 255, 0.2) !important;
+  color: #FFC107 !important; 
+  border: 1px solid #33A1FF !important;
+  transition: all 0.3s ease !important;
+}
+
+.deployment-button:hover {
+  background: rgba(51, 161, 255, 0.3) !important;
+  box-shadow: 0 0 15px rgba(51, 161, 255, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* User buttons */
+.user-button {
+  background: rgba(51, 255, 87, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #33FF57 !important;
+  transition: all 0.3s ease !important;
+}
+
+.user-button:hover {
+  background: rgba(51, 255, 87, 0.3) !important;
+  box-shadow: 0 0 15px rgba(51, 255, 87, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Testing buttons */
+.testing-button {
+  background: rgba(243, 255, 51, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #F3FF33 !important;
+  transition: all 0.3s ease !important;
+}
+
+.testing-button:hover {
+  background: rgba(243, 255, 51, 0.3) !important;
+  box-shadow: 0 0 15px rgba(243, 255, 51, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* System buttons */
+.system-button {
+  background: rgba(255, 51, 161, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #FF33A1 !important;
+  transition: all 0.3s ease !important;
+}
+
+.system-button:hover {
+  background: rgba(255, 51, 161, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 51, 161, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Button variants */
+.deployment-button.generate {
+  background: rgba(76, 175, 80, 0.2) !important; /* Green */
+  border-color: #4CAF50 !important;
+}
+
+.deployment-button.generate:hover {
+  background: rgba(76, 175, 80, 0.3) !important;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.5) !important;
+}
+
+.deployment-button.view {
+  background: rgba(33, 150, 243, 0.2) !important; /* Blue */
+  border-color: #2196F3 !important;
+}
+
+.deployment-button.view:hover {
+  background: rgba(33, 150, 243, 0.3) !important;
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.5) !important;
+}
+
+.deployment-button.clear {
+  background: rgba(244, 67, 54, 0.2) !important; /* Red */
+  border-color: #F44336 !important;
+}
+
+.deployment-button.clear:hover {
+  background: rgba(244, 67, 54, 0.3) !important;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+}
+
+.deployment-button.complete {
+  background: rgba(255, 152, 0, 0.2) !important; /* Orange */
+  border-color: #FF9800 !important;
+}
+
+.deployment-button.complete:hover {
+  background: rgba(255, 152, 0, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 152, 0, 0.5) !important;
+}
+
+/* Enhanced modal styles */
+.modal-content {
+  max-width: 800px;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header {
+  background: var(--background-dark);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* User action buttons */
+.user-action-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 5px;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.user-action-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+}
+
+/* Users table */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th, .users-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+  background: var(--background-dark);
+  color: var(--highlight-color);
+}
+
+/* Sound test buttons */
+.sound-tests {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sound-test-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sound-test-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Volume control for sound test */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.volume-control label {
+  color: var(--highlight-color);
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+}
+
+#volume-value {
+  color: var(--text-primary);
+  width: 50px;
+  text-align: right;
+}
+
+/* Notification test buttons */
+.notification-tests {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.test-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.test-button[data-type="standard"] {
+  border-color: var(--highlight-color);
+}
+
+.test-button[data-type="error"] {
+  border-color: var(--alert-color);
+}
+
+.test-button[data-type="success"] {
+  border-color: #4CAF50; /* Green */
+}
+
+.test-button[data-type="warning"] {
+  border-color: var(--warning-color);
+}
+
+.test-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Debug panel */
+.debug-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  background: rgba(0, 31, 24, 0.85);
+  border: 1px solid var(--border-color);
+  z-index: 9999;
+  font-size: 0.8em;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.debug-title {
+  color: var(--highlight-color);
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.debug-close {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  cursor: pointer;
+}
+
+.debug-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.debug-section {
+  margin-bottom: 10px;
+}
+
+.debug-section-title {
+  background: var(--background-dark);
+  color: var(--highlight-color);
+  padding: 5px;
+  font-size: 0.9em;
+}
+
+.debug-info {
+  padding: 5px;
+  color: var(--text-primary);
+}
+
+.debug-log {
+  padding: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.debug-log-item {
+  margin-bottom: 3px;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+
+.debug-timestamp {
+  color: var(--warning-color);
+  margin-right: 5px;
+}
+
+/* Form row layout */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group.half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.confirmation-message {
+  margin-bottom: 15px;
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  text-align: center;
+}
+
+.confirmation-warning {
+  color: var(--warning-color);
+  text-align: center;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+.delete-confirm {
+  background: #F44336 !important; /* Red */
+  color: white !important;
+}
+
+.delete-confirm:hover {
+  background: #D32F2F !important; /* Darker red */
+}
+
+/* Complete deployment button */
+.complete-deployment-button {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 8px;
+  width: 100%;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.complete-deployment-button:hover {
+  background: var(--background-light);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Deployment times */
+.deployment-times {
+  margin-top: 5px;
+  font-size: 0.9em;
+}
+
+/* Enhanced Admin Panel Styles */
+
+/* Admin section colors */
+.admin-section-title.resources {
+  color: #FF5733 !important; /* Orange */
+  border-bottom: 2px solid #FF5733 !important;
+  text-shadow: 0 0 5px rgba(255, 87, 51, 0.5);
+}
+
+.admin-section-title.deployments {
+  color: #33A1FF !important; /* Blue */
+  border-bottom: 2px solid #33A1FF !important;
+  text-shadow: 0 0 5px rgba(51, 161, 255, 0.5);
+}
+
+.admin-section-title.users {
+  color: #33FF57 !important; /* Green */
+  border-bottom: 2px solid #33FF57 !important;
+  text-shadow: 0 0 5px rgba(51, 255, 87, 0.5);
+}
+
+.admin-section-title.testing {
+  color: #F3FF33 !important; /* Yellow */
+  border-bottom: 2px solid #F3FF33 !important;
+  text-shadow: 0 0 5px rgba(243, 255, 51, 0.5);
+}
+
+.admin-section-title.system {
+  color: #FF33A1 !important; /* Pink */
+  border-bottom: 2px solid #FF33A1 !important;
+  text-shadow: 0 0 5px rgba(255, 51, 161, 0.5);
+}
+
+/* Resource buttons */
+.resource-button {
+  background: rgba(255, 87, 51, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #FF5733 !important;
+  transition: all 0.3s ease !important;
+}
+
+.resource-button:hover {
+  background: rgba(255, 87, 51, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 87, 51, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Deployment buttons */
+.deployment-button {
+  background: rgba(51, 161, 255, 0.2) !important;
+  color: #FFC107 !important; 
+  border: 1px solid #33A1FF !important;
+  transition: all 0.3s ease !important;
+}
+
+.deployment-button:hover {
+  background: rgba(51, 161, 255, 0.3) !important;
+  box-shadow: 0 0 15px rgba(51, 161, 255, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* User buttons */
+.user-button {
+  background: rgba(51, 255, 87, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #33FF57 !important;
+  transition: all 0.3s ease !important;
+}
+
+.user-button:hover {
+  background: rgba(51, 255, 87, 0.3) !important;
+  box-shadow: 0 0 15px rgba(51, 255, 87, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Testing buttons */
+.testing-button {
+  background: rgba(243, 255, 51, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #F3FF33 !important;
+  transition: all 0.3s ease !important;
+}
+
+.testing-button:hover {
+  background: rgba(243, 255, 51, 0.3) !important;
+  box-shadow: 0 0 15px rgba(243, 255, 51, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* System buttons */
+.system-button {
+  background: rgba(255, 51, 161, 0.2) !important;
+  color: #FFC107 !important;
+  border: 1px solid #FF33A1 !important;
+  transition: all 0.3s ease !important;
+}
+
+.system-button:hover {
+  background: rgba(255, 51, 161, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 51, 161, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Button variants */
+.deployment-button.generate {
+  background: rgba(76, 175, 80, 0.2) !important; /* Green */
+  border-color: #4CAF50 !important;
+}
+
+.deployment-button.generate:hover {
+  background: rgba(76, 175, 80, 0.3) !important;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.5) !important;
+}
+
+.deployment-button.view {
+  background: rgba(33, 150, 243, 0.2) !important; /* Blue */
+  border-color: #2196F3 !important;
+}
+
+.deployment-button.view:hover {
+  background: rgba(33, 150, 243, 0.3) !important;
+  box-shadow: 0 0 15px rgba(33, 150, 243, 0.5) !important;
+}
+
+.deployment-button.clear {
+  background: rgba(244, 67, 54, 0.2) !important; /* Red */
+  border-color: #F44336 !important;
+}
+
+.deployment-button.clear:hover {
+  background: rgba(244, 67, 54, 0.3) !important;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+}
+
+.deployment-button.complete {
+  background: rgba(255, 152, 0, 0.2) !important; /* Orange */
+  border-color: #FF9800 !important;
+}
+
+.deployment-button.complete:hover {
+  background: rgba(255, 152, 0, 0.3) !important;
+  box-shadow: 0 0 15px rgba(255, 152, 0, 0.5) !important;
+}
+
+/* Enhanced modal styles */
+.modal-content {
+  max-width: 800px;
+  background: var(--background-medium);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header {
+  background: var(--background-dark);
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  color: var(--highlight-color);
+  font-size: 1.2em;
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* User action buttons */
+.user-action-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 5px;
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.user-action-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+}
+
+/* Users table */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th, .users-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+  background: var(--background-dark);
+  color: var(--highlight-color);
+}
+
+/* Sound test buttons */
+.sound-tests {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sound-test-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sound-test-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Volume control for sound test */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.volume-control label {
+  color: var(--highlight-color);
+}
+
+.volume-control input[type="range"] {
+  flex: 1;
+}
+
+#volume-value {
+  color: var(--text-primary);
+  width: 50px;
+  text-align: right;
+}
+
+/* Notification test buttons */
+.notification-tests {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.test-button {
+  background: var(--background-dark);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.test-button[data-type="standard"] {
+  border-color: var(--highlight-color);
+}
+
+.test-button[data-type="error"] {
+  border-color: var(--alert-color);
+}
+
+.test-button[data-type="success"] {
+  border-color: #4CAF50; /* Green */
+}
+
+.test-button[data-type="warning"] {
+  border-color: var(--warning-color);
+}
+
+.test-button:hover {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Debug panel */
+.debug-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  background: rgba(0, 31, 24, 0.85);
+  border: 1px solid var(--border-color);
+  z-index: 9999;
+  font-size: 0.8em;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: var(--background-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.debug-title {
+  color: var(--highlight-color);
+  font-family: 'Hack-Bold', monospace !important;
+}
+
+.debug-close {
+  background: none;
+  border: none;
+  color: var(--highlight-color);
+  cursor: pointer;
+}
+
+.debug-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.debug-section {
+  margin-bottom: 10px;
+}
+
+.debug-section-title {
+  background: var(--background-dark);
+  color: var(--highlight-color);
+  padding: 5px;
+  font-size: 0.9em;
+}
+
+.debug-info {
+  padding: 5px;
+  color: var(--text-primary);
+}
+
+.debug-log {
+  padding: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--background-dark);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.debug-log-item {
+  margin-bottom: 3px;
+  word-wrap: break-word;
+  font-size: 0.9em;
+}
+
+.debug-timestamp {
+  color: var(--warning-color);
+  margin-right: 5px;
+}
+
+/* Form row layout */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-group.half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.confirmation-message {
+  margin-bottom: 15px;
+  color: var(--highlight-color);
+  font-size: 1.1em;
+  text-align: center;
+}
+
+.confirmation-warning {
+  color: var(--warning-color);
+  text-align: center;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+.delete-confirm {
+  background: #F44336 !important; /* Red */
+  color: white !important;
+}
+
+.delete-confirm:hover {
+  background: #D32F2F !important; /* Darker red */
+}
+
+/* Complete deployment button */
+.complete-deployment-button {
+  background: var(--accent-color);
+  color: var(--highlight-color);
+  border: none;
+  padding: 8px;
+  width: 100%;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.complete-deployment-button:hover {
+  background: var(--background-light);
+  box-shadow: 0 0 15px rgba(83, 167, 116, 0.5);
+}
+
+/* Deployment times */
+.deployment-times {
+  margin-top: 5px;
+  font-size: 0.9em;
+}
