@@ -607,6 +607,30 @@
   right: auto !important; /* Ensure it's never positioned from the right */
 }
 
+/* Force the intel panel to appear from the left side */
+#intel-panel.active {
+  left: 0 !important;
+  right: auto !important;
+}
+
+/* Force the intel panel to appear from the left side */
+#intel-panel.active {
+  left: 0 !important;
+  right: auto !important;
+}
+
+/* Force the intel panel to appear from the left side */
+#intel-panel.active {
+  left: 0 !important;
+  right: auto !important;
+}
+
+/* Force the intel panel to appear from the left side */
+#intel-panel.active {
+  left: 0 !important;
+  right: auto !important;
+}
+
 #intel-panel.active {
   left: 0;
   box-shadow: 5px 0 25px rgba(83, 167, 116, 0.3); /* Green glow when active */
@@ -1726,110 +1750,4 @@ button:hover, .mission-point:hover, .base-platform:hover {
 
 #mission-title, #intel-title {
   margin: 0 auto;
-}
-
-/* Resource Refresh Button Styles */
-.resource-refresh-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--mission-color);
-}
-
-.resource-refresh-button {
-  background: rgba(139, 0, 0, 0.4);
-  color: #ffcc00;
-  border: 1px solid var(--mission-color);
-  padding: 3px 8px;
-  font-size: 0.85em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 5px rgba(255, 204, 0, 0.2);
-}
-
-.resource-refresh-button:hover {
-  background: rgba(139, 0, 0, 0.6);
-  box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
-}
-
-.refresh-icon {
-  font-size: 1.1em;
-  transition: transform 0.5s ease;
-}
-
-.refresh-spinning .refresh-icon {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.resource-last-updated {
-  color: rgba(255, 204, 0, 0.7);
-  font-size: 0.7em;
-  text-align: right;
-  max-width: 120px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-/* Resource Refresh Button Styles */
-.resource-refresh-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--mission-color);
-}
-
-.resource-refresh-button {
-  background: rgba(139, 0, 0, 0.4);
-  color: #ffcc00;
-  border: 1px solid var(--mission-color);
-  padding: 3px 8px;
-  font-size: 0.85em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 5px rgba(255, 204, 0, 0.2);
-}
-
-.resource-refresh-button:hover {
-  background: rgba(139, 0, 0, 0.6);
-  box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
-}
-
-.refresh-icon {
-  font-size: 1.1em;
-  transition: transform 0.5s ease;
-}
-
-.refresh-spinning .refresh-icon {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.resource-last-updated {
-  color: rgba(255, 204, 0, 0.7);
-  font-size: 0.7em;
-  text-align: right;
-  max-width: 120px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
 }

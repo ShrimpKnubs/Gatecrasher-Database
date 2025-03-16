@@ -1,12 +1,12 @@
-// Firebase configuration
+// Firebase configuration - Using the same config from main.js
 const firebaseConfig = {
-  // Add your Firebase project details here after setup
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBKhc_Nl4kMAUfd3Ze43jG6hM1nt9FCsIg",
+  authDomain: "gatecrasher-database.firebaseapp.com",
+  projectId: "gatecrasher-database",
+  storageBucket: "gatecrasher-database.firebaseapp.com",
+  messagingSenderId: "221759991275",
+  appId: "1:221759991275:web:4b1a92d2647d9f48c8bdae",
+  measurementId: "G-QH1TYL025K"
 };
 
 // Initialize Firebase
@@ -229,3 +229,37 @@ function signOut() {
     console.error('Sign out error:', error);
   });
 }
+
+// Initialize Firebase configuration to avoid caching issues
+(function() {
+  // Set Firebase cache settings
+  firebase.firestore().settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+  });
+  
+  // Enable offline persistence with aggressive refresh
+  firebase.firestore().enablePersistence({
+    synchronizeTabs: true
+  }).catch(function(err) {
+    console.error("Firebase persistence error:", err);
+  });
+  
+  console.log("Firebase cache configuration applied");
+})();
+
+// Initialize Firebase configuration to avoid caching issues
+(function() {
+  // Set Firebase cache settings
+  firebase.firestore().settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+  });
+  
+  // Enable offline persistence with aggressive refresh
+  firebase.firestore().enablePersistence({
+    synchronizeTabs: true
+  }).catch(function(err) {
+    console.error("Firebase persistence error:", err);
+  });
+  
+  console.log("Firebase cache configuration applied");
+})();

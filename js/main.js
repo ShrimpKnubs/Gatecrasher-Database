@@ -1,9 +1,9 @@
-// Firebase configuration - Replace with your actual firebase config
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBKhc_Nl4kMAUfd3Ze43jG6hM1nt9FCsIg",
   authDomain: "gatecrasher-database.firebaseapp.com",
   projectId: "gatecrasher-database",
-  storageBucket: "gatecrasher-database.firebasestorage.app",
+  storageBucket: "gatecrasher-database.firebaseapp.com",
   messagingSenderId: "221759991275",
   appId: "1:221759991275:web:4b1a92d2647d9f48c8bdae",
   measurementId: "G-QH1TYL025K"
@@ -330,8 +330,15 @@ function initializeUIAfterLogin() {
     console.error("Error loading missions:", error);
   });
   
-  // Update resources display
+  // Update resources display and set up real-time listeners
   updateResourceDisplay();
+  
+  // Initialize resource listener for real-time updates
+  if (typeof setupResourcesListener === 'function') {
+    setupResourcesListener();
+  } else {
+    console.warn("Resource listener function not available");
+  }
   
   // Initialize UI sounds
   initializeUISounds();
@@ -799,18 +806,18 @@ function initializeResourceManagement() {
   setInterval(updateResourceDisplay, 60000); // Update every minute
 }
 
-// Override original update resource display function to use global resources
+// Update resource display
 async function updateResourceDisplay() {
   try {
-    // Get global resources instead of user-specific resources
-    const globalDoc = await db.collection('globalResources').doc('shared').get();
+    let userData;
     
-    let resourceData;
-    if (globalDoc.exists) {
-      resourceData = globalDoc.data();
+    if (currentUser) {
+      // For authenticated users, get data from Firebase
+      const userDoc = await db.collection('users').doc(currentUser.uid).get();
+      userData = userDoc.data();
     } else {
-      // Fall back to default values and initialize global resources
-      resourceData = {
+      // For guests, use default values
+      userData = {
         money: 100000,
         resources: {
           fuel: 500,
@@ -820,39 +827,35 @@ async function updateResourceDisplay() {
           materials: 500
         }
       };
-      
-      // Initialize the global resources
-      initializeGlobalResources();
     }
     
-    // Update all UI displays with the data
-    updateResourceMonitor(resourceData);
-    updateBaseResourceDisplay(resourceData);
+    // Update the resource monitor in top left
+    updateResourceMonitor(userData);
     
-    // Also update squad panel display
-    const resourceDisplay = document.getElementById('resource-display');
-    if (resourceDisplay) {
-      resourceDisplay.innerHTML = '';
+    // Also update the base resources display if it exists
+    const baseResourcesDisplay = document.getElementById('base-resources');
+    if (baseResourcesDisplay) {
+      baseResourcesDisplay.innerHTML = '';
       
       // Add money display
-      const moneyItem = document.createElement('div');
-      moneyItem.className = 'resource-item';
-      moneyItem.innerHTML = `
+      const moneyDisplay = document.createElement('div');
+      moneyDisplay.className = 'resource-item';
+      moneyDisplay.innerHTML = `
         <div class="resource-name">MONEY:</div>
-        <div class="resource-value">${resourceData.money.toLocaleString()}</div>
+        <div class="resource-value">$${userData.money.toLocaleString()}</div>
       `;
-      resourceDisplay.appendChild(moneyItem);
+      baseResourcesDisplay.appendChild(moneyDisplay);
       
       // Add other resources
-      if (resourceData.resources) {
-        for (const [resource, amount] of Object.entries(resourceData.resources)) {
+      if (userData.resources) {
+        for (const [resource, amount] of Object.entries(userData.resources)) {
           const resourceItem = document.createElement('div');
           resourceItem.className = 'resource-item';
           resourceItem.innerHTML = `
             <div class="resource-name">${resource.toUpperCase()}:</div>
             <div class="resource-value">${amount}</div>
           `;
-          resourceDisplay.appendChild(resourceItem);
+          baseResourcesDisplay.appendChild(resourceItem);
         }
       }
     }
@@ -2678,3 +2681,25 @@ console.log("Vertical tabs polished - no line, X buttons removed - Version 5.1")
 
 // Final polish for vertical tabs
 console.log("Vertical tabs polished - no line, X buttons removed - Version 5.1");
+
+
+// Initialize firebase hosting service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(function(registration) {
+      console.log('Firebase Service Worker registered with scope:', registration.scope);
+    }).catch(function(error) {
+      console.log('Service worker registration failed:', error);
+    });
+}
+
+
+// Initialize firebase hosting service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(function(registration) {
+      console.log('Firebase Service Worker registered with scope:', registration.scope);
+    }).catch(function(error) {
+      console.log('Service worker registration failed:', error);
+    });
+}

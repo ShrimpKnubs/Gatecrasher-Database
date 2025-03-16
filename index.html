@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Military Strategic Globe</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/login.css">
-  <link rel="stylesheet" href="css/admin-panel.css">
-  <link rel="stylesheet" href="css/close-buttons.css">
+  <link rel="stylesheet" href="css/style.css?v=1.1">
+  <link rel="stylesheet" href="css/login.css?v=1.1">
+  <link rel="stylesheet" href="css/admin-panel.css?v=1.1">
+  <link rel="stylesheet" href="css/close-buttons.css?v=1.1">
   
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
@@ -17,30 +20,6 @@
 <body>
   <!-- Z-Index Layer 1: Background -->
   <div id="vanta-background" style="background-image: url('textures/background.png'); background-size: cover; background-repeat: no-repeat;"></div>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Military Strategic Globe</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/login.css">
-  <link rel="stylesheet" href="css/admin-panel.css">
-  <link rel="stylesheet" href="css/close-buttons.css">
-  
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
-</head>
-<body>
-  <!-- Z-Index Layer 1: Background -->
-  <div id="vanta-background" style="background-image: url('textures/background.png'); background-size: cover; background-repeat: no-repeat;"></div>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Military Strategic Globe</title>
@@ -50,74 +29,6 @@
   
   <!-- Additional styles for enhanced features -->
   <style>
-    /* Enhanced Sci-Fi Resource Monitor in Top Left */
-    .resources-panel {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 280px;
-      background: rgba(0, 31, 24, 0.85);
-      border: 1px solid var(--border-color);
-      border-left: 3px solid var(--mission-color);
-      box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
-      z-index: 5;
-      overflow: hidden;
-    }
-    /* Enhanced Sci-Fi Resource Monitor in Top Left */
-    .resources-panel {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 280px;
-      background: rgba(0, 31, 24, 0.85);
-      border: 1px solid var(--border-color);
-      border-left: 3px solid var(--mission-color);
-      box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
-      z-index: 3; /* Lower z-index so it appears below intel panel */
-      overflow: hidden;
-    }
-
-    /* Enhanced Sci-Fi Resource Monitor in Top Left */
-    .resources-panel {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 280px;
-      background: rgba(0, 31, 24, 0.85);
-      border: 1px solid var(--border-color);
-      border-left: 3px solid var(--mission-color);
-      box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
-      z-index: 5;
-      overflow: hidden;
-    }
-    /* Enhanced Sci-Fi Resource Monitor in Top Left */
-    .resources-panel {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 280px;
-      background: rgba(0, 31, 24, 0.85);
-      border: 1px solid var(--border-color);
-      border-left: 3px solid var(--mission-color);
-      box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
-      z-index: 3; /* Lower z-index so it appears below intel panel */
-      overflow: hidden;
-    }
-
-    /* Enhanced Sci-Fi Resource Monitor in Top Left */
-    .resources-panel {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      width: 280px;
-      background: rgba(0, 31, 24, 0.85);
-      border: 1px solid var(--border-color);
-      border-left: 3px solid var(--mission-color);
-      box-shadow: 0 0 15px rgba(221, 48, 48, 0.3);
-      z-index: 5;
-      overflow: hidden;
-    }
-
     /* Enhanced Sci-Fi Resource Monitor in Top Left */
     .resources-panel {
       position: fixed;
@@ -911,17 +822,11 @@
 
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/intel-panel.js"></script>
-
-  <script src="js/intel-panel.js"></script>
-
-  <script src="js/intel-panel.js"></script>
-
-  <script src="js/mission-system.js"></script>
-  <script src="js/base-system.js"></script>
-  <script src="js/deployment-system.js"></script>
-  <script src="js/resource-system.js"></script>
-  <script src="js/admin-panel.js"></script>
+  <script src="js/main.js?v=1.1"></script>
+  <script src="js/mission-system.js?v=1.1"></script>
+  <script src="js/base-system.js?v=1.1"></script>
+  <script src="js/deployment-system.js?v=1.1"></script>
+  <script src="js/resource-system.js?v=1.1"></script>
+  <script src="js/admin-panel.js?v=1.1"></script>
 </body>
 </html>
