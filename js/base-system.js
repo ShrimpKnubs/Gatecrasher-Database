@@ -384,54 +384,82 @@ async function loadCurrentUpgrades() {
   }
 }
 
-// Update team UI with current data
+// Update team UI with current data - FIXED to prevent layout shifts
 function updateTeamUi() {
-  // Update each team's stats on UI
+  // Update each team's stats on UI - Use textContent instead of innerHTML where possible
   Object.keys(baseTeams).forEach(teamType => {
     const team = baseTeams[teamType];
     
     // Update level display
     const levelElement = document.getElementById(`${teamType}-level`);
     if (levelElement) {
-      levelElement.textContent = team.level;
+      // Only update if the value has changed to prevent unnecessary repaints
+      if (levelElement.textContent !== String(team.level)) {
+        levelElement.textContent = team.level;
+      }
     }
     
     // Update stats based on team type
     if (teamType === 'combat') {
-      document.getElementById('combat-power').textContent = team.power;
-      document.getElementById('combat-members').textContent = team.availableMembers;
-      document.getElementById('combat-wounded').textContent = team.woundedMembers;
+      const powerElement = document.getElementById('combat-power');
+      const membersElement = document.getElementById('combat-members');
+      const woundedElement = document.getElementById('combat-wounded');
+      
+      if (powerElement && powerElement.textContent !== String(team.power)) {
+        powerElement.textContent = team.power;
+      }
+      
+      if (membersElement && membersElement.textContent !== String(team.availableMembers)) {
+        membersElement.textContent = team.availableMembers;
+      }
+      
+      if (woundedElement && woundedElement.textContent !== String(team.woundedMembers)) {
+        woundedElement.textContent = team.woundedMembers;
+      }
     } else if (teamType === 'medical') {
       // Update medical team display
       const healRateElement = document.getElementById('medical-heal-rate');
       if (healRateElement) {
-        healRateElement.textContent = `${team.healRate}x`;
+        const healRateText = `${team.healRate}x`;
+        if (healRateElement.textContent !== healRateText) {
+          healRateElement.textContent = healRateText;
+        }
       }
     } else if (teamType === 'intel') {
       // Update intel team display
       const intelRateElement = document.getElementById('intel-rate');
       if (intelRateElement) {
-        intelRateElement.textContent = `${team.intelRate}x`;
+        const intelRateText = `${team.intelRate}x`;
+        if (intelRateElement.textContent !== intelRateText) {
+          intelRateElement.textContent = intelRateText;
+        }
       }
     } else if (teamType === 'rnd') {
       // Update R&D display
       const weaponsTierElement = document.getElementById('weapons-tier');
       if (weaponsTierElement) {
         const maxTier = Math.max(...team.unlockedWeapons.map(tier => parseInt(tier.replace('tier', ''))));
-        weaponsTierElement.textContent = maxTier;
+        if (weaponsTierElement.textContent !== String(maxTier)) {
+          weaponsTierElement.textContent = maxTier;
+        }
       }
     } else if (teamType === 'command') {
       // Update command display
       const maxDeploymentsElement = document.getElementById('max-deployments');
       if (maxDeploymentsElement) {
-        maxDeploymentsElement.textContent = team.maxDeployments;
+        if (maxDeploymentsElement.textContent !== String(team.maxDeployments)) {
+          maxDeploymentsElement.textContent = team.maxDeployments;
+        }
       }
     } else if (teamType === 'development') {
       // Update development display
       const buildReductionElement = document.getElementById('build-reduction');
       if (buildReductionElement) {
         const reductionPercent = Math.round((1 - team.buildTimeReduction) * 100);
-        buildReductionElement.textContent = `${reductionPercent}%`;
+        const reductionText = `${reductionPercent}%`;
+        if (buildReductionElement.textContent !== reductionText) {
+          buildReductionElement.textContent = reductionText;
+        }
       }
     }
   });

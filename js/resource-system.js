@@ -112,7 +112,7 @@ function updateResourceMonitor(userData) {
   moneyItem.className = 'resource-monitor-item';
   moneyItem.innerHTML = `
     <div class="resource-monitor-label">MONEY</div>
-    <div class="resource-monitor-value money-value">$${userData.money.toLocaleString()}</div>
+    <div class="resource-monitor-value money-value">${userData.money.toLocaleString()}</div>
   `;
   resourceMonitorContent.appendChild(moneyItem);
   
@@ -123,9 +123,17 @@ function updateResourceMonitor(userData) {
   moneyBar.innerHTML = `<div class="resource-fill" style="width: ${moneyPercentage}%"></div>`;
   resourceMonitorContent.appendChild(moneyBar);
   
-  // Add other resources
+  // Add other resources in a consistent, fixed order
   if (userData.resources) {
-    for (const [resource, amount] of Object.entries(userData.resources)) {
+    // Define the order we want to display resources in
+    const resourceOrder = ['fuel', 'ammo', 'medicine', 'food', 'materials'];
+    
+    // Process resources in our defined order
+    resourceOrder.forEach(resource => {
+      // Skip if this resource doesn't exist in userData
+      if (!userData.resources.hasOwnProperty(resource)) return;
+      
+      const amount = userData.resources[resource];
       const resourceItem = document.createElement('div');
       resourceItem.className = 'resource-monitor-item';
       resourceItem.innerHTML = `
@@ -140,7 +148,7 @@ function updateResourceMonitor(userData) {
       const percentage = Math.min(100, (amount / 1000) * 100); // Max at 1000
       resourceBar.innerHTML = `<div class="resource-fill" style="width: ${percentage}%"></div>`;
       resourceMonitorContent.appendChild(resourceBar);
-    }
+    });
   }
 }
 
@@ -156,13 +164,21 @@ function updateBaseResourceDisplay(userData) {
   moneyDisplay.className = 'resource-item';
   moneyDisplay.innerHTML = `
     <div class="resource-name">MONEY:</div>
-    <div class="resource-value">$${userData.money.toLocaleString()}</div>
+    <div class="resource-value">${userData.money.toLocaleString()}</div>
   `;
   baseResourcesDisplay.appendChild(moneyDisplay);
   
-  // Add other resources
+  // Add other resources in a consistent, fixed order
   if (userData.resources) {
-    for (const [resource, amount] of Object.entries(userData.resources)) {
+    // Define the order we want to display resources in
+    const resourceOrder = ['fuel', 'ammo', 'medicine', 'food', 'materials'];
+    
+    // Process resources in our defined order
+    resourceOrder.forEach(resource => {
+      // Skip if this resource doesn't exist in userData
+      if (!userData.resources.hasOwnProperty(resource)) return;
+      
+      const amount = userData.resources[resource];
       const resourceItem = document.createElement('div');
       resourceItem.className = 'resource-item';
       resourceItem.innerHTML = `
@@ -170,12 +186,12 @@ function updateBaseResourceDisplay(userData) {
         <div class="resource-value">${amount}</div>
       `;
       baseResourcesDisplay.appendChild(resourceItem);
-    }
+    });
   }
 }
 
-// Add resources to user - Firebase Integration
-// ENHANCED for reliable real-time updates
+// Add resources to user - Firebase Integration - FIXED
+// ENHANCED for reliable real-time updates with DOM preservation
 async function addResources(userId, resources) {
   if (!userId) return { success: false, error: 'No user ID provided' };
   
@@ -213,16 +229,16 @@ async function addResources(userId, resources) {
     
     console.log("Added resources to global pool:", resources);
     
-    // Force a UI refresh just to be sure
+    // Force a UI refresh just to be sure, but use the new DOM-preserving approach
     setTimeout(() => {
       globalResourcesRef.get().then(doc => {
         if (doc.exists) {
           const sharedData = doc.data();
           updateResourceMonitor(sharedData);
-          updateBaseResourceDisplay(sharedData);
+          updateBaseResourceDisplay(sharedData); // Will now preserve DOM structure
         }
       });
-    }, 500);
+    }, 300); // Reduced timeout for faster update
     
     return { success: true };
   } catch (error) {
@@ -1117,66 +1133,8 @@ function addShopStyles() {
 document.addEventListener('DOMContentLoaded', addShopStyles);
 
 
-// Update base resource display in a separate function
-function updateBaseResourceDisplay(userData) {
-  const baseResourcesDisplay = document.getElementById('base-resources');
-  if (!baseResourcesDisplay) return;
-  
-  baseResourcesDisplay.innerHTML = '';
-  
-  // Add money display
-  const moneyDisplay = document.createElement('div');
-  moneyDisplay.className = 'resource-item';
-  moneyDisplay.innerHTML = `
-    <div class="resource-name">MONEY:</div>
-    <div class="resource-value">$${userData.money.toLocaleString()}</div>
-  `;
-  baseResourcesDisplay.appendChild(moneyDisplay);
-  
-  // Add other resources
-  if (userData.resources) {
-    for (const [resource, amount] of Object.entries(userData.resources)) {
-      const resourceItem = document.createElement('div');
-      resourceItem.className = 'resource-item';
-      resourceItem.innerHTML = `
-        <div class="resource-name">${resource.toUpperCase()}:</div>
-        <div class="resource-value">${amount}</div>
-      `;
-      baseResourcesDisplay.appendChild(resourceItem);
-    }
-  }
-}
 
 
-// Update base resource display in a separate function
-function updateBaseResourceDisplay(userData) {
-  const baseResourcesDisplay = document.getElementById('base-resources');
-  if (!baseResourcesDisplay) return;
-  
-  baseResourcesDisplay.innerHTML = '';
-  
-  // Add money display
-  const moneyDisplay = document.createElement('div');
-  moneyDisplay.className = 'resource-item';
-  moneyDisplay.innerHTML = `
-    <div class="resource-name">MONEY:</div>
-    <div class="resource-value">$${userData.money.toLocaleString()}</div>
-  `;
-  baseResourcesDisplay.appendChild(moneyDisplay);
-  
-  // Add other resources
-  if (userData.resources) {
-    for (const [resource, amount] of Object.entries(userData.resources)) {
-      const resourceItem = document.createElement('div');
-      resourceItem.className = 'resource-item';
-      resourceItem.innerHTML = `
-        <div class="resource-name">${resource.toUpperCase()}:</div>
-        <div class="resource-value">${amount}</div>
-      `;
-      baseResourcesDisplay.appendChild(resourceItem);
-    }
-  }
-}
 
 // Setup real-time resource updates listener - ENHANCED FOR REAL-TIME UPDATES
 function setupResourcesListener() {
@@ -1225,9 +1183,17 @@ function setupResourcesListener() {
             `;
             resourceDisplay.appendChild(moneyItem);
             
-            // Add other resources
+            // Add other resources in a consistent, fixed order
             if (sharedData.resources) {
-              for (const [resource, amount] of Object.entries(sharedData.resources)) {
+              // Define the order we want to display resources in
+              const resourceOrder = ['fuel', 'ammo', 'medicine', 'food', 'materials'];
+              
+              // Process resources in our defined order
+              resourceOrder.forEach(resource => {
+                // Skip if this resource doesn't exist in userData
+                if (!sharedData.resources.hasOwnProperty(resource)) return;
+                
+                const amount = sharedData.resources[resource];
                 const resourceItem = document.createElement('div');
                 resourceItem.className = 'resource-item';
                 resourceItem.innerHTML = `
@@ -1235,14 +1201,11 @@ function setupResourcesListener() {
                   <div class="resource-value">${amount}</div>
                 `;
                 resourceDisplay.appendChild(resourceItem);
-              }
+              });
             }
           }
           
-          // Notify user if enabled (disabled by default to avoid spam)
-          if (sharedData.notifyUpdates) {
-            showNotification('RESOURCES UPDATED');
-          }
+          // Removed notification - no longer showing resource update notifications
         });
       } else {
         console.log("No shared resources found, initializing default values");
@@ -1346,19 +1309,19 @@ async function initializeGlobalResources() {
         },
         lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
         updateId: Math.random().toString(36).substring(2, 15),
-        notifyUpdates: false,
-        cacheVersion: 1.1 // Used to track version and force updates
+        notifyUpdates: false, // Always disabled to avoid showing notifications
+        cacheVersion: 1.2 // Updated version number
       });
       
       console.log("Global resources initialized with default values");
     } else {
       // Make sure we have the updateId property for forcing updates
-      if (!doc.data().updateId) {
-        await globalResourcesRef.update({
-          updateId: Math.random().toString(36).substring(2, 15),
-          cacheVersion: 1.1
-        });
-      }
+      // And also ensure notifyUpdates is disabled
+      await globalResourcesRef.update({
+        updateId: Math.random().toString(36).substring(2, 15),
+        notifyUpdates: false, // Always ensure notifications are disabled
+        cacheVersion: 1.2
+      });
     }
   } catch (error) {
     console.error("Error initializing global resources:", error);
@@ -1405,13 +1368,21 @@ async function updateResourceDisplay() {
       moneyItem.className = 'resource-item';
       moneyItem.innerHTML = `
         <div class="resource-name">MONEY:</div>
-        <div class="resource-value">$${resourceData.money.toLocaleString()}</div>
+        <div class="resource-value">${resourceData.money.toLocaleString()}</div>
       `;
       resourceDisplay.appendChild(moneyItem);
       
-      // Add other resources
+      // Add other resources in a consistent, fixed order
       if (resourceData.resources) {
-        for (const [resource, amount] of Object.entries(resourceData.resources)) {
+        // Define the order we want to display resources in
+        const resourceOrder = ['fuel', 'ammo', 'medicine', 'food', 'materials'];
+        
+        // Process resources in our defined order
+        resourceOrder.forEach(resource => {
+          // Skip if this resource doesn't exist in userData
+          if (!resourceData.resources.hasOwnProperty(resource)) return;
+          
+          const amount = resourceData.resources[resource];
           const resourceItem = document.createElement('div');
           resourceItem.className = 'resource-item';
           resourceItem.innerHTML = `
@@ -1419,7 +1390,7 @@ async function updateResourceDisplay() {
             <div class="resource-value">${amount}</div>
           `;
           resourceDisplay.appendChild(resourceItem);
-        }
+        });
       }
     }
   } catch (error) {
@@ -1474,9 +1445,17 @@ function setupResourcesListener() {
             `;
             resourceDisplay.appendChild(moneyItem);
             
-            // Add other resources
+            // Add other resources in a consistent, fixed order
             if (sharedData.resources) {
-              for (const [resource, amount] of Object.entries(sharedData.resources)) {
+              // Define the order we want to display resources in
+              const resourceOrder = ['fuel', 'ammo', 'medicine', 'food', 'materials'];
+              
+              // Process resources in our defined order
+              resourceOrder.forEach(resource => {
+                // Skip if this resource doesn't exist in userData
+                if (!sharedData.resources.hasOwnProperty(resource)) return;
+                
+                const amount = sharedData.resources[resource];
                 const resourceItem = document.createElement('div');
                 resourceItem.className = 'resource-item';
                 resourceItem.innerHTML = `
@@ -1484,14 +1463,11 @@ function setupResourcesListener() {
                   <div class="resource-value">${amount}</div>
                 `;
                 resourceDisplay.appendChild(resourceItem);
-              }
+              });
             }
           }
           
-          // Notify user if enabled (disabled by default to avoid spam)
-          if (sharedData.notifyUpdates) {
-            showNotification('RESOURCES UPDATED');
-          }
+          // Removed notification - no longer showing resource update notifications
         });
       } else {
         console.log("No shared resources found, initializing default values");
@@ -1595,19 +1571,19 @@ async function initializeGlobalResources() {
         },
         lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
         updateId: Math.random().toString(36).substring(2, 15),
-        notifyUpdates: false,
-        cacheVersion: 1.1 // Used to track version and force updates
+        notifyUpdates: false, // Always disabled to avoid showing notifications
+        cacheVersion: 1.2 // Updated version number
       });
       
       console.log("Global resources initialized with default values");
     } else {
       // Make sure we have the updateId property for forcing updates
-      if (!doc.data().updateId) {
-        await globalResourcesRef.update({
-          updateId: Math.random().toString(36).substring(2, 15),
-          cacheVersion: 1.1
-        });
-      }
+      // And also ensure notifyUpdates is disabled
+      await globalResourcesRef.update({
+        updateId: Math.random().toString(36).substring(2, 15),
+        notifyUpdates: false, // Always ensure notifications are disabled
+        cacheVersion: 1.2
+      });
     }
   } catch (error) {
     console.error("Error initializing global resources:", error);
@@ -1654,13 +1630,21 @@ async function updateResourceDisplay() {
       moneyItem.className = 'resource-item';
       moneyItem.innerHTML = `
         <div class="resource-name">MONEY:</div>
-        <div class="resource-value">$${resourceData.money.toLocaleString()}</div>
+        <div class="resource-value">${resourceData.money.toLocaleString()}</div>
       `;
       resourceDisplay.appendChild(moneyItem);
       
-      // Add other resources
+      // Add other resources in a consistent, fixed order
       if (resourceData.resources) {
-        for (const [resource, amount] of Object.entries(resourceData.resources)) {
+        // Define the order we want to display resources in
+        const resourceOrder = ['fuel', 'ammo', 'medicine', 'food', 'materials'];
+        
+        // Process resources in our defined order
+        resourceOrder.forEach(resource => {
+          // Skip if this resource doesn't exist in userData
+          if (!resourceData.resources.hasOwnProperty(resource)) return;
+          
+          const amount = resourceData.resources[resource];
           const resourceItem = document.createElement('div');
           resourceItem.className = 'resource-item';
           resourceItem.innerHTML = `
@@ -1668,7 +1652,7 @@ async function updateResourceDisplay() {
             <div class="resource-value">${amount}</div>
           `;
           resourceDisplay.appendChild(resourceItem);
-        }
+        });
       }
     }
   } catch (error) {

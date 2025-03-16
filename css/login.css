@@ -145,7 +145,73 @@
   gap: 15px;
 }
 
+.resource-item
+/* Fix for resource items in base tab - prevent shifting */
+.resource-container {
+  position: relative;
+}
+
 .resource-item {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-light);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  min-height: 65px; /* Fixed height to prevent shifting */
+  position: relative;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  position: relative;
+}
+
+/* Fix for resource items in base tab - prevent shifting */
+.resource-container {
+  position: relative;
+}
+
+.resource-item
+/* Fix for resource items in base tab - prevent shifting */
+.resource-container {
+  position: relative;
+}
+
+.resource-item {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-light);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  min-height: 65px; /* Fixed height to prevent shifting */
+  position: relative;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  position: relative;
+}
+ {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-light);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  min-height: 65px; /* Fixed height to prevent shifting */
+  position: relative;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  position: relative;
+}
+ {
   display: flex;
   flex-direction: column;
   background: var(--background-light);
@@ -553,7 +619,73 @@
   margin-bottom: 15px;
 }
 
+.resource-item
+/* Fix for resource items in base tab - prevent shifting */
+.resource-container {
+  position: relative;
+}
+
 .resource-item {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-light);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  min-height: 65px; /* Fixed height to prevent shifting */
+  position: relative;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  position: relative;
+}
+
+/* Fix for resource items in base tab - prevent shifting */
+.resource-container {
+  position: relative;
+}
+
+.resource-item
+/* Fix for resource items in base tab - prevent shifting */
+.resource-container {
+  position: relative;
+}
+
+.resource-item {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-light);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  min-height: 65px; /* Fixed height to prevent shifting */
+  position: relative;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  position: relative;
+}
+ {
+  display: flex;
+  flex-direction: column;
+  background: var(--background-light);
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  min-height: 65px; /* Fixed height to prevent shifting */
+  position: relative;
+}
+
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  position: relative;
+}
+ {
   display: flex;
   justify-content: space-between;
   margin-bottom: 5px;

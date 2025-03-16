@@ -172,7 +172,82 @@
   padding: 10px;
 }
 
+.resource-monitor-item
+/* Fix for resource items in resource monitor - prevent shifting */
+.resources-panel .panel-content {
+  position: relative;
+}
+
 .resource-monitor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+  height: 30px; /* Fixed height to prevent shifting */
+}
+
+.resource-bar {
+  height: 3px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin-top: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  min-height: 3px; /* Ensure minimum height */
+}
+
+/* Fix for resource items in resource monitor - prevent shifting */
+.resources-panel .panel-content {
+  position: relative;
+}
+
+.resource-monitor-item
+/* Fix for resource items in resource monitor - prevent shifting */
+.resources-panel .panel-content {
+  position: relative;
+}
+
+.resource-monitor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+  height: 30px; /* Fixed height to prevent shifting */
+}
+
+.resource-bar {
+  height: 3px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin-top: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  min-height: 3px; /* Ensure minimum height */
+}
+ {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+  height: 30px; /* Fixed height to prevent shifting */
+}
+
+.resource-bar {
+  height: 3px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin-top: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  min-height: 3px; /* Ensure minimum height */
+}
+ {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1438,7 +1513,82 @@ button:hover, .mission-point:hover, .base-platform:hover {
   padding: 10px;
 }
 
+.resource-monitor-item
+/* Fix for resource items in resource monitor - prevent shifting */
+.resources-panel .panel-content {
+  position: relative;
+}
+
 .resource-monitor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+  height: 30px; /* Fixed height to prevent shifting */
+}
+
+.resource-bar {
+  height: 3px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin-top: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  min-height: 3px; /* Ensure minimum height */
+}
+
+/* Fix for resource items in resource monitor - prevent shifting */
+.resources-panel .panel-content {
+  position: relative;
+}
+
+.resource-monitor-item
+/* Fix for resource items in resource monitor - prevent shifting */
+.resources-panel .panel-content {
+  position: relative;
+}
+
+.resource-monitor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+  height: 30px; /* Fixed height to prevent shifting */
+}
+
+.resource-bar {
+  height: 3px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin-top: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  min-height: 3px; /* Ensure minimum height */
+}
+ {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  position: relative;
+  height: 30px; /* Fixed height to prevent shifting */
+}
+
+.resource-bar {
+  height: 3px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  position: relative;
+  margin-top: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  min-height: 3px; /* Ensure minimum height */
+}
+ {
   display: flex;
   justify-content: space-between;
   align-items: center;
