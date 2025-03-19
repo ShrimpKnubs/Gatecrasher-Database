@@ -735,28 +735,47 @@
     
     <div class="admin-content">
       <div class="admin-section">
-        <div class="admin-section-title">MISSION MANAGEMENT</div>
-        <button id="create-mission-button">CREATE MISSION</button>
-        <button id="edit-mission-button">EDIT MISSION</button>
-        <button id="complete-mission-button">COMPLETE MISSION</button>
-      </div>
-      
-      <div class="admin-section">
-        <div class="admin-section-title">USER MANAGEMENT</div>
-        <button id="create-user-button">CREATE USER</button>
-        <button id="edit-user-button">EDIT USER</button>
-      </div>
-      
-      <div class="admin-section">
         <div class="admin-section-title">DEPLOYMENT MANAGEMENT</div>
-        <button id="generate-deployments-button">GENERATE DEPLOYMENTS</button>
-        <button id="view-deployments-button">VIEW DEPLOYMENTS</button>
+        <button id="generate-money-deployment">GENERATE MONEY DEPLOYMENT</button>
+        <button id="generate-fuel-deployment">GENERATE FUEL DEPLOYMENT</button>
+        <button id="generate-ammo-deployment">GENERATE AMMO DEPLOYMENT</button>
+        <button id="generate-medicine-deployment">GENERATE MEDICINE DEPLOYMENT</button>
+        <button id="generate-food-deployment">GENERATE FOOD DEPLOYMENT</button>
+        <button id="generate-materials-deployment">GENERATE MATERIALS DEPLOYMENT</button>
+        <button id="view-active-deployments">VIEW ACTIVE DEPLOYMENTS</button>
       </div>
       
       <div class="admin-section">
-        <div class="admin-section-title">RESOURCE MANAGEMENT</div>
-        <button id="reset-resources-button">RESET DEFAULT RESOURCES</button>
-        <button id="add-resources-button">ADD TEST RESOURCES</button>
+        <div class="admin-section-title resources">RESOURCE MANAGEMENT</div>
+        <div class="resource-input-group">
+          <button id="add-money-button" class="resource-button">ADD MONEY</button>
+          <input type="number" id="money-amount" placeholder="Amount" min="0" value="10000">
+        </div>
+        <div class="resource-input-group">
+          <button id="add-fuel-button" class="resource-button">ADD FUEL</button>
+          <input type="number" id="fuel-amount" placeholder="Amount" min="0" value="100">
+        </div>
+        <div class="resource-input-group">
+          <button id="add-ammo-button" class="resource-button">ADD AMMO</button>
+          <input type="number" id="ammo-amount" placeholder="Amount" min="0" value="100">
+        </div>
+        <div class="resource-input-group">
+          <button id="add-medicine-button" class="resource-button">ADD MEDICINE</button>
+          <input type="number" id="medicine-amount" placeholder="Amount" min="0" value="100">
+        </div>
+        <div class="resource-input-group">
+          <button id="add-food-button" class="resource-button">ADD FOOD</button>
+          <input type="number" id="food-amount" placeholder="Amount" min="0" value="100">
+        </div>
+        <div class="resource-input-group">
+          <button id="add-materials-button" class="resource-button">ADD MATERIALS</button>
+          <input type="number" id="materials-amount" placeholder="Amount" min="0" value="100">
+        </div>
+        <button id="reset-resources-button" class="resource-button reset">RESET DEFAULT RESOURCES</button>
+        <div class="resource-input-group">
+          <button id="add-resources-button" class="resource-button add">ADD TEST RESOURCES</button>
+          <input type="number" id="test-resources-amount" placeholder="Amount" min="0" value="200">
+        </div>
       </div>
     </div>
   </div>
@@ -775,12 +794,12 @@
     <div class="squad-section">
       <div class="squad-section-title">ACTIONS</div>
       <button id="accept-mission-button">ACCEPT MISSION</button>
-      <button id="send-deployment-button">SEND DEPLOYMENT</button>
+      <button id="send-deployment-button" style="display: none;">SEND SQUAD</button>
       <button id="shop-button">EQUIPMENT SHOP</button>
     </div>
   </div>
 
-  <div id="notification">SYSTEM NOTIFICATION</div>
+  <div id="notification" style="display:none !important;"></div>
 
   <div id="status-bar">
     <div id="status-text">STATUS: OPERATIONAL</div>
@@ -830,3 +849,213 @@
   <script src="js/admin-panel.js?v=1.1"></script>
 </body>
 </html>
+
+<script>
+  // Initialize event handlers once document is fully loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Make notification element visible
+    const notification = document.getElementById('notification');
+    if (notification) {
+      notification.style.display = 'block';
+    }
+    
+    // Add squad deployment button to mission panel
+    const missionPanel = document.getElementById('mission-panel');
+    if (missionPanel && !document.getElementById('send-deployment-button')) {
+      const sendButton = document.createElement('button');
+      sendButton.id = 'send-deployment-button';
+      sendButton.textContent = 'SEND SQUAD';
+      sendButton.style.display = 'none';
+      
+      // Add after intel button
+      const intelButton = document.getElementById('mission-intel-button');
+      if (intelButton && intelButton.parentNode) {
+        intelButton.parentNode.appendChild(sendButton);
+      } else {
+        missionPanel.appendChild(sendButton);
+      }
+      
+      // Add click event listener
+      sendButton.addEventListener('click', function() {
+        if (activeMission && activeMission.id) {
+          confirmSendSquad(activeMission.id);
+        } else {
+          showNotification('SELECT A DEPLOYMENT FIRST');
+        }
+      });
+    }
+  });
+</script>
+
+<script>
+  // Initialize event handlers once document is fully loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Make notification element visible
+    const notification = document.getElementById('notification');
+    if (notification) {
+      notification.style.display = 'block';
+    }
+    
+    // Add squad deployment button to mission panel
+    const missionPanel = document.getElementById('mission-panel');
+    if (missionPanel && !document.getElementById('send-deployment-button')) {
+      const sendButton = document.createElement('button');
+      sendButton.id = 'send-deployment-button';
+      sendButton.textContent = 'SEND SQUAD';
+      sendButton.style.display = 'none';
+      
+      // Add after intel button
+      const intelButton = document.getElementById('mission-intel-button');
+      if (intelButton && intelButton.parentNode) {
+        intelButton.parentNode.appendChild(sendButton);
+      } else {
+        missionPanel.appendChild(sendButton);
+      }
+      
+      // Add click event listener
+      sendButton.addEventListener('click', function() {
+        if (activeMission && activeMission.id) {
+          confirmSendSquad(activeMission.id);
+        } else {
+          showNotification('SELECT A DEPLOYMENT FIRST');
+        }
+      });
+    }
+  });
+</script>
+
+<script>
+  // Force update mission panel for deployments
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create send deployment button if it doesn't exist
+    if (!document.getElementById('send-deployment-button')) {
+      const missionPanel = document.getElementById('mission-panel');
+      const sendButton = document.createElement('button');
+      sendButton.id = 'send-deployment-button';
+      sendButton.textContent = 'SEND SQUAD';
+      sendButton.style.display = 'none';
+      
+      // Add button after intel button
+      const intelButton = document.getElementById('mission-intel-button');
+      if (intelButton && intelButton.parentNode) {
+        intelButton.parentNode.appendChild(sendButton);
+      }
+      
+      // Add click event
+      sendButton.addEventListener('click', function() {
+        if (activeMission && activeMission.id) {
+          if (typeof confirmSendSquad === 'function') {
+            confirmSendSquad(activeMission.id);
+          } else {
+            console.error('confirmSendSquad function not found');
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<script>
+  // Force update mission panel for deployments
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create send deployment button if it doesn't exist
+    if (!document.getElementById('send-deployment-button')) {
+      const missionPanel = document.getElementById('mission-panel');
+      const sendButton = document.createElement('button');
+      sendButton.id = 'send-deployment-button';
+      sendButton.textContent = 'SEND SQUAD';
+      sendButton.style.display = 'none';
+      
+      // Add button after intel button
+      const intelButton = document.getElementById('mission-intel-button');
+      if (intelButton && intelButton.parentNode) {
+        intelButton.parentNode.appendChild(sendButton);
+      }
+      
+      // Add click event
+      sendButton.addEventListener('click', function() {
+        if (activeMission && activeMission.id) {
+          if (typeof confirmSendSquad === 'function') {
+            confirmSendSquad(activeMission.id);
+          } else {
+            console.error('confirmSendSquad function not found');
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<script>
+  // Initialize event handlers once document is fully loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Make notification element visible
+    const notification = document.getElementById('notification');
+    if (notification) {
+      notification.style.display = 'block';
+    }
+    
+    // Add squad deployment button to mission panel
+    const missionPanel = document.getElementById('mission-panel');
+    if (missionPanel && !document.getElementById('send-deployment-button')) {
+      const sendButton = document.createElement('button');
+      sendButton.id = 'send-deployment-button';
+      sendButton.textContent = 'SEND SQUAD';
+      sendButton.style.display = 'none';
+      
+      // Add after intel button
+      const intelButton = document.getElementById('mission-intel-button');
+      if (intelButton && intelButton.parentNode) {
+        intelButton.parentNode.appendChild(sendButton);
+      } else {
+        missionPanel.appendChild(sendButton);
+      }
+      
+      // Add click event listener
+      sendButton.addEventListener('click', function() {
+        if (activeMission && activeMission.id) {
+          confirmSendSquad(activeMission.id);
+        } else {
+          showNotification('SELECT A DEPLOYMENT FIRST');
+        }
+      });
+    }
+  });
+</script>
+
+<script>
+  // Initialize event handlers once document is fully loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Make notification element visible
+    const notification = document.getElementById('notification');
+    if (notification) {
+      notification.style.display = 'block';
+    }
+    
+    // Add squad deployment button to mission panel
+    const missionPanel = document.getElementById('mission-panel');
+    if (missionPanel && !document.getElementById('send-deployment-button')) {
+      const sendButton = document.createElement('button');
+      sendButton.id = 'send-deployment-button';
+      sendButton.textContent = 'SEND SQUAD';
+      sendButton.style.display = 'none';
+      
+      // Add after intel button
+      const intelButton = document.getElementById('mission-intel-button');
+      if (intelButton && intelButton.parentNode) {
+        intelButton.parentNode.appendChild(sendButton);
+      } else {
+        missionPanel.appendChild(sendButton);
+      }
+      
+      // Add click event listener
+      sendButton.addEventListener('click', function() {
+        if (activeMission && activeMission.id) {
+          confirmSendSquad(activeMission.id);
+        } else {
+          showNotification('SELECT A DEPLOYMENT FIRST');
+        }
+      });
+    }
+  });
+</script>

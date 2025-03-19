@@ -1231,6 +1231,15 @@ async function initializeGlobe() {
   camera.position.z = 20;
   scene.rotation.y = 0.5; // Initial rotation
   
+  // Initialize markers array correctly
+  if (!window.missionMarkers) {
+    window.missionMarkers = [];
+  }
+  
+  if (!window.deploymentMarkers) {
+    window.deploymentMarkers = [];
+  }
+  
   // Globe interaction
   let isDragging = false;
   let previousMousePosition = {
@@ -1338,11 +1347,35 @@ async function initializeGlobe() {
     raycaster.setFromCamera(mouse, camera);
     
     // Check for intersections with mission points
-    const intersects = raycaster.intersectObjects(missionMarkers);
+    let intersects = raycaster.intersectObjects(missionMarkers);
     if (intersects.length > 0) {
       const missionId = intersects[0].object.userData.missionId;
       displayMissionDetails(missionId);
+      return;
     }
+    
+    // Check for intersections with deployment points - make sure we look in the correct array
+    if (deploymentMarkers && deploymentMarkers.length > 0) {
+      intersects = raycaster.intersectObjects(deploymentMarkers);
+      
+      if (intersects.length > 0) {
+        const userData = intersects[0].object.userData;
+        if (userData.type === 'deployment-point') {
+          console.log("Clicked on deployment marker:", userData);
+          if (typeof displayDeploymentDetails === 'function') {
+            displayDeploymentDetails(userData);
+          } else {
+            // Fallback if function not defined yet
+            showNotification('DEPLOYMENT DETAILS VIEW NOT AVAILABLE');
+            console.error('displayDeploymentDetails function not found');
+          }
+          return;
+        }
+      }
+    }
+    
+    // Debug output when nothing is clicked
+    console.log("Click detected but no markers found. Markers:", missionMarkers.length, "Deployment markers:", deploymentMarkers.length);
   });
   
   // Animation Loop
@@ -1386,9 +1419,18 @@ async function initializeGlobe() {
           ring.scale.x = 1 + 0.2 * Math.sin(Date.now() * 0.003);
           ring.scale.y = 1 + 0.2 * Math.sin(Date.now() * 0.003);
           ring.material.opacity = 0.7 * (0.5 + 0.5 * Math.sin(Date.now() * 0.003));
-          
-          // Don't make the ring face the camera - stay static and oriented to globe surface
-          // ring.lookAt(camera.position); - removed this line
+        }
+      });
+    }
+    
+    // Animate deployment markers if they exist
+    if (window.deploymentMarkers && window.deploymentMarkers.length > 0) {
+      window.deploymentMarkers.forEach(point => {
+        if (point.userData.ring) {
+          const ring = point.userData.ring;
+          ring.scale.x = 1 + 0.2 * Math.sin(Date.now() * 0.003);
+          ring.scale.y = 1 + 0.2 * Math.sin(Date.now() * 0.003);
+          ring.material.opacity = 0.7 * (0.5 + 0.5 * Math.sin(Date.now() * 0.003));
         }
       });
     }
@@ -1406,6 +1448,7 @@ async function initializeGlobe() {
 }
 
 // Utility Functions - IMPROVED NOTIFICATION SYSTEM
+// Updated showNotification function to make notifications visible
 function showNotification(text) {
   const notificationElement = document.getElementById('notification');
   if (!notificationElement) return;
@@ -1413,12 +1456,37 @@ function showNotification(text) {
   // Set text and show notification
   notificationElement.textContent = text;
   notificationElement.style.display = 'block';
+  notificationElement.classList.add('show');
   
   // Remove after 3 seconds
   setTimeout(() => {
-    notificationElement.style.display = 'none';
+    notificationElement.classList.remove('show');
+    setTimeout(() => {
+      notificationElement.style.display = 'none';
+    }, 300);
   }, 3000);
 }
+
+// Add event listeners for squad panel
+document.addEventListener('DOMContentLoaded', function() {
+  // Connect the send-deployment-button if it exists
+  const sendDeploymentButton = document.getElementById('send-deployment-button');
+  if (sendDeploymentButton) {
+    sendDeploymentButton.addEventListener('click', function() {
+      if (activeMission && activeMission.id) {
+        confirmSendSquad(activeMission.id);
+      } else {
+        showNotification('SELECT A DEPLOYMENT FIRST');
+      }
+    });
+  }
+  
+  // Make notification visible
+  const notification = document.getElementById('notification');
+  if (notification) {
+    notification.style.display = 'block';
+  }
+});
 
 // CLOCK FIX - Update the time every second
 function updateDateTime() {
@@ -1506,7 +1574,15 @@ function addHQMarker() {
   
   scene.add(point);
   
-  // Add pulsing effect (ring) - Light blue
+  // Create a parent object for the ring to keep it aligned with globe surface
+  const ringParent = new THREE.Object3D();
+  ringParent.position.copy(point.position);
+  
+  // Orient parent to face outward from globe center
+  ringParent.lookAt(new THREE.Vector3(0, 0, 0));
+  scene.add(ringParent);
+  
+  // Add pulsing effect (ring)
   const ringGeometry = new THREE.RingGeometry(0.3, 0.4, 32);
   const ringMaterial = new THREE.MeshBasicMaterial({ 
     color: 0x00BFFF, // Light blue
@@ -1515,14 +1591,21 @@ function addHQMarker() {
     side: THREE.DoubleSide
   });
   const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-  ring.position.copy(point.position);
   
-  // Orient ring to face outward from globe center
-  ring.lookAt(new THREE.Vector3(0, 0, 0));
-  scene.add(ring);
+  // Add ring to its parent
+  ringParent.add(ring);
+  
+  // Position ring a tiny bit away from the globe's surface to prevent z-fighting
+  ring.position.set(0, 0, 0.01);
+  
+  // Rotate the ring to face outward
+  ring.rotation.x = Math.PI / 2;
   
   // Store reference for animation
   point.userData.ring = ring;
+  point.userData.ringParent = ringParent;
+  
+  console.log(`Added HQ marker at coordinates: ${lat}, ${lon}`);
   
   return point;
 }
@@ -1770,142 +1853,6 @@ function centerGlobeOnCoordinates(lat, lon) {
   return;
 }
 
-
-// Function to center the globe on specific coordinates - disabled as per request
-function centerGlobeOnCoordinates(lat, lon) {
-  // Feature disabled as requested
-  console.log("Globe centering feature disabled");
-  return;
-}
-
-// Make openIntelPanel function available globally to ensure it can be called from anywhere
-window.openIntelPanel = async function(missionId) {
-  try {
-    console.log("Global openIntelPanel called with:", missionId);
-    
-    // Get a string mission ID no matter what was passed in
-    let missionIdStr = missionId;
-    if (typeof missionId === 'object') {
-      missionIdStr = missionId.id || 'mission1';
-    }
-    
-    console.log("Using mission ID:", missionIdStr);
-    
-    // DIRECT APPROACH: Load intel data directly from the file
-    let intelData = null;
-    
-    try {
-      // Try direct fetch first - most reliable method
-      const response = await fetch('data/intel.json');
-      if (response.ok) {
-        const allIntel = await response.json();
-        console.log("All intel data loaded:", allIntel);
-        
-        // Get the specific mission's intel
-        intelData = allIntel[missionIdStr];
-        console.log("Extracted intel for mission:", missionIdStr, intelData);
-      } else {
-        console.error("Failed to fetch intel.json:", response.status);
-      }
-    } catch (fetchError) {
-      console.error("Error fetching intel.json:", fetchError);
-    }
-    
-    // If we still have no intel, use a fallback for mission1
-    if (!intelData && missionIdStr === 'mission1') {
-      console.warn("Using fallback intel for mission1");
-      intelData = {
-        title: "FAILED DIPLOMACY INTEL",
-        content: "A diplomatic meeting has gone wrong, and the embassy staff need immediate extraction. Local forces are hostile and the situation is deteriorating rapidly. Your team needs to get in, secure the staff, and get out before the situation worsens.",
-        images: ["goblin.jpg"]
-      };
-    } else if (!intelData) {
-      // Generic fallback for other missions
-      console.warn("Using generic fallback intel");
-      intelData = {
-        title: "MISSION INTEL FOR " + missionIdStr,
-        content: "Mission intel data could not be loaded. Please check the data/intel.json file to ensure it contains information for this mission.",
-        images: []
-      };
-    }
-    
-    // *** IMPORTANT: Make sure we're targeting the correct intel panel ***
-    // We want the mission intel panel, not the intel team tab in HQ
-    const missionIntelPanel = document.getElementById('intel-panel');
-    if (!missionIntelPanel) {
-      console.error("Mission intel panel not found");
-      return;
-    }
-    
-    // Play intel sound
-    if (intelSound && intelSound.readyState >= 2) {
-      intelSound.currentTime = 0;
-      intelSound.play().catch(error => console.error("Error playing intel sound:", error));
-    }
-    
-    // Update the panel title - make sure we're targeting the right element
-    const titleElement = missionIntelPanel.querySelector('#intel-title');
-    if (titleElement) {
-      titleElement.textContent = intelData.title || 'MISSION INTEL';
-    } else {
-      console.error("Intel title element not found in mission intel panel");
-    }
-    
-    // Create HTML for intel content in a simple, direct way
-    let htmlContent = '';
-    
-    // Add the content text
-    if (intelData.content) {
-      htmlContent += `<p>${intelData.content}</p>`;
-      console.log("Added content paragraph:", intelData.content);
-    }
-    
-    // Add images if available
-    if (intelData.images && intelData.images.length > 0) {
-      intelData.images.forEach(imgSrc => {
-        htmlContent += `<img src="data/images/${imgSrc}" class="intel-image" alt="Mission Intel">`;
-        console.log("Added image:", imgSrc);
-      });
-    }
-    
-    // Fallback if nothing was added
-    if (htmlContent === '') {
-      htmlContent = '<p>No intel data available.</p>';
-      console.warn("No content was generated, using fallback");
-    }
-    
-    console.log("Final HTML content:", htmlContent);
-    
-    // Find the content container inside the MISSION intel panel
-    const contentContainer = missionIntelPanel.querySelector('#intel-content');
-    if (contentContainer) {
-      console.log("Setting content to mission intel panel content container");
-      contentContainer.innerHTML = htmlContent;
-    } else {
-      console.error("Intel content container not found in mission intel panel");
-    }
-    
-    // Force the panel to be positioned on the left side with correct z-index
-    missionIntelPanel.style.left = '-40vw';
-    missionIntelPanel.style.right = 'auto';
-    missionIntelPanel.style.zIndex = '4'; // Below LCD overlay (z-index 6)
-    
-    // Show the panel
-    missionIntelPanel.classList.add('active');
-    
-    // Force a reflow and animate
-    missionIntelPanel.offsetHeight;
-    missionIntelPanel.style.left = '0';
-    
-    // Show notification
-    showNotification('ACCESSING MISSION INTEL');
-    
-  } catch (error) {
-    console.error('Error displaying intel:', error);
-    showNotification('ERROR DISPLAYING INTEL');
-  }
-};
-
 // Make openIntelPanel function available globally to ensure it can be called from anywhere
 window.openIntelPanel = async function(missionId) {
   try {
@@ -2062,34 +2009,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// Check if the intel panel is working correctly
-document.addEventListener('DOMContentLoaded', function() {
-  // Test the intel panel functionality
-  const intelPanel = document.getElementById('intel-panel');
-  const missionIntelButton = document.getElementById('mission-intel-button');
-  
-  if (intelPanel && missionIntelButton) {
-    console.log("Intel panel and button found");
-    
-    // Monitor the intel button for clicks
-    missionIntelButton.addEventListener('click', function(event) {
-      console.log("Intel button clicked directly");
-    });
-    
-    // Make sure the close button works correctly
-    const closeIntelButton = document.getElementById('close-intel');
-    if (closeIntelButton) {
-      closeIntelButton.addEventListener('click', function() {
-        console.log("Close intel button clicked");
-        intelPanel.classList.remove('active');
-        intelPanel.style.left = '-40vw';
-      });
-    }
-  } else {
-    console.error("Intel panel elements not found!");
-  }
-});
-
 
 // Fix Intel panel issues - Log to console when update is applied
 console.log("Intel panel fixes applied - Version 1.1");
@@ -2115,73 +2034,6 @@ function testIntelPanelSetup() {
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
   console.log(testIntelPanelSetup());
 }
-
-
-// Fix Intel panel issues - Log to console when update is applied
-console.log("Intel panel fixes applied - Version 1.1");
-
-// Add a helper function to check the functionality of openIntelPanel
-function testIntelPanelSetup() {
-  try {
-    const intelPanel = document.getElementById('intel-panel');
-    console.log("Intel panel element found:", intelPanel !== null);
-    console.log("Intel panel z-index:", window.getComputedStyle(intelPanel).zIndex);
-    console.log("Intel panel defined functions:", {
-      openIntelPanel: typeof window.openIntelPanel === 'function',
-      loadIntel: typeof loadIntel === 'function'
-    });
-    return "Intel panel configuration check completed";
-  } catch (error) {
-    console.error("Error checking intel panel setup:", error);
-    return "Error checking intel panel setup";
-  }
-}
-
-// Auto-run the test if in development mode
-if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-  console.log(testIntelPanelSetup());
-}
-
-
-// Add debug function to manually test intel loading
-function testIntelLoading(missionId = 'mission1') {
-  console.log("Running intel loading test for mission:", missionId);
-  
-  // Try to find intel.json
-  findIntelJsonPath().then(path => {
-    console.log("Intel.json path discovery result:", path);
-    
-    // Try to load all intel data
-    loadIntel().then(allIntel => {
-      console.log("All intel data:", allIntel);
-      
-      // Try to load specific mission intel
-      loadIntel(missionId).then(missionIntel => {
-        console.log("Mission intel for " + missionId + ":", missionIntel);
-        
-        if (missionIntel) {
-          console.log("Intel loading test SUCCESSFUL");
-          
-          // Test opening intel panel
-          if (typeof window.openIntelPanel === 'function') {
-            console.log("Opening intel panel for test...");
-            window.openIntelPanel(missionId);
-          }
-        } else {
-          console.error("Intel loading test FAILED - No intel found for mission:", missionId);
-        }
-      });
-    });
-  });
-  
-  return "Intel loading test initiated. Check console for results.";
-}
-
-// Expose testing function globally
-window.testIntelLoading = testIntelLoading;
-
-// Console message to indicate this update has been applied
-console.log("Intel display fix applied - Version 2.0");
 
 
 // Add debug function to manually test intel loading
@@ -2392,314 +2244,581 @@ window.testIntelPanels = function() {
 console.log("Intel panel tab fix applied - Version 4.0");
 
 
-// Function to test if we're targeting the correct panel
-window.testIntelPanels = function() {
-  // First, identify all elements with ID 'intel-content'
-  const allIntelContentElements = document.querySelectorAll('#intel-content');
-  console.log(`Found ${allIntelContentElements.length} elements with ID 'intel-content'`);
+// Test function to check all z-indices
+window.checkZIndices = function() {
+  console.log("Checking z-indices of important elements:");
   
-  allIntelContentElements.forEach((el, index) => {
-    console.log(`Element ${index + 1}:`, el);
-    console.log(`  Parent:`, el.parentElement);
-    console.log(`  Grandparent:`, el.parentElement?.parentElement);
+  const elements = {
+    "LCD Overlay": document.getElementById('lcd-overlay'),
+    "Mission Panel": document.getElementById('mission-panel'),
+    "Intel Panel": document.getElementById('intel-panel'),
+    "HQ Panel": document.getElementById('hq-panel'),
+    "Resources Panel": document.querySelector('.resources-panel')
+  };
+  
+  for (const [name, element] of Object.entries(elements)) {
+    if (element) {
+      const zIndex = window.getComputedStyle(element).zIndex;
+      console.log(`${name}: z-index = ${zIndex}`);
+    } else {
+      console.log(`${name}: Element not found`);
+    }
+  }
+  
+  return "Z-index check complete. See console for results.";
+};
+
+// Z-index fix applied
+console.log("Intel panel z-index fix applied - Version 4.1");
+
+
+// Ensure resources panel appears below intel panel
+document.addEventListener('DOMContentLoaded', function() {
+  // Set correct z-index for resources panel after DOM is loaded
+  const resourcesPanel = document.querySelector('.resources-panel');
+  if (resourcesPanel) {
+    resourcesPanel.style.zIndex = '3';
+  }
+});
+
+// Function to compare intel and resources panel z-indices
+window.compareZIndices = function() {
+  const intelPanel = document.getElementById('intel-panel');
+  const resourcesPanel = document.querySelector('.resources-panel');
+  
+  if (intelPanel && resourcesPanel) {
+    const intelZIndex = window.getComputedStyle(intelPanel).zIndex;
+    const resourcesZIndex = window.getComputedStyle(resourcesPanel).zIndex;
     
-    // Add a temporary class to help identify it visually
-    el.classList.add(`intel-content-${index + 1}`);
+    console.log("Intel Panel z-index:", intelZIndex);
+    console.log("Resources Panel z-index:", resourcesZIndex);
     
-    // Temporarily make it visible with a background color
-    el.style.border = '2px solid yellow';
-    el.textContent = `Intel content element ${index + 1}`;
+    if (parseInt(intelZIndex) > parseInt(resourcesZIndex)) {
+      console.log("✅ Correct: Intel panel appears above resources panel");
+    } else {
+      console.log("❌ Issue: Resources panel appears above or at same level as intel panel");
+    }
+  } else {
+    console.log("Could not find both panels to compare");
+  }
+  
+  return "Z-index comparison complete. See console for results.";
+};
+
+// Resource panel z-index fix applied
+console.log("Resource panel z-index fix applied - Version 4.2");
+
+
+// Function to ensure vertical tabs are added when panels are shown
+function ensureVerticalTabs() {
+  // For mission panel
+  const missionPanel = document.getElementById('mission-panel');
+  if (missionPanel && !document.getElementById('mission-vertical-close')) {
+    const missionVerticalTab = document.createElement('button');
+    missionVerticalTab.className = 'vertical-tab-close';
+    missionVerticalTab.id = 'mission-vertical-close';
+    missionVerticalTab.setAttribute('aria-label', 'Close mission panel');
+    missionVerticalTab.setAttribute('title', 'Close mission panel');
     
-    // Reset after 5 seconds
-    setTimeout(() => {
-      el.style.border = '';
-      el.classList.remove(`intel-content-${index + 1}`);
-    }, 5000);
+    missionPanel.appendChild(missionVerticalTab);
+    
+    missionVerticalTab.addEventListener('click', () => {
+      missionPanel.classList.remove('active');
+      activeMission = null;
+      resumeRotation();
+    });
+  }
+  
+  // For intel panel
+  const intelPanel = document.getElementById('intel-panel');
+  if (intelPanel && !document.getElementById('intel-vertical-close')) {
+    const intelVerticalTab = document.createElement('button');
+    intelVerticalTab.className = 'vertical-tab-close';
+    intelVerticalTab.id = 'intel-vertical-close';
+    intelVerticalTab.setAttribute('aria-label', 'Close intel panel');
+    intelVerticalTab.setAttribute('title', 'Close intel panel');
+    
+    intelPanel.appendChild(intelVerticalTab);
+    
+    intelVerticalTab.addEventListener('click', () => {
+      intelPanel.classList.remove('active');
+      intelPanel.style.left = '-40vw';
+    });
+  }
+}
+
+// Run once on startup and also when DOM content is loaded
+ensureVerticalTabs();
+document.addEventListener('DOMContentLoaded', ensureVerticalTabs);
+
+// Run periodically to handle dynamic panel creation
+setInterval(ensureVerticalTabs, 5000);
+
+// Vertical tabs feature has been applied
+console.log("Vertical close tabs added to panels - Version 5.0");
+
+
+// Function to ensure vertical tabs are added when panels are shown
+function ensureVerticalTabs() {
+  // For mission panel
+  const missionPanel = document.getElementById('mission-panel');
+  if (missionPanel && !document.getElementById('mission-vertical-close')) {
+    const missionVerticalTab = document.createElement('button');
+    missionVerticalTab.className = 'vertical-tab-close';
+    missionVerticalTab.id = 'mission-vertical-close';
+    missionVerticalTab.setAttribute('aria-label', 'Close mission panel');
+    missionVerticalTab.setAttribute('title', 'Close mission panel');
+    
+    missionPanel.appendChild(missionVerticalTab);
+    
+    missionVerticalTab.addEventListener('click', () => {
+      missionPanel.classList.remove('active');
+      activeMission = null;
+      resumeRotation();
+    });
+  }
+  
+  // For intel panel
+  const intelPanel = document.getElementById('intel-panel');
+  if (intelPanel && !document.getElementById('intel-vertical-close')) {
+    const intelVerticalTab = document.createElement('button');
+    intelVerticalTab.className = 'vertical-tab-close';
+    intelVerticalTab.id = 'intel-vertical-close';
+    intelVerticalTab.setAttribute('aria-label', 'Close intel panel');
+    intelVerticalTab.setAttribute('title', 'Close intel panel');
+    
+    intelPanel.appendChild(intelVerticalTab);
+    
+    intelVerticalTab.addEventListener('click', () => {
+      intelPanel.classList.remove('active');
+      intelPanel.style.left = '-40vw';
+    });
+  }
+}
+
+// Run once on startup and also when DOM content is loaded
+ensureVerticalTabs();
+document.addEventListener('DOMContentLoaded', ensureVerticalTabs);
+
+// Run periodically to handle dynamic panel creation
+setInterval(ensureVerticalTabs, 5000);
+
+// Vertical tabs feature has been applied
+console.log("Vertical close tabs added to panels - Version 5.0");
+
+
+// Final polish for vertical tabs
+console.log("Vertical tabs polished - no line, X buttons removed - Version 5.1");
+
+
+// Initialize firebase hosting service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then(function(registration) {
+      console.log('Firebase Service Worker registered with scope:', registration.scope);
+    }).catch(function(error) {
+      console.log('Service worker registration failed:', error);
+    });
+}
+
+// Display deployment details when clicking on a deployment marker
+function displayDeploymentDetails(userData) {
+  try {
+    const deployment = userData.deployment;
+    
+    if (!deployment) {
+      console.error('Deployment data not found');
+      return;
+    }
+    
+    console.log('Displaying deployment details:', deployment);
+    
+    // Always use mission panel with send squad option
+    displayDeploymentInMissionPanel(deployment);
+  } catch (error) {
+    console.error('Error displaying deployment details:', error);
+  }
+}
+
+// Helper to get active deployment details
+async function getActiveDeploymentDetails(deploymentId) {
+  if (!currentUser) return null;
+  
+  try {
+    // Try to find in active deployments collection
+    const snapshot = await db.collection('activeDeployments')
+      .where('deploymentId', '==', deploymentId)
+      .where('userId', '==', currentUser.uid)
+      .limit(1)
+      .get();
+    
+    if (!snapshot.empty) {
+      return {
+        id: snapshot.docs[0].id,
+        ...snapshot.docs[0].data()
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error fetching active deployment:", error);
+    return null;
+  }
+}
+
+// Display deployment in mission panel
+function displayDeploymentInMissionPanel(deployment) {
+  // Play mission sound
+  if (missionSound && missionSound.readyState >= 2) {
+    missionSound.currentTime = 0;
+    missionSound.play().catch(console.error);
+  }
+  
+  // Update mission panel content with deployment info
+  document.getElementById('mission-title').textContent = deployment.name || `${deployment.primaryResource.toUpperCase()} DEPLOYMENT`;
+  document.getElementById('mission-location').textContent = deployment.location;
+  document.getElementById('mission-difficulty').textContent = deployment.difficulty || 'MEDIUM';
+  
+  // Format payment based on available data
+  const paymentText = deployment.resources && deployment.resources.money 
+    ? `${deployment.resources.money.toLocaleString()}`
+    : (deployment.moneyReward ? `${deployment.moneyReward.toLocaleString()}` : 'VARIES');
+  document.getElementById('mission-payment').textContent = paymentText;
+  
+  // Set duration
+  document.getElementById('mission-duration').textContent = `${deployment.duration || 3} DAYS`;
+  document.getElementById('mission-team-size').textContent = 'SQUAD (4-6)';
+  
+  // Show squad deploy button if user is squad leader
+  const acceptButton = document.getElementById('accept-mission-button');
+  const sendDeploymentButton = document.getElementById('send-deployment-button');
+  
+  if (acceptButton) {
+    acceptButton.style.display = 'none'; // Hide accept mission button
+  }
+  
+  if (sendDeploymentButton) {
+    if (userRole === 'squadLead') {
+      sendDeploymentButton.style.display = 'block';
+      
+      // Add click handler to send squad to this deployment
+      sendDeploymentButton.onclick = function() {
+        confirmSendSquad(deployment.id);
+      };
+    } else {
+      sendDeploymentButton.style.display = 'none';
+    }
+  }
+  
+  // Show mission panel
+  const missionPanel = document.getElementById('mission-panel');
+  missionPanel.classList.add('active');
+  
+  // Stop rotation when mission is displayed
+  rotating = false;
+  
+  // Set active mission to this deployment for other functions
+  activeMission = deployment;
+  
+  // Show notification
+  showNotification(`DEPLOYMENT BRIEFING: ${deployment.name || deployment.primaryResource.toUpperCase() + ' DEPLOYMENT'}`);
+}
+
+// Display deployment details when clicking on a deployment marker
+function displayDeploymentDetails(userData) {
+  try {
+    const deployment = userData.deployment;
+    
+    if (!deployment) {
+      console.error('Deployment data not found');
+      return;
+    }
+    
+    console.log('Displaying deployment details:', deployment);
+    
+    // Always use mission panel with send squad option
+    displayDeploymentInMissionPanel(deployment);
+  } catch (error) {
+    console.error('Error displaying deployment details:', error);
+  }
+}
+
+// Helper to get active deployment details
+async function getActiveDeploymentDetails(deploymentId) {
+  if (!currentUser) return null;
+  
+  try {
+    // Try to find in active deployments collection
+    const snapshot = await db.collection('activeDeployments')
+      .where('deploymentId', '==', deploymentId)
+      .where('userId', '==', currentUser.uid)
+      .limit(1)
+      .get();
+    
+    if (!snapshot.empty) {
+      return {
+        id: snapshot.docs[0].id,
+        ...snapshot.docs[0].data()
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error fetching active deployment:", error);
+    return null;
+  }
+}
+
+// Display deployment in mission panel
+function displayDeploymentInMissionPanel(deployment) {
+  // Play mission sound
+  if (missionSound && missionSound.readyState >= 2) {
+    missionSound.currentTime = 0;
+    missionSound.play().catch(console.error);
+  }
+  
+  // Update mission panel content with deployment info
+  document.getElementById('mission-title').textContent = deployment.name || `${deployment.primaryResource.toUpperCase()} DEPLOYMENT`;
+  document.getElementById('mission-location').textContent = deployment.location;
+  document.getElementById('mission-difficulty').textContent = deployment.difficulty || 'MEDIUM';
+  
+  // Format payment based on available data
+  const paymentText = deployment.resources && deployment.resources.money 
+    ? `${deployment.resources.money.toLocaleString()}`
+    : (deployment.moneyReward ? `${deployment.moneyReward.toLocaleString()}` : 'VARIES');
+  document.getElementById('mission-payment').textContent = paymentText;
+  
+  // Set duration
+  document.getElementById('mission-duration').textContent = `${deployment.duration || 3} DAYS`;
+  document.getElementById('mission-team-size').textContent = 'SQUAD (4-6)';
+  
+  // Show squad deploy button if user is squad leader
+  const acceptButton = document.getElementById('accept-mission-button');
+  const sendDeploymentButton = document.getElementById('send-deployment-button');
+  
+  if (acceptButton) {
+    acceptButton.style.display = 'none'; // Hide accept mission button
+  }
+  
+  if (sendDeploymentButton) {
+    if (userRole === 'squadLead') {
+      sendDeploymentButton.style.display = 'block';
+      
+      // Add click handler to send squad to this deployment
+      sendDeploymentButton.onclick = function() {
+        confirmSendSquad(deployment.id);
+      };
+    } else {
+      sendDeploymentButton.style.display = 'none';
+    }
+  }
+  
+  // Show mission panel
+  const missionPanel = document.getElementById('mission-panel');
+  missionPanel.classList.add('active');
+  
+  // Stop rotation when mission is displayed
+  rotating = false;
+  
+  // Set active mission to this deployment for other functions
+  activeMission = deployment;
+  
+  // Show notification
+  showNotification(`DEPLOYMENT BRIEFING: ${deployment.name || deployment.primaryResource.toUpperCase() + ' DEPLOYMENT'}`);
+}
+
+// Enhanced animate function to make deployment markers blink faster
+// Add this to the animate function in initializeGlobe
+function enhanceGlobeAnimation() {
+  // Find the original animate function
+  const originalAnimateFunction = window.animateFunction;
+  
+  // Create enhanced version of animation function that adds faster blinking for deployment markers
+  function enhancedAnimate() {
+    // Call the original animation code
+    if (typeof originalAnimateFunction === 'function') {
+      originalAnimateFunction();
+    }
+    
+    // Add enhanced animation for deployment markers
+    if (deploymentMarkers && deploymentMarkers.length > 0) {
+      deploymentMarkers.forEach(marker => {
+        if (marker.userData.ring) {
+          const ring = marker.userData.ring;
+          const pulseSpeed = marker.userData.pulseSpeed || 0.006; // Use stored or default speed
+          
+          // Enhanced pulsing effect - larger scale and opacity variation
+          ring.scale.x = 1 + 0.4 * Math.sin(Date.now() * pulseSpeed);
+          ring.scale.y = 1 + 0.4 * Math.sin(Date.now() * pulseSpeed);
+          ring.material.opacity = 0.9 * (0.6 + 0.4 * Math.sin(Date.now() * pulseSpeed));
+        }
+      });
+    }
+  }
+  
+  // Store reference to our enhanced function
+  window.animateFunction = enhancedAnimate;
+  
+  return enhancedAnimate;
+}
+
+// Execute the enhancement when document loads
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(() => {
+    enhanceGlobeAnimation();
+    console.log("Enhanced globe animation with faster blinking deployment markers");
+  }, 2000); // Wait 2 seconds to make sure globe is initialized
+});
+
+// Enhanced animate function to make deployment markers blink faster
+// Add this to the animate function in initializeGlobe
+function enhanceGlobeAnimation() {
+  // Find the original animate function
+  const originalAnimateFunction = window.animateFunction;
+  
+  // Create enhanced version of animation function that adds faster blinking for deployment markers
+  function enhancedAnimate() {
+    // Call the original animation code
+    if (typeof originalAnimateFunction === 'function') {
+      originalAnimateFunction();
+    }
+    
+    // Add enhanced animation for deployment markers
+    if (deploymentMarkers && deploymentMarkers.length > 0) {
+      deploymentMarkers.forEach(marker => {
+        if (marker.userData.ring) {
+          const ring = marker.userData.ring;
+          const pulseSpeed = marker.userData.pulseSpeed || 0.006; // Use stored or default speed
+          
+          // Enhanced pulsing effect - larger scale and opacity variation
+          ring.scale.x = 1 + 0.4 * Math.sin(Date.now() * pulseSpeed);
+          ring.scale.y = 1 + 0.4 * Math.sin(Date.now() * pulseSpeed);
+          ring.material.opacity = 0.9 * (0.6 + 0.4 * Math.sin(Date.now() * pulseSpeed));
+        }
+      });
+    }
+  }
+  
+  // Store reference to our enhanced function
+  window.animateFunction = enhancedAnimate;
+  
+  return enhancedAnimate;
+}
+
+// Execute the enhancement when document loads
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(() => {
+    enhanceGlobeAnimation();
+    console.log("Enhanced globe animation with faster blinking deployment markers");
+  }, 2000); // Wait 2 seconds to make sure globe is initialized
+});
+
+// Force initialize resources and deployments when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Add a delayed setup for deployment system
+  setTimeout(() => {
+    console.log("Initializing deployment system and checking for deployments...");
+    if (typeof initializeEnhancedDeploymentSystem === 'function') {
+      initializeEnhancedDeploymentSystem();
+    } else {
+      console.error("Enhanced deployment system function not found");
+    }
+    
+    // Make the globe interact with deployment markers
+    setupGlobeDeploymentInteraction();
+  }, 3000); // Delay to ensure scene and other components are loaded
+});
+
+// Set up globe interaction with deployment markers
+function setupGlobeDeploymentInteraction() {
+  if (!window.scene) {
+    console.error("Globe scene not initialized yet");
+    return;
+  }
+  
+  // Set up raycaster for deployment markers if not already done
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  
+  // Add specific click handler for deployment markers
+  document.getElementById('globe').addEventListener('click', function(event) {
+    // Calculate mouse position in normalized device coordinates
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    
+    // Update the raycaster
+    raycaster.setFromCamera(mouse, window.camera);
+    
+    // Check for intersections with deployment markers
+    let intersects = raycaster.intersectObjects(window.deploymentMarkers);
+    
+    if (intersects.length > 0) {
+      const userData = intersects[0].object.userData;
+      if (userData.type === 'deployment-point') {
+        console.log("Clicked deployment marker:", userData);
+        if (typeof displayDeploymentDetails === 'function') {
+          displayDeploymentDetails(userData);
+        } else {
+          console.error("displayDeploymentDetails function not found");
+        }
+      }
+    }
   });
   
-  // Check the mission intel panel specifically
-  const missionIntelPanel = document.getElementById('intel-panel');
-  console.log("Mission intel panel:", missionIntelPanel);
-  
-  if (missionIntelPanel) {
-    const contentInMissionPanel = missionIntelPanel.querySelector('#intel-content');
-    console.log("Content element in mission intel panel:", contentInMissionPanel);
-    
-    if (contentInMissionPanel) {
-      contentInMissionPanel.style.border = '2px solid green';
-      contentInMissionPanel.textContent = 'THIS IS THE MISSION INTEL PANEL CONTENT';
-      
-      // Reset after 5 seconds
-      setTimeout(() => {
-        contentInMissionPanel.style.border = '';
-      }, 5000);
-    }
-  }
-  
-  // Check intel team tab in HQ
-  const intelTeamTab = document.getElementById('intel-content'); // This might actually be targeting any element with this ID
-  console.log("Element with ID 'intel-content' (might be intel team tab):", intelTeamTab);
-  
-  return "Test complete. Check console for results.";
-};
+  console.log("Globe deployment interaction initialized");
+}
 
-// Tab-fixing version applied
-console.log("Intel panel tab fix applied - Version 4.0");
-
-
-// Test function to check all z-indices
-window.checkZIndices = function() {
-  console.log("Checking z-indices of important elements:");
-  
-  const elements = {
-    "LCD Overlay": document.getElementById('lcd-overlay'),
-    "Mission Panel": document.getElementById('mission-panel'),
-    "Intel Panel": document.getElementById('intel-panel'),
-    "HQ Panel": document.getElementById('hq-panel'),
-    "Resources Panel": document.querySelector('.resources-panel')
-  };
-  
-  for (const [name, element] of Object.entries(elements)) {
-    if (element) {
-      const zIndex = window.getComputedStyle(element).zIndex;
-      console.log(`${name}: z-index = ${zIndex}`);
-    } else {
-      console.log(`${name}: Element not found`);
-    }
-  }
-  
-  return "Z-index check complete. See console for results.";
-};
-
-// Z-index fix applied
-console.log("Intel panel z-index fix applied - Version 4.1");
-
-
-// Test function to check all z-indices
-window.checkZIndices = function() {
-  console.log("Checking z-indices of important elements:");
-  
-  const elements = {
-    "LCD Overlay": document.getElementById('lcd-overlay'),
-    "Mission Panel": document.getElementById('mission-panel'),
-    "Intel Panel": document.getElementById('intel-panel'),
-    "HQ Panel": document.getElementById('hq-panel'),
-    "Resources Panel": document.querySelector('.resources-panel')
-  };
-  
-  for (const [name, element] of Object.entries(elements)) {
-    if (element) {
-      const zIndex = window.getComputedStyle(element).zIndex;
-      console.log(`${name}: z-index = ${zIndex}`);
-    } else {
-      console.log(`${name}: Element not found`);
-    }
-  }
-  
-  return "Z-index check complete. See console for results.";
-};
-
-// Z-index fix applied
-console.log("Intel panel z-index fix applied - Version 4.1");
-
-
-// Ensure resources panel appears below intel panel
+// Force initialize resources and deployments when the page loads
 document.addEventListener('DOMContentLoaded', function() {
-  // Set correct z-index for resources panel after DOM is loaded
-  const resourcesPanel = document.querySelector('.resources-panel');
-  if (resourcesPanel) {
-    resourcesPanel.style.zIndex = '3';
-  }
+  // Add a delayed setup for deployment system
+  setTimeout(() => {
+    console.log("Initializing deployment system and checking for deployments...");
+    if (typeof initializeEnhancedDeploymentSystem === 'function') {
+      initializeEnhancedDeploymentSystem();
+    } else {
+      console.error("Enhanced deployment system function not found");
+    }
+    
+    // Make the globe interact with deployment markers
+    setupGlobeDeploymentInteraction();
+  }, 3000); // Delay to ensure scene and other components are loaded
 });
 
-// Function to compare intel and resources panel z-indices
-window.compareZIndices = function() {
-  const intelPanel = document.getElementById('intel-panel');
-  const resourcesPanel = document.querySelector('.resources-panel');
+// Set up globe interaction with deployment markers
+function setupGlobeDeploymentInteraction() {
+  if (!window.scene) {
+    console.error("Globe scene not initialized yet");
+    return;
+  }
   
-  if (intelPanel && resourcesPanel) {
-    const intelZIndex = window.getComputedStyle(intelPanel).zIndex;
-    const resourcesZIndex = window.getComputedStyle(resourcesPanel).zIndex;
+  // Set up raycaster for deployment markers if not already done
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  
+  // Add specific click handler for deployment markers
+  document.getElementById('globe').addEventListener('click', function(event) {
+    // Calculate mouse position in normalized device coordinates
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     
-    console.log("Intel Panel z-index:", intelZIndex);
-    console.log("Resources Panel z-index:", resourcesZIndex);
+    // Update the raycaster
+    raycaster.setFromCamera(mouse, window.camera);
     
-    if (parseInt(intelZIndex) > parseInt(resourcesZIndex)) {
-      console.log("✅ Correct: Intel panel appears above resources panel");
-    } else {
-      console.log("❌ Issue: Resources panel appears above or at same level as intel panel");
+    // Check for intersections with deployment markers
+    let intersects = raycaster.intersectObjects(window.deploymentMarkers);
+    
+    if (intersects.length > 0) {
+      const userData = intersects[0].object.userData;
+      if (userData.type === 'deployment-point') {
+        console.log("Clicked deployment marker:", userData);
+        if (typeof displayDeploymentDetails === 'function') {
+          displayDeploymentDetails(userData);
+        } else {
+          console.error("displayDeploymentDetails function not found");
+        }
+      }
     }
-  } else {
-    console.log("Could not find both panels to compare");
-  }
+  });
   
-  return "Z-index comparison complete. See console for results.";
-};
-
-// Resource panel z-index fix applied
-console.log("Resource panel z-index fix applied - Version 4.2");
-
-
-// Ensure resources panel appears below intel panel
-document.addEventListener('DOMContentLoaded', function() {
-  // Set correct z-index for resources panel after DOM is loaded
-  const resourcesPanel = document.querySelector('.resources-panel');
-  if (resourcesPanel) {
-    resourcesPanel.style.zIndex = '3';
-  }
-});
-
-// Function to compare intel and resources panel z-indices
-window.compareZIndices = function() {
-  const intelPanel = document.getElementById('intel-panel');
-  const resourcesPanel = document.querySelector('.resources-panel');
-  
-  if (intelPanel && resourcesPanel) {
-    const intelZIndex = window.getComputedStyle(intelPanel).zIndex;
-    const resourcesZIndex = window.getComputedStyle(resourcesPanel).zIndex;
-    
-    console.log("Intel Panel z-index:", intelZIndex);
-    console.log("Resources Panel z-index:", resourcesZIndex);
-    
-    if (parseInt(intelZIndex) > parseInt(resourcesZIndex)) {
-      console.log("✅ Correct: Intel panel appears above resources panel");
-    } else {
-      console.log("❌ Issue: Resources panel appears above or at same level as intel panel");
-    }
-  } else {
-    console.log("Could not find both panels to compare");
-  }
-  
-  return "Z-index comparison complete. See console for results.";
-};
-
-// Resource panel z-index fix applied
-console.log("Resource panel z-index fix applied - Version 4.2");
-
-
-// Function to ensure vertical tabs are added when panels are shown
-function ensureVerticalTabs() {
-  // For mission panel
-  const missionPanel = document.getElementById('mission-panel');
-  if (missionPanel && !document.getElementById('mission-vertical-close')) {
-    const missionVerticalTab = document.createElement('button');
-    missionVerticalTab.className = 'vertical-tab-close';
-    missionVerticalTab.id = 'mission-vertical-close';
-    missionVerticalTab.setAttribute('aria-label', 'Close mission panel');
-    missionVerticalTab.setAttribute('title', 'Close mission panel');
-    
-    missionPanel.appendChild(missionVerticalTab);
-    
-    missionVerticalTab.addEventListener('click', () => {
-      missionPanel.classList.remove('active');
-      activeMission = null;
-      resumeRotation();
-    });
-  }
-  
-  // For intel panel
-  const intelPanel = document.getElementById('intel-panel');
-  if (intelPanel && !document.getElementById('intel-vertical-close')) {
-    const intelVerticalTab = document.createElement('button');
-    intelVerticalTab.className = 'vertical-tab-close';
-    intelVerticalTab.id = 'intel-vertical-close';
-    intelVerticalTab.setAttribute('aria-label', 'Close intel panel');
-    intelVerticalTab.setAttribute('title', 'Close intel panel');
-    
-    intelPanel.appendChild(intelVerticalTab);
-    
-    intelVerticalTab.addEventListener('click', () => {
-      intelPanel.classList.remove('active');
-      intelPanel.style.left = '-40vw';
-    });
-  }
-}
-
-// Run once on startup and also when DOM content is loaded
-ensureVerticalTabs();
-document.addEventListener('DOMContentLoaded', ensureVerticalTabs);
-
-// Run periodically to handle dynamic panel creation
-setInterval(ensureVerticalTabs, 5000);
-
-// Vertical tabs feature has been applied
-console.log("Vertical close tabs added to panels - Version 5.0");
-
-
-// Function to ensure vertical tabs are added when panels are shown
-function ensureVerticalTabs() {
-  // For mission panel
-  const missionPanel = document.getElementById('mission-panel');
-  if (missionPanel && !document.getElementById('mission-vertical-close')) {
-    const missionVerticalTab = document.createElement('button');
-    missionVerticalTab.className = 'vertical-tab-close';
-    missionVerticalTab.id = 'mission-vertical-close';
-    missionVerticalTab.setAttribute('aria-label', 'Close mission panel');
-    missionVerticalTab.setAttribute('title', 'Close mission panel');
-    
-    missionPanel.appendChild(missionVerticalTab);
-    
-    missionVerticalTab.addEventListener('click', () => {
-      missionPanel.classList.remove('active');
-      activeMission = null;
-      resumeRotation();
-    });
-  }
-  
-  // For intel panel
-  const intelPanel = document.getElementById('intel-panel');
-  if (intelPanel && !document.getElementById('intel-vertical-close')) {
-    const intelVerticalTab = document.createElement('button');
-    intelVerticalTab.className = 'vertical-tab-close';
-    intelVerticalTab.id = 'intel-vertical-close';
-    intelVerticalTab.setAttribute('aria-label', 'Close intel panel');
-    intelVerticalTab.setAttribute('title', 'Close intel panel');
-    
-    intelPanel.appendChild(intelVerticalTab);
-    
-    intelVerticalTab.addEventListener('click', () => {
-      intelPanel.classList.remove('active');
-      intelPanel.style.left = '-40vw';
-    });
-  }
-}
-
-// Run once on startup and also when DOM content is loaded
-ensureVerticalTabs();
-document.addEventListener('DOMContentLoaded', ensureVerticalTabs);
-
-// Run periodically to handle dynamic panel creation
-setInterval(ensureVerticalTabs, 5000);
-
-// Vertical tabs feature has been applied
-console.log("Vertical close tabs added to panels - Version 5.0");
-
-
-// Final polish for vertical tabs
-console.log("Vertical tabs polished - no line, X buttons removed - Version 5.1");
-
-
-// Final polish for vertical tabs
-console.log("Vertical tabs polished - no line, X buttons removed - Version 5.1");
-
-
-// Initialize firebase hosting service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/firebase-messaging-sw.js')
-    .then(function(registration) {
-      console.log('Firebase Service Worker registered with scope:', registration.scope);
-    }).catch(function(error) {
-      console.log('Service worker registration failed:', error);
-    });
-}
-
-
-// Initialize firebase hosting service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/firebase-messaging-sw.js')
-    .then(function(registration) {
-      console.log('Firebase Service Worker registered with scope:', registration.scope);
-    }).catch(function(error) {
-      console.log('Service worker registration failed:', error);
-    });
+  console.log("Globe deployment interaction initialized");
 }

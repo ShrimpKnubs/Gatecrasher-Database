@@ -371,46 +371,38 @@ async function resetUserResources(userId = null) {
   }
 }
 
-// Add test resources - Admin Function - MODIFIED to use global resources
-async function addTestResources(userId = null) {
+// Add test resources - Admin Function - MODIFIED to use global resources and custom amount
+async function addTestResources(amount = 200) {
   if (!currentUser || userRole !== 'admin') {
     showNotification('UNAUTHORIZED: ADMIN ACCESS REQUIRED');
     return { success: false, error: 'Unauthorized' };
   }
   
   try {
-    // Resources to add
-    const testResources = {
-      money: 50000,
-      resources: {
-        fuel: 200,
-        ammo: 200,
-        medicine: 200,
-        food: 200,
-        materials: 200
-      }
-    };
-    
     // Get global resources reference
     const globalResourcesRef = db.collection('globalResources').doc('shared');
     
-    // Create updates
+    // Create updates with the specified amount
     const updates = {
-      money: firebase.firestore.FieldValue.increment(testResources.money),
+      money: firebase.firestore.FieldValue.increment(amount * 250), // More money
+      'resources.fuel': firebase.firestore.FieldValue.increment(amount),
+      'resources.ammo': firebase.firestore.FieldValue.increment(amount),
+      'resources.medicine': firebase.firestore.FieldValue.increment(amount),
+      'resources.food': firebase.firestore.FieldValue.increment(amount),
+      'resources.materials': firebase.firestore.FieldValue.increment(amount),
       lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-      notifyUpdates: true
+      updateId: Math.random().toString(36).substring(2, 15),
+      notifyUpdates: false
     };
-    
-    // Add resource updates
-    for (const [resource, amount] of Object.entries(testResources.resources)) {
-      updates[`resources.${resource}`] = firebase.firestore.FieldValue.increment(amount);
-    }
     
     // Apply updates
     await globalResourcesRef.update(updates);
     
-    showNotification('TEST RESOURCES ADDED');
-    console.log("Added test resources to global pool");
+    showNotification(`ADDED ${amount} OF EACH RESOURCE`);
+    console.log(`Added ${amount} of each resource to global pool`);
+    
+    // Update display
+    updateResourceDisplay();
     
     return { success: true };
   } catch (error) {
